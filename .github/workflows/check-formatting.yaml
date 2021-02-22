@@ -1,0 +1,23 @@
+name: Lint Code
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    name: Lint Code
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+
+    - name: Install black
+      run: |
+        set -eux
+        sudo apt-get install python3-setuptools
+        pip3 install --user black==20.8b1
+
+    - name: Check formatting
+      run: ~/.local/bin/black --check .

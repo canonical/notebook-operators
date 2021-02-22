@@ -1,0 +1,69 @@
+name: Charmed Jupyter Notebooks
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  build:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out repo
+      uses: actions/checkout@v2
+
+    - uses: balchua/microk8s-actions@v0.2.2
+      with:
+        channel: '1.19/stable'
+        addons: '["dns", "storage", "rbac"]'
+
+    - name: Install dependencies
+      run: |
+        set -eux
+        sudo snap install charm --classic
+        sudo snap install juju --classic
+        sudo snap install juju-helpers --classic
+        sudo snap install juju-wait --classic
+        sudo apt update
+
+    - name: Deploy Jupyter
+      run: |
+        set -eux
+        sg microk8s -c 'juju bootstrap microk8s uk8s'
+        juju add-model jupyter
+        juju bundle deploy --build
+        juju wait -wvt 300
+
+    - name: Test Jupyter
+      run: |
+        set -eux
+        kubectl run \
+            --rm \
+            -i \
+            --restart=Never \
+            --image=ubuntu \
+            jupyter-check \
+            -- \
+            bash -c "apt update && apt install -y curl && curl -f http://jupyter-ui.jupyter.svc.cluster.local:8080/"
+
+
+    - name: Get pod statuses
+      run: kubectl get all -A
+      if: failure()
+
+    - name: Get juju status
+      run: juju status
+      if: failure()
+
+    - name: Get jupyter-controller logs
+      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-controller
+      if: failure()
+
+    - name: Get jupyter-ui logs
+      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-ui
+      if: failure()
+
+    - name: Get jupyter-manager logs
+      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-manager
+      if: failure()

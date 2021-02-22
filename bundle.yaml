@@ -1,0 +1,4 @@
+bundle: kubernetes
+applications:
+  jupyter-controller: { charm: cs:jupyter-controller, scale: 1 }
+  jupyter-ui:         { charm: cs:jupyter-ui,         scale: 1 }
