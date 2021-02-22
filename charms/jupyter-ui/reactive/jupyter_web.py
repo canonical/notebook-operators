@@ -41,8 +41,7 @@ def start_charm():
     layer.status.maintenance('configuring container')
 
     image_info = layer.docker_resource.get_info('oci-image')
-
-    port = hookenv.config('port')
+    config = dict(hookenv.config())
 
     layer.caas_base.pod_spec_set(
         {
@@ -110,12 +109,13 @@ def start_charm():
                         'username': image_info.username,
                         'password': image_info.password,
                     },
-                    'command': ['python3'],
-                    'args': ['main.py', '--dev'],
-                    'ports': [{'name': 'http', 'containerPort': port}],
+                    'ports': [{'name': 'http', 'containerPort': config['port']}],
                     'config': {
                         'USERID_HEADER': 'kubeflow-userid',
                         'USERID_PREFIX': '',
+                        'UI': config['ui'],
+                        'URL_PREFIX': config['url-prefix'],
+                        'DEV_MODE': config['dev-mode'],
                     },
                     'files': [
                         {

@@ -39,6 +39,7 @@ def start_charm():
 
     image_info = layer.docker_resource.get_info('oci-image')
     model = os.environ['JUJU_MODEL_NAME']
+    config = dict(hookenv.config())
 
     layer.caas_base.pod_spec_set(
         {
@@ -85,7 +86,7 @@ def start_charm():
                     'config': {
                         'USE_ISTIO': str(hookenv.is_relation_made('service-mesh')).lower(),
                         'ISTIO_GATEWAY': f'{model}/kubeflow-gateway',
-                        'ENABLE_CULLING': hookenv.config('enable-culling'),
+                        'ENABLE_CULLING': config['enable-culling'],
                     },
                     'imageDetails': {
                         'imagePath': image_info.registry_path,
@@ -118,7 +119,7 @@ def start_charm():
                             {'apiGroups': ['kubeflow.org'], 'resources': ['*'], 'verbs': ['*']},
                             {'apiGroups': ['batch'], 'resources': ['jobs'], 'verbs': ['*']},
                         ],
-                    }
+                    },
                 ],
             }
         },

@@ -2,4 +2,16 @@ options:
   port:
     type: int
     default: 5000
-    description: The port to listen to
+    description: HTTP port
+  ui:
+    type: string
+    default: default
+    description: Which UI to use
+  url-prefix:
+    type: string
+    default: /jupyter
+    description: URL prefix for HTTP requests
+  dev-mode:
+    type: boolean
+    default: true
+    description: If true, deactives SubjectAccessReview checks

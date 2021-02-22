@@ -1,4 +1,4 @@
-name: Publish bundle to charm store
+name: Publish
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - master
 
 jobs:
-  build:
-    name: Publish bundle
+  bundle:
+    name: Bundle
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +18,7 @@ jobs:
       run: |
         set -eux
         sudo snap install charm --classic
-        sudo snap install juju-helpers --classic --channel edge
+        sudo snap install juju-helpers --classic
 
     - name: Publish bundle
       env:
@@ -27,6 +27,6 @@ jobs:
         set -eux
         echo $CHARMSTORE_CREDENTIAL > ~/.go-cookies
         juju-bundle publish \
-            --url cs:~jupyter-charmers/jupyter \
+            --url cs:~notebook-charmers/jupyter \
             --publish-charms \
-            --publish-namespace jupyter-charmers
+            --publish-namespace notebook-charmers
