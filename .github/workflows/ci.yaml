@@ -1,10 +1,29 @@
-name: Charmed Jupyter Notebooks
+name: CI
 
 on:
   - push
   - pull_request
 
 jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v2
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get install python3-setuptools
+        sudo pip3 install black flake8
+
+    - name: Check black
+      run: black --check .
+
+    - name: Check flake8
+      run: flake8
+
   build:
     name: Test
     runs-on: ubuntu-latest
@@ -15,7 +34,7 @@ jobs:
 
     - uses: balchua/microk8s-actions@v0.2.2
       with:
-        channel: '1.19/stable'
+        channel: '1.20/stable'
         addons: '["dns", "storage", "rbac"]'
 
     - name: Install dependencies
@@ -31,22 +50,18 @@ jobs:
       run: |
         set -eux
         sg microk8s -c 'juju bootstrap microk8s uk8s'
-        juju add-model jupyter
+        juju add-model kubeflow
         juju bundle deploy --build
         juju wait -wvt 300
 
-    - name: Test Jupyter
+    - name: Test kubeflow
       run: |
         set -eux
-        kubectl run \
-            --rm \
-            -i \
-            --restart=Never \
-            --image=ubuntu \
-            jupyter-check \
-            -- \
-            bash -c "apt update && apt install -y curl && curl -f http://jupyter-ui.jupyter.svc.cluster.local:8080/"
+        sudo apt update
+        sudo apt install -y firefox-geckodriver
+        sudo pip3 install -r test-requirements.txt
 
+        pytest -vvs
 
     - name: Get pod statuses
       run: kubectl get all -A
@@ -56,14 +71,18 @@ jobs:
       run: juju status
       if: failure()
 
-    - name: Get jupyter-controller logs
+    - name: Get jupyter-controller workload logs
       run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-controller
       if: failure()
 
-    - name: Get jupyter-ui logs
+    - name: Get jupyter-controller operator logs
+      run: kubectl logs --tail 100 -njupyter -ljuju-operator=jupyter-controller
+      if: failure()
+
+    - name: Get jupyter-ui workload logs
       run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-ui
       if: failure()
 
-    - name: Get jupyter-manager logs
-      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-manager
+    - name: Get jupyter-ui operator logs
+      run: kubectl logs --tail 100 -njupyter -ljuju-operator=jupyter-ui
       if: failure()
