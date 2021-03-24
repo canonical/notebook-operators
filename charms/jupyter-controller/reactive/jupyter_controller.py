@@ -84,7 +84,9 @@ def start_charm():
                     'name': 'jupyter-controller',
                     'command': ['/manager'],
                     'config': {
-                        'USE_ISTIO': str(hookenv.is_relation_made('service-mesh')).lower(),
+                        'USE_ISTIO': str(
+                            config['use-istio'] or hookenv.is_relation_made('service-mesh')
+                        ).lower(),
                         'ISTIO_GATEWAY': f'{model}/kubeflow-gateway',
                         'ENABLE_CULLING': config['enable-culling'],
                     },

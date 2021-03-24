@@ -3,3 +3,7 @@ options:
     type: boolean
     default: true
     description: Enables culling of idle Jupyter pods
+  use-istio:
+    type: boolean
+    default: false
+    description: Manually enable Istio integration, instead of via relations
