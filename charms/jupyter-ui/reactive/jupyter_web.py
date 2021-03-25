@@ -25,7 +25,6 @@ def update_image():
 def configure_mesh():
     endpoint_from_name('service-mesh').add_route(
         prefix='/jupyter/',
-        rewrite='/',
         service=hookenv.service_name(),
         port=hookenv.config('port'),
     )
