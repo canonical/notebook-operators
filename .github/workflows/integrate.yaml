@@ -6,7 +6,7 @@ on:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint Check
     runs-on: ubuntu-latest
 
     steps:
@@ -14,17 +14,12 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Install dependencies
-      run: |
-        sudo apt-get install python3-setuptools
-        sudo pip3 install black flake8
+      run: sudo apt install python3-pip tox
 
-    - name: Check black
-      run: black --check .
+    - name: Lint code
+      run: tox -e lint
 
-    - name: Check flake8
-      run: flake8
-
-  build:
+  deploy:
     name: Test
     runs-on: ubuntu-latest
 
@@ -40,31 +35,44 @@ jobs:
     - name: Install dependencies
       run: |
         set -eux
+        sudo pip3 install charmcraft
         sudo snap install charm --classic
         sudo snap install juju --classic
         sudo snap install juju-helpers --classic
         sudo snap install juju-wait --classic
         sudo apt update
+        sudo apt install -y firefox-geckodriver
+        sudo pip3 install -r test-requirements.txt
 
-    - name: Deploy Jupyter
+    - name: Bootstrap
       run: |
         set -eux
         sg microk8s -c 'juju bootstrap microk8s uk8s'
         juju add-model kubeflow
-        juju bundle deploy --build
-        juju wait -wvt 300
 
-    - name: Test kubeflow
+    - name: Deploy istio-pilot
       run: |
         set -eux
-        sudo apt update
-        sudo apt install -y firefox-geckodriver
-        sudo pip3 install -r test-requirements.txt
+        juju deploy cs:istio-pilot
+        juju wait -wvt 300
 
-        pytest -vvs
+    - name: Deploy Jupyter
+      run: |
+        set -eux
+        juju bundle deploy --build
+        juju relate istio-pilot jupyter-ui
+        juju wait -wvt 300
+
+    - name: Test Jupyter
+      run: pytest -vvs
+      if: always()
 
     - name: Get pod statuses
       run: kubectl get all -A
+      if: failure()
+
+    - name: Get notebooks
+      run: kubectl get notebooks -A
       if: failure()
 
     - name: Get juju status
@@ -72,17 +80,24 @@ jobs:
       if: failure()
 
     - name: Get jupyter-controller workload logs
-      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-controller
+      run: kubectl logs --tail 100 -nkubeflow -ljuju-app=jupyter-controller
       if: failure()
 
     - name: Get jupyter-controller operator logs
-      run: kubectl logs --tail 100 -njupyter -ljuju-operator=jupyter-controller
+      run: kubectl logs --tail 100 -nkubeflow -ljuju-operator=jupyter-controller
       if: failure()
 
     - name: Get jupyter-ui workload logs
-      run: kubectl logs --tail 100 -njupyter -ljuju-app=jupyter-ui
+      run: kubectl logs --tail 100 -nkubeflow -ljuju-app=jupyter-ui
       if: failure()
 
     - name: Get jupyter-ui operator logs
-      run: kubectl logs --tail 100 -njupyter -ljuju-operator=jupyter-ui
+      run: kubectl logs --tail 100 -nkubeflow -ljuju-operator=jupyter-ui
+      if: failure()
+
+    - name: Upload selenium screenshots
+      uses: actions/upload-artifact@v2
+      with:
+        name: selenium-screenshots
+        path: /tmp/selenium-*.png
       if: failure()

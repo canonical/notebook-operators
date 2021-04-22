@@ -14,11 +14,11 @@ from selenium.webdriver.support.expected_conditions import url_to_be
 
 @pytest.fixture()
 def driver(request):
-    status = yaml.load(check_output(['juju', 'status', '--format=yaml']))
+    status = yaml.safe_load(check_output(['juju', 'status', '--format=yaml']))
     endpoint = status['applications']['jupyter-ui']['address']
     url = f'http://{endpoint}.xip.io:5000/jupyter/'
     options = Options()
-    options.add_argument("--headless")
+    options.headless = True
 
     with webdriver.Firefox(options=options) as driver:
         wait = WebDriverWait(driver, 180, 1, (JavascriptException, StopIteration))

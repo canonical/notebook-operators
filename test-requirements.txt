@@ -2,3 +2,5 @@ charmcraft==0.8.0
 pytest==6.2.2
 pyyaml==5.3.1
 selenium==3.141.0
+flake8
+black==20.8b1
