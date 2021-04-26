@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-from glob import glob
 from pathlib import Path
 
 from ops.charm import CharmBase
@@ -31,6 +30,8 @@ class Operator(CharmBase):
         except NoCompatibleVersions as err:
             self.model.unit.status = BlockedStatus(str(err))
             return
+        else:
+            self.model.unit.status = ActiveStatus()
 
         self.image = OCIImageResource(self, "oci-image")
 
