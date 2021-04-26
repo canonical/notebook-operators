@@ -49,7 +49,6 @@ class Operator(CharmBase):
             self.interfaces["ingress"].send_data(
                 {
                     "prefix": '/jupyter/',
-                    "rewrite": '/',
                     "service": self.model.app.name,
                     "port": self.model.config['port'],
                 }
