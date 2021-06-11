@@ -114,7 +114,13 @@ class JupyterUICharm(CharmBase):
                 }
         config_template = None
         with open(Path('src/spawner_ui_config.yaml')) as file:
-            config_template = yaml.full_load(file)   
+            config_template = yaml.full_load(file)
+        # Configure jupyter notebook url list
+        if config['default_notebook_lists'] != "default":
+            config_template['spawnerFormDefaults']['image']['options'] = \
+                                            config['default_notebook_lists'].split(',')
+            config_template['spawnerFormDefaults']['image']['value'] = \
+                                            config['default_notebook_lists'].split(',')[0]
         # Add a Pebble config layer to the scraper container
         container = self.unit.get_container("jupyter-ui")
         container.push("/etc/config/spawner_ui_config.yaml", yaml.dump(config_template))
