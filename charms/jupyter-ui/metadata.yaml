@@ -4,7 +4,13 @@ summary: Multi-user server for Jupyter notebooks
 description: Multi-user server for Jupyter notebooks
 maintainers: [Juju Developers <juju@lists.ubuntu.com>]
 tags: [ai, bigdata, kubeflow, machine-learning, tensorflow]
-series: [kubernetes]
+containers:
+  jupyter-ui:
+    resource: oci-image
+    mounts:
+      - storage: config
+        location: /etc/config
+
 resources:
   oci-image:
     type: oci-image
@@ -14,9 +20,14 @@ resources:
     # https://github.com/kubeflow/kubeflow/pull/5686
     # upstream-source: gcr.io/kubeflow-images-public/jupyter-web-app:vmaster-ge4456300
     upstream-source: rocks.canonical.com:5000/kubeflow/jupyter-ui:2d285b8
+
+storage:
+  config:
+    type: filesystem
+    location: /etc/config
+
 requires:
   ingress:
     interface: ingress
     schema: https://raw.githubusercontent.com/canonical/operator-schemas/service-mesh-schemas/ingress.yaml
     versions: [v1]
-min-juju-version: 2.8.6
