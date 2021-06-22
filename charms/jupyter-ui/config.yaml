@@ -11,7 +11,11 @@ options:
     type: string
     default: /jupyter
     description: URL prefix for HTTP requests
-  dev-mode:
+  backend-mode:
+    type: string
+    default: development
+    description: Which mode out of `development` or `production` the backend server should use
+  secure-cookies:
     type: boolean
-    default: true
-    description: If true, deactives SubjectAccessReview checks
+    default: false
+    description: Whether cookies should require HTTPS
