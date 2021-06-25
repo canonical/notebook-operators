@@ -48,7 +48,8 @@ class Operator(CharmBase):
         if self.interfaces["ingress"]:
             self.interfaces["ingress"].send_data(
                 {
-                    "prefix": '/jupyter/',
+                    "prefix": self.model.config['url-prefix'] + '/',
+                    "rewrite": "/",
                     "service": self.model.app.name,
                     "port": self.model.config['port'],
                 }
@@ -116,11 +117,10 @@ class Operator(CharmBase):
                         "imageDetails": image_details,
                         'ports': [{'name': 'http', 'containerPort': config['port']}],
                         "envConfig": {
-                            'USERID_HEADER': 'kubeflow-userid',
-                            'USERID_PREFIX': '',
+                            'APP_PREFIX': config['url-prefix'],
+                            'APP_SECURE_COOKIES': str(config['secure-cookies']),
+                            'BACKEND_MODE': config['backend-mode'],
                             'UI': config['ui'],
-                            'URL_PREFIX': config['url-prefix'],
-                            'DEV_MODE': config['dev-mode'],
                         },
                         "volumeConfig": [
                             {
