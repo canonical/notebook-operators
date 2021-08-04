@@ -19,7 +19,7 @@ class Operator(CharmBase):
 
         if not self.model.unit.is_leader():
             log.info("Not a leader, skipping set_pod_spec")
-            self.model.unit.status = ActiveStatus()
+            self.model.unit.status = WaitingStatus("Waiting for leadership")
             return
 
         try:
