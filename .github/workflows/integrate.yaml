@@ -34,7 +34,7 @@ jobs:
     - name: Install dependencies
       run: |
         set -eux
-        sudo pip3 install charmcraft
+        sudo pip3 install charmcraft==1.0.0
         sudo snap install charm --classic
         sudo snap install juju --classic
         sudo snap install juju-helpers --classic
