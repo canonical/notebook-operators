@@ -19,7 +19,7 @@ jobs:
         set -eux
         sudo snap install charm --classic
         sudo snap install juju-helpers --classic
-        sudo pip3 install charmcraft
+        sudo pip3 install charmcraft==1.0.0
 
     - name: Publish bundle
       env:
