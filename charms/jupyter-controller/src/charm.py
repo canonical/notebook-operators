@@ -6,7 +6,7 @@ from pathlib import Path
 import yaml
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus
+from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 
 from oci_image import OCIImageResource, OCIImageResourceError
 
@@ -19,7 +19,7 @@ class Operator(CharmBase):
 
         if not self.model.unit.is_leader():
             log.info("Not a leader, skipping set_pod_spec")
-            self.model.unit.status = ActiveStatus()
+            self.model.unit.status = WaitingStatus("Waiting for leadership")
             return
 
         self.image = OCIImageResource(self, "oci-image")

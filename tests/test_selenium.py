@@ -1,3 +1,4 @@
+from pathlib import Path
 from random import choices
 from string import ascii_lowercase
 from subprocess import check_output
@@ -6,12 +7,12 @@ from urllib.parse import urlparse
 
 import pytest
 import yaml
-from selenium import webdriver
 from selenium.common.exceptions import JavascriptException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
+from seleniumwire import webdriver
 
 
 @pytest.fixture()
@@ -21,10 +22,15 @@ def driver(request):
     url = f'http://{endpoint}.nip.io/jupyter/'
     options = Options()
     options.headless = True
+    options.log.level = 'trace'
 
-    with webdriver.Firefox(options=options) as driver:
+    kwargs = {
+        'options': options,
+        'seleniumwire_options': {'enable_har': True},
+    }
+
+    with webdriver.Firefox(**kwargs) as driver:
         wait = WebDriverWait(driver, 180, 1, (JavascriptException, StopIteration))
-        # Go to URL and log in
         for _ in range(60):
             try:
                 driver.get(url)
@@ -36,6 +42,7 @@ def driver(request):
 
         yield driver, wait, url
 
+        Path(f'/tmp/selenium-{request.node.name}.har').write_text(driver.har)
         driver.get_screenshot_as_file(f'/tmp/selenium-{request.node.name}.png')
 
 
@@ -81,7 +88,9 @@ def test_notebook(driver):
         ]
     )
     row = wait.until(EC.presence_of_element_located((By.XPATH, chonky_boi)))
+    print(driver.window_handles)
     row.find_element_by_class_name('action-button').click()
+    print(driver.window_handles)
 
     # Make sure we can connect to a specific notebook's endpoint
     # Notebook is opened in a new tab, so we have to explicitly switch to it,
@@ -96,7 +105,10 @@ def test_notebook(driver):
         sleep(10)
         driver.refresh()
     else:
-        pytest.fail("Waited too long for selenium to open up notebook server!")
+        pytest.fail(
+            "Waited too long for selenium to open up notebook server. "
+            f"Expected current path to be `{expected_path}`, got `{path}`."
+        )
 
     # Wait for main content div to load
     # TODO: More testing of notebook UIs

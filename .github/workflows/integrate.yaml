@@ -5,22 +5,18 @@ on:
   - pull_request
 
 jobs:
-  lint:
-    name: Lint Check
+  unit-test:
+    name: Unit Test
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [controller, ui]
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v2
-
-    - name: Install dependencies
-      run: |
-        set -eux
-        sudo apt update
-        sudo apt install python3-pip tox
-
-    - name: Lint code
-      run: tox -e lint
+    - uses: actions/checkout@v2
+    - run: sudo apt update
+    - run: sudo apt install tox
+    - run: tox -e ${{ matrix.charm }}
 
   deploy:
     name: Test
@@ -85,12 +81,15 @@ jobs:
         juju wait -wvt 300
 
     - name: Test Jupyter
-      run: pytest -vvs
+      run: pytest -vvs tests/
 
     - run: kubectl get all -A
       if: failure()
 
     - run: kubectl get notebooks -A
+      if: failure()
+
+    - run: kubectl get pods -A -oyaml
       if: failure()
 
     - run: juju status
@@ -133,4 +132,11 @@ jobs:
       with:
         name: selenium-screenshots
         path: /tmp/selenium-*.png
+      if: failure()
+
+    - name: Upload HAR logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: selenium-har
+        path: /tmp/selenium-*.har
       if: failure()
