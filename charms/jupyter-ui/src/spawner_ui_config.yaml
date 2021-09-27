@@ -17,24 +17,61 @@
 spawnerFormDefaults:
   image:
     # The container Image for the user's Jupyter Notebook
-    # If readonly, this value must be a member of the list below
-    value: gcr.io/kubeflow-images-public/tensorflow-1.15.2-notebook-cpu:1.0.0
+    value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-scipy:master-1831e436
     # The list of available standard container Images
     options:
-      - gcr.io/kubeflow-images-public/tensorflow-1.15.2-notebook-cpu:1.0.0
-      - gcr.io/kubeflow-images-public/tensorflow-1.15.2-notebook-gpu:1.0.0
-      - gcr.io/kubeflow-images-public/tensorflow-2.1.0-notebook-cpu:1.0.0
-      - gcr.io/kubeflow-images-public/tensorflow-2.1.0-notebook-gpu:1.0.0
-    # By default, custom container Images are allowed
-    # Uncomment the following line to only enable standard container Images
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-scipy:master-1831e436
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-pytorch-full:master-1831e436
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-pytorch-cuda-full:master-1831e436
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-tensorflow-full:master-1831e436
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/jupyter-tensorflow-cuda-full:master-1831e436
+  imageGroupOne:
+    # The container Image for the user's Group One Server
+    # The annotation `notebooks.kubeflow.org/http-rewrite-uri: /`
+    # is applied to notebook in this group, configuring
+    # the Istio rewrite for containers that host their web UI at `/`
+    value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/codeserver-python:master-1831e436
+    # The list of available standard container Images
+    options:
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/codeserver-python:master-1831e436
+  imageGroupTwo:
+    # The container Image for the user's Group Two Server
+    # The annotation `notebooks.kubeflow.org/http-rewrite-uri: /`
+    # is applied to notebook in this group, configuring
+    # the Istio rewrite for containers that host their web UI at `/`
+    # The annotation `notebooks.kubeflow.org/http-headers-request-set`
+    # is applied to notebook in this group, configuring Istio
+    # to add the `X-RStudio-Root-Path` header to requests
+    value: public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/rstudio-tidyverse:master-164fa2ea
+    # The list of available standard container Images
+    options:
+      - public.ecr.aws/j1r0q0g6/notebooks/notebook-servers/rstudio-tidyverse:master-164fa2ea
+  # If true, hide registry and/or tag name in the image selection dropdown
+  hideRegistry: true
+  hideTag: false
+  allowCustomImage: true
+  # If true, users can input custom images
+  # If false, users can only select from the images in this config
+  imagePullPolicy:
+    # Supported values: Always, IfNotPresent, Never
+    value: IfNotPresent
     readOnly: false
   cpu:
     # CPU for user's Notebook
     value: '0.5'
+    # Factor by with to multiply request to calculate limit
+    # if no limit is set, to disable set "none"
+    limitFactor: "1.2"
     readOnly: false
   memory:
     # Memory for user's Notebook
     value: 1.0Gi
+    # Factor by with to multiply request to calculate limit
+    # if no limit is set, to disable set "none"
+    limitFactor: "1.2"
+    readOnly: false
+  environment:
+    value: {}
     readOnly: false
   workspaceVolume:
     # Workspace Volume to be attached to user's Notebook
@@ -53,7 +90,7 @@ spawnerFormDefaults:
         value: 'workspace-{notebook-name}'
       size:
         # The Size of the Workspace Volume (in Gi)
-        value: '10Gi'
+        value: '5Gi'
       mountPath:
         # The Path that the Workspace Volume will be mounted
         value: /home/jovyan
@@ -113,8 +150,58 @@ spawnerFormDefaults:
       vendors:
         - limitsKey: "nvidia.com/gpu"
           uiName: "NVIDIA"
+        - limitsKey: "amd.com/gpu"
+          uiName: "AMD"
       # Values: "" or a `limits-key` from the vendors list
       vendor: ""
+    readOnly: false
+  affinityConfig:
+    # If readonly, the default value will be the only option
+    # value is a list of `configKey`s that we want to be selected by default
+    value: ""
+    # The list of available affinity configs
+    options: []
+    #options:
+    #  - configKey: "exclusive__n1-standard-2"
+    #    displayName: "Exclusive: n1-standard-2"
+    #    affinity:
+    #      # (Require) Node having label: `node_pool=notebook-n1-standard-2`
+    #      nodeAffinity:
+    #        requiredDuringSchedulingIgnoredDuringExecution:
+    #          nodeSelectorTerms:
+    #            - matchExpressions:
+    #                - key: "node_pool"
+    #                  operator: "In"
+    #                  values:
+    #                   - "notebook-n1-standard-2"
+    #      # (Require) Node WITHOUT existing Pod having label: `notebook-name`
+    #      podAntiAffinity:
+    #        requiredDuringSchedulingIgnoredDuringExecution:
+    #          - labelSelector:
+    #              matchExpressions:
+    #                - key: "notebook-name"
+    #                  operator: "Exists"
+    #            namespaces: []
+    #            topologyKey: "kubernetes.io/hostname"
+    #readOnly: false
+  tolerationGroup:
+    # The default `groupKey` from the options list
+    # If readonly, the default value will be the only option
+    value: ""
+    # The list of available tolerationGroup configs
+    options: []
+    #options:
+    #  - groupKey: "group_1"
+    #    displayName: "Group 1: description"
+    #    tolerations:
+    #      - key: "key1"
+    #        operator: "Equal"
+    #        value: "value1"
+    #        effect: "NoSchedule"
+    #      - key: "key2"
+    #        operator: "Equal"
+    #        value: "value2"
+    #        effect: "NoSchedule"
     readOnly: false
   shm:
     value: true

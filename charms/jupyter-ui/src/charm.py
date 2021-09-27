@@ -25,7 +25,8 @@ class JupyterUICharm(CharmBase):
         super().__init__(*args)
 
         if not self.model.unit.is_leader():
-            self.model.unit.status = ActiveStatus()
+            log.info("Not a leader, skipping set_pod_spec")
+            self.model.unit.status = WaitingStatus("Waiting for leadership")
             return
 
         try:
@@ -52,7 +53,8 @@ class JupyterUICharm(CharmBase):
         if self.interfaces["ingress"]:
             self.interfaces["ingress"].send_data(
                 {
-                    "prefix": '/jupyter/',
+                    "prefix": self.model.config['url-prefix'] + '/',
+                    "rewrite": "/",
                     "service": self.model.app.name,
                     "port": self.model.config['port'],
                 }
@@ -68,7 +70,7 @@ class JupyterUICharm(CharmBase):
         # Create the Kubernetes resources needed for the Dashboard
         r = resources.JupyterUIResources(self)
         r.apply()
-    
+
     def _on_remove(self, event):
         """Cleanup Kubernetes resources"""
         # Authenticate with the Kubernetes API
@@ -78,7 +80,7 @@ class JupyterUICharm(CharmBase):
         # Remove created Kubernetes resources
         r = resources.JupyterUIResources(self)
         r.delete()
-    
+
     def _on_config_changed(self, event):
         # Defer the config-changed event if we do not have sufficient privileges
         if not self._k8s_auth():
@@ -91,17 +93,17 @@ class JupyterUICharm(CharmBase):
             event.defer()
             return
         self.unit.status = ActiveStatus()
-    
+
     def _config_ui(self):
         """Configure Pebble to start the Jupyter ui"""
         # Define a simple layer
         config = self.model.config
         layer = {
-            "services": {"jupyter-ui": 
+            "services": {"jupyter-ui":
                             {
-                                "override": "replace", 
+                                "override": "replace",
                                 "startup": "enabled",
-                                "command": "python3 main.py", 
+                                "command": "python3 main.py",
                                 "environment": {
                                     'USERID_HEADER': 'kubeflow-userid',
                                     'USERID_PREFIX': '',
