@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import logging
-import urllib
 import os
 import yaml
 
@@ -21,11 +20,12 @@ logger = logging.getLogger(__name__)
 class JupyterUICharm(CharmBase):
     _authed = False
     """Charm the service."""
+
     def __init__(self, *args):
         super().__init__(*args)
 
         if not self.model.unit.is_leader():
-            log.info("Not a leader, skipping set_pod_spec")
+            logger.info("Not a leader, skipping set_pod_spec")
             self.model.unit.status = WaitingStatus("Waiting for leadership")
             return
 
@@ -63,9 +63,8 @@ class JupyterUICharm(CharmBase):
     def _on_install(self, _):
         """Handle the install event, create Kubernetes resources"""
         logging.info("INSTALLING ......")
-        if not self._k8s_auth():
-            event.defer()
-            return
+        if self._authed:
+            return True
         self.unit.status = MaintenanceStatus("creating k8s resources")
         # Create the Kubernetes resources needed for the Dashboard
         r = resources.JupyterUIResources(self)
@@ -99,29 +98,32 @@ class JupyterUICharm(CharmBase):
         # Define a simple layer
         config = self.model.config
         layer = {
-            "services": {"jupyter-ui":
-                            {
-                                "override": "replace",
-                                "startup": "enabled",
-                                "command": "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app",
-                                "environment": {
-                                    'APP_PREFIX': config['url-prefix'],
-                                    'APP_SECURE_COOKIES': str(config['secure-cookies']),
-                                    'BACKEND_MODE': config['backend-mode'],
-                                    'UI': config['ui'],
-                                },
-                            }
-                        },
+            "services": {
+                "jupyter-ui": {
+                    "override": "replace",
+                    "startup": "enabled",
+                    "command": "gunicorn -w 3 --bind 0.0.0.0:5000 \
+                                            --access-logfile - entrypoint:app",
+                    "environment": {
+                        'APP_PREFIX': config['url-prefix'],
+                        'APP_SECURE_COOKIES': str(config['secure-cookies']),
+                        'BACKEND_MODE': config['backend-mode'],
+                        'UI': config['ui'],
+                    },
                 }
+            },
+        }
         config_template = None
         with open(Path('src/spawner_ui_config.yaml')) as file:
             config_template = yaml.full_load(file)
         # Configure jupyter notebook url list
         if config['default_notebook_lists'] != "default":
-            config_template['spawnerFormDefaults']['image']['options'] = \
-                                            config['default_notebook_lists'].split(',')
-            config_template['spawnerFormDefaults']['image']['value'] = \
-                                            config['default_notebook_lists'].split(',')[0]
+            config_template['spawnerFormDefaults']['image']['options'] = config[
+                'default_notebook_lists'
+            ].split(',')
+            config_template['spawnerFormDefaults']['image']['value'] = config[
+                'default_notebook_lists'
+            ].split(',')[0]
         # Add a Pebble config layer to the scraper container
         container = self.unit.get_container("jupyter-ui")
         container.push("/etc/config/spawner_ui_config.yaml", yaml.dump(config_template))
@@ -160,6 +162,7 @@ class JupyterUICharm(CharmBase):
 
         self._authed = True
         return True
+
 
 if __name__ == "__main__":
     main(JupyterUICharm)

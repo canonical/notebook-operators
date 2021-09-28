@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class JupyterUIResources:
     """Class to handle the creation and deletion of those Kubernetes resources
     required by the JupyterUI, but not automatically handled by Juju"""
+
     def __init__(self, charm):
         self.model = charm.model
         self.app = charm.app
@@ -19,8 +20,7 @@ class JupyterUIResources:
         self.apps_api = kubernetes.client.AppsV1Api(kcl)
         self.core_api = kubernetes.client.CoreV1Api(kcl)
         self.auth_api = kubernetes.client.RbacAuthorizationV1Api(kcl)
-    
-    
+
     def apply(self) -> None:
         """Create the required Kubernetes resources for the dashboard"""
         # Create Kubernetes Cluster Roles
@@ -56,13 +56,12 @@ class JupyterUIResources:
         # Delete Kubernetes cluster roles
         for cr in self._clusterroles:
             self.auth_api.delete_cluster_role(name=cr["body"].metadata.name)
-         # Delete Kubernetes services
+        # Delete Kubernetes services
         for service in self._services:
             self.core_api.delete_namespaced_service(
                 namespace=service["namespace"], name=service["body"].metadata.name
             )
-    
-    
+
     @property
     def _clusterroles(self) -> list:
         """Return a list of Cluster Roles required by the Jupyter UI"""
@@ -106,12 +105,11 @@ class JupyterUIResources:
                             resources=['storageclasses'],
                             verbs=['get', 'list', 'watch'],
                         ),
-
                     ],
                 )
             }
         ]
-    
+
     @property
     def _services(self) -> list:
         """Return a list of Kubernetes services needed by the Jupyter UI"""
@@ -142,4 +140,3 @@ class JupyterUIResources:
                 ),
             }
         ]
-
