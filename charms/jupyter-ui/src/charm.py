@@ -103,13 +103,12 @@ class JupyterUICharm(CharmBase):
                             {
                                 "override": "replace",
                                 "startup": "enabled",
-                                "command": "python3 main.py",
+                                "command": "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app",
                                 "environment": {
-                                    'USERID_HEADER': 'kubeflow-userid',
-                                    'USERID_PREFIX': '',
+                                    'APP_PREFIX': config['url-prefix'],
+                                    'APP_SECURE_COOKIES': str(config['secure-cookies']),
+                                    'BACKEND_MODE': config['backend-mode'],
                                     'UI': config['ui'],
-                                    'URL_PREFIX': config['url-prefix'],
-                                    'DEV_MODE': config['dev-mode'],
                                 },
                             }
                         },
