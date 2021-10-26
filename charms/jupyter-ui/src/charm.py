@@ -3,12 +3,12 @@
 import logging
 from pathlib import Path
 
+import yaml
+from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
-
-from oci_image import OCIImageResource, OCIImageResourceError
 
 log = logging.getLogger()
 
@@ -120,7 +120,10 @@ class Operator(CharmBase):
                             'APP_PREFIX': config['url-prefix'],
                             'APP_SECURE_COOKIES': str(config['secure-cookies']),
                             'BACKEND_MODE': config['backend-mode'],
+                            'CLUSTER_DOMAIN': 'cluster.local',
                             'UI': config['ui'],
+                            'USERID_HEADER': 'kubeflow-userid',
+                            'USERID_PREFIX': '',
                         },
                         "volumeConfig": [
                             {
@@ -131,6 +134,19 @@ class Operator(CharmBase):
                                         "path": "spawner_ui_config.yaml",
                                         "content": Path('src/spawner_ui_config.yaml').read_text(),
                                     }
+                                ],
+                            },
+                            {
+                                "name": "logos",
+                                "mountPath": "/src/apps/default/static/assets/logos",
+                                "files": [
+                                    {
+                                        "path": name,
+                                        "content": content,
+                                    }
+                                    for name, content in yaml.safe_load(
+                                        Path('src/logos-configmap.yaml').read_text()
+                                    )['data'].items()
                                 ],
                             },
                         ],

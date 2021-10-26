@@ -10,10 +10,10 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: rocks.canonical.com:5000/kubeflow/jupyter-ui:977965b
+    upstream-source: public.ecr.aws/j1r0q0g6/notebooks/jupyter-web-app:v1.4
 requires:
   ingress:
     interface: ingress
-    schema: https://raw.githubusercontent.com/canonical/operator-schemas/service-mesh-schemas/ingress.yaml
+    schema: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
     versions: [v1]
 min-juju-version: 2.8.6
