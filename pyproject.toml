@@ -2,3 +2,6 @@
 line-length = 100
 target-version = ['py37']
 skip-string-normalization = true
+
+[tool.isort]
+profile = "black"

@@ -1,7 +1,8 @@
-charmcraft==0.8.0
-pytest==6.2.2
-pyyaml==5.3.1
-selenium==3.141.0
-flake8
 black==20.8b1
-selenium-wire==4.3.1
+flake8<4.1
+juju<2.10
+pytest-operator<0.10
+pytest<6.3
+pyyaml<6.1
+selenium-wire<4.6
+selenium==3.141.0

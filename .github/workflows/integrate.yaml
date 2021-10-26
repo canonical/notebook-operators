@@ -5,138 +5,111 @@ on:
   - pull_request
 
 jobs:
-  unit-test:
+  unit:
     name: Unit Test
     runs-on: ubuntu-latest
     strategy:
       matrix:
         charm: [controller, ui]
-
     steps:
     - uses: actions/checkout@v2
     - run: sudo apt update
     - run: sudo apt install tox
-    - run: tox -e ${{ matrix.charm }}
+    - run: tox -e ${{ matrix.charm }}-unit
 
-  deploy:
-    name: Test
+  lint:
+    name: Lint Code
     runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        charm: [controller, ui]
     steps:
-    - name: Check out repo
-      uses: actions/checkout@v2
+    - uses: actions/checkout@v2
+    - run: sudo apt update
+    - run: sudo apt install tox
+    - run: tox -e ${{ matrix.charm }}-lint
 
-    - uses: balchua/microk8s-actions@v0.2.2
-      with:
-        channel: '1.20/stable'
-        addons: '["dns", "storage", "rbac", "metallb:10.64.140.43-10.64.140.49"]'
+  integration:
+    name: Integration
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+            provider: microk8s
+            channel: 1.21/stable
 
-    - name: Install dependencies
-      run: |
-        set -eux
-        sudo pip3 install charmcraft==1.0.0
-        sudo snap install charm --classic
-        sudo snap install juju --classic
-        sudo snap install juju-helpers --classic
-        sudo snap install juju-wait --classic
-        sudo apt update
-        sudo apt install -y firefox-geckodriver
-        sudo pip3 install -r test-requirements.txt
+      # TODO: Remove once the actions-operator does this automatically
+      - name: Configure kubectl
+        run: |
+          sg microk8s -c "microk8s config > ~/.kube/config"
 
-    - name: Bootstrap
-      run: |
-        set -eux
-        sg microk8s -c 'juju bootstrap microk8s uk8s'
-        juju add-model kubeflow
+      - name: Run test
+        run: |
+          sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
+          sudo apt install -y firefox-geckodriver
+          sudo snap install juju-bundle --classic
+          sudo snap install juju-wait --classic
+          sudo snap refresh charmcraft --channel=latest/candidate
+          juju add-model kubeflow
+          sg microk8s -c "tox -e integration -- --model kubeflow"
 
-    - name: Deploy charm dependencies
-      timeout-minutes: 15
-      run: |
-        set -eux
-        juju model-config update-status-hook-interval=15s
-        juju deploy cs:istio
-        juju config istio-pilot default-gateway=kubeflow-gateway
-        sleep 10
-        kubectl patch role -n kubeflow istio-ingressgateway-operator -p '{"apiVersion":"rbac.authorization.k8s.io/v1","kind":"Role","metadata":{"name":"istio-ingressgateway-operator"},"rules":[{"apiGroups":["*"],"resources":["*"],"verbs":["*"]}]}'
-        juju wait -wvt 300
-        juju model-config update-status-hook-interval=5m
+      - run: kubectl get all -A
+        if: failure()
 
-        # Manually create PodDefaults CRD due to
-        # https://github.com/canonical/admission-webhook-operator/issues/5
-        kubectl apply -f https://raw.githubusercontent.com/canonical/admission-webhook-operator/master/src/crds.yaml
-        # juju deploy cs:admission-webhook
+      - run: kubectl get notebooks -A
+        if: failure()
 
-        juju deploy cs:kubeflow-dashboard --config profile=kubeflow-user
-        juju deploy cs:kubeflow-profiles
-        juju relate kubeflow-dashboard kubeflow-profiles
+      - run: kubectl get pods -A -oyaml
+        if: failure()
 
-        # https://bugs.launchpad.net/juju/+bug/1921739
-        (i=600; while ! juju wait -wvt 30 ; do ((--i)) || exit; sleep 1; done)
+      - run: juju status
+        if: failure()
 
-    - name: Deploy Jupyter
-      run: |
-        set -eux
-        juju bundle deploy --build
-        juju relate istio-pilot jupyter-ui
-        juju wait -wvt 300
+      - name: Get jupyter-controller workload logs
+        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-controller
+        if: failure()
 
-    - name: Test Jupyter
-      run: pytest -vvs tests/
+      - name: Get jupyter-controller operator logs
+        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-controller
+        if: failure()
 
-    - run: kubectl get all -A
-      if: failure()
+      - name: Get jupyter-ui workload logs
+        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-ui
+        if: failure()
 
-    - run: kubectl get notebooks -A
-      if: failure()
+      - name: Get jupyter-ui operator logs
+        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-ui
+        if: failure()
 
-    - run: kubectl get pods -A -oyaml
-      if: failure()
+      - name: Generate inspect tarball
+        run: >
+          sg microk8s <<EOF
+            microk8s inspect | \
+            grep -Po "Report tarball is at \K.+" | \
+            xargs -I {} cp {} inspection-report-${{ strategy.job-index }}.tar.gz
+          EOF
+        if: failure()
 
-    - run: juju status
-      if: failure()
+      - name: Upload inspect tarball
+        uses: actions/upload-artifact@v2
+        with:
+          name: inspection-reports
+          path: ./inspection-report-${{ strategy.job-index }}.tar.gz
+        if: failure()
 
-    - name: Get jupyter-controller workload logs
-      run: kubectl logs --tail 100 -nkubeflow -ljuju-app=jupyter-controller
-      if: failure()
+      - name: Upload selenium screenshots
+        uses: actions/upload-artifact@v2
+        with:
+          name: selenium-screenshots
+          path: /tmp/selenium-*.png
+        if: failure()
 
-    - name: Get jupyter-controller operator logs
-      run: kubectl logs --tail 100 -nkubeflow -ljuju-operator=jupyter-controller
-      if: failure()
-
-    - name: Get jupyter-ui workload logs
-      run: kubectl logs --tail 100 -nkubeflow -ljuju-app=jupyter-ui
-      if: failure()
-
-    - name: Get jupyter-ui operator logs
-      run: kubectl logs --tail 100 -nkubeflow -ljuju-operator=jupyter-ui
-      if: failure()
-
-    - name: Generate inspect tarball
-      run: >
-        sg microk8s <<EOF
-          microk8s inspect | \
-          grep -Po "Report tarball is at \K.+" | \
-          xargs -I {} cp {} inspection-report-${{ strategy.job-index }}.tar.gz
-        EOF
-      if: failure()
-
-    - name: Upload inspect tarball
-      uses: actions/upload-artifact@v2
-      with:
-        name: inspection-reports
-        path: ./inspection-report-${{ strategy.job-index }}.tar.gz
-      if: failure()
-
-    - name: Upload selenium screenshots
-      uses: actions/upload-artifact@v2
-      with:
-        name: selenium-screenshots
-        path: /tmp/selenium-*.png
-      if: failure()
-
-    - name: Upload HAR logs
-      uses: actions/upload-artifact@v2
-      with:
-        name: selenium-har
-        path: /tmp/selenium-*.har
-      if: failure()
+      - name: Upload HAR logs
+        uses: actions/upload-artifact@v2
+        with:
+          name: selenium-har
+          path: /tmp/selenium-*.har
+        if: failure()
