@@ -10,7 +10,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: public.ecr.aws/j1r0q0g6/notebooks/notebook-controller:v1.3.0
+    upstream-source: public.ecr.aws/j1r0q0g6/notebooks/notebook-controller:v1.4-rc.1
 deployment:
   type: stateless
   service: omit
