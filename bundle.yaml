@@ -1,4 +1,36 @@
 bundle: kubernetes
 applications:
-  jupyter-controller: { charm: cs:jupyter-controller, scale: 1 }
-  jupyter-ui:         { charm: cs:jupyter-ui,         scale: 1 }
+  jupyter-controller:
+    charm: cs:jupyter-controller
+    scale: 1
+  jupyter-ui:
+    charm: cs:jupyter-ui
+    scale: 1
+  kubeflow-profiles:
+    charm: cs:kubeflow-profiles-52
+    scale: 1
+  kubeflow-dashboard:
+    charm: cs:kubeflow-dashboard-56
+    scale: 1
+  istio-pilot:
+    charm: ch:istio-pilot
+    channel: latest/stable
+    scale: 1
+    trust: true
+    options:
+      default-gateways: kubeflow-gateway
+  istio-ingressgateway-operator:
+    charm: ch:istio-gateway
+    channel: latest/stable
+    scale: 1
+    trust: true
+    options:
+      kind: ingress
+  admission-webhook:
+    charm: ch:admission-webhook
+    channel: latest/stable
+    scale: 1
+relations:
+  - [istio-pilot:istio-pilot, istio-ingressgateway-operator:istio-pilot]
+  - [istio-pilot, jupyter-ui]
+  - [kubeflow-profiles, kubeflow-dashboard]
