@@ -53,6 +53,7 @@ async def test_build_and_deploy(ops_test):
 def driver(request, ops_test):
     env = os.environ.copy()
     env['JUJU_MODEL'] = ops_test.model_name
+
     gateway_json = check_output(
         [
             'kubectl',
@@ -117,21 +118,6 @@ def test_notebook(driver, ops_test):
     sleep(1)
     driver.find_element_by_xpath("//*[contains(text(), 'LAUNCH')]").click()
     wait.until(EC.url_to_be(url))
-
-    # Workaround for https://github.com/kubeflow/kubeflow/issues/6056
-    # Don't hate me
-    check_call(
-        [
-            'kubectl',
-            'wait',
-            '-nkubeflow-user',
-            '--for=condition=ready',
-            '--timeout=300s',
-            'pod',
-            f'-lstatefulset.kubernetes.io/pod-name={notebook_name}-0',
-        ]
-    )
-    check_call(['kubectl', 'delete', '-nkubeflow-user', 'pods', f'-lnotebook-name={notebook_name}'])
 
     # Since upstream doesn't use proper class names or IDs or anything, find the <tr> containing
     # elements that contain the notebook name and `ready`, signifying that the notebook is finished
