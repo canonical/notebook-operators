@@ -1,13 +1,19 @@
+import logging
 import os
 from pathlib import Path
 from random import choices
 from string import ascii_lowercase
-from subprocess import check_call, check_output
 from time import sleep
 from urllib.parse import urlparse
 
 import pytest
 import yaml
+
+from lightkube import Client
+from lightkube.resources.rbac_authorization_v1 import Role
+from lightkube.models.rbac_v1 import PolicyRule
+from lightkube.resources.core_v1 import Namespace, ServiceAccount, Service
+from lightkube.models.meta_v1 import ObjectMeta
 from selenium.common.exceptions import JavascriptException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
@@ -19,57 +25,99 @@ CONTROLLER_METADATA = yaml.safe_load(Path("charms/jupyter-controller/metadata.ya
 UI_METADATA = yaml.safe_load(Path("charms/jupyter-ui/metadata.yaml").read_text())
 
 
+INGRESSGATEWAY_NAME = "istio-ingressgateway-operator"
+
+
+@pytest.fixture(scope="module")
+def lightkube_client(ops_test):
+    # TODO: Not sure why, but `.get(... namespace=somenamespace)` for the istio role patching
+    #  would not respect the namespace arg, and instead used the Client's default namespace.  Bug?
+    #  remove this when patching is no longer necessary
+    this_namespace = ops_test.model_name
+
+    c = Client(namespace=this_namespace)
+    yield c
+
+
+@pytest.fixture(scope="module")
+def dummy_resources_for_testing(lightkube_client):
+    # Add namespace and service account for testing
+    # This namespace is required to test the notebook in standalone mode, but not if accessed
+    # through the dashboard
+    # The namespace and serviceaccount could be replaced by adding a single Profile named
+    # kubeflow-user
+    namespace_name = "kubeflow-user"
+    namespace_metadata = ObjectMeta(name=namespace_name)
+    namespace = Namespace(metadata=namespace_metadata)
+    lightkube_client.create(namespace, namespace_name)
+
+    serviceaccount_name = "default-editor"
+    serviceaccount_metadata = ObjectMeta(name=serviceaccount_name, namespace=namespace_name)
+    serviceaccount = ServiceAccount(metadata=serviceaccount_metadata)
+    lightkube_client.create(serviceaccount, serviceaccount_name, namespace=namespace_name)
+
+    yield
+
+    # Clean up dummy resources
+    lightkube_client.delete(Namespace, namespace_name)
+    lightkube_client.delete(ServiceAccount, serviceaccount_name, namespace=namespace_name)
+
+
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test):
+async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_testing):
     await ops_test.deploy_bundle(destructive_mode=True, serial=True, extra_args=["--trust"])
 
-    await ops_test.model.block_until(
-        lambda: all(
-            unit.workload_status == "active" and unit.agent_status == "idle"
-            for _, application in ops_test.model.applications.items()
-            for unit in application.units
-        ),
-        timeout=600,
+    await patch_ingress_gateway(lightkube_client, ops_test)
+
+    # Wait for everything to deploy
+    await ops_test.model.wait_for_idle(
+        status="active",
+        raise_on_blocked=True,
+        timeout=360,
     )
 
-    await ops_test.run(
-        "kubectl",
-        "create",
-        "namespace",
-        "kubeflow-user",
-    )
 
-    await ops_test.run(
-        "kubectl",
-        "create",
-        "-n",
-        "kubeflow-user",
-        "serviceaccount",
-        "default-editor",
+async def patch_ingress_gateway(lightkube_client, ops_test):
+    """Patch the ingress gateway's roles, allowing configmap access, to fix a bug.
+
+    This can be removed once updating to the istio > 1.5 charm
+    """
+    # Wait for gateway to come up (and thus create the role we want to patch)
+    await ops_test.model.wait_for_idle(
+        apps=[INGRESSGATEWAY_NAME],
+        status="waiting",
+        timeout=300,
     )
+    # Patch the role
+    this_namespace = ops_test.model_name
+    ingressgateway_role_name = f"{INGRESSGATEWAY_NAME}-operator"
+    logging.error(f"Looking for role {ingressgateway_role_name} in namespace {this_namespace}")
+    new_policy_rule = PolicyRule(verbs=["get", "list"], apiGroups=[""], resources=["configmaps"])
+    this_role = lightkube_client.get(Role, ingressgateway_role_name, namespace=this_namespace)
+    this_role.rules.append(new_policy_rule)
+    lightkube_client.patch(Role, ingressgateway_role_name, this_role)
+
+    # Give a few moments of quick updates to get the gateway to notice the fixed role, but don't
+    # leave it this way or the model will never look idle to `wait_for_idle()`
+    await ops_test.model.set_config({"update-status-hook-interval": "10s"})
+    sleep(60)
+    await ops_test.model.set_config({"update-status-hook-interval": "60s"})
 
 
 @pytest.fixture()
-def driver(request, ops_test):
-    env = os.environ.copy()
-    env['JUJU_MODEL'] = ops_test.model_name
+def driver(request, ops_test, lightkube_client):
+    this_namespace = ops_test.model_name
 
-    gateway_json = check_output(
-        [
-            'kubectl',
-            'get',
-            'services/istio-ingressgateway',
-            '-n',
-            ops_test.model_name,
-            '-oyaml',
-        ]
+    ingress_service = lightkube_client.get(
+        res=Service, name=INGRESSGATEWAY_NAME, namespace=this_namespace
     )
-    gateway_obj = yaml.safe_load(gateway_json)
-    gateway_ip = gateway_obj['status']['loadBalancer']['ingress'][0]['ip']
+    gateway_ip = ingress_service.status.loadBalancer.ingress[0].ip
+
     url = f'http://{gateway_ip}.nip.io/jupyter/'
     options = Options()
     options.headless = True
     options.log.level = 'trace'
+    max_wait = 150  # seconds
 
     kwargs = {
         'options': options,
@@ -77,7 +125,7 @@ def driver(request, ops_test):
     }
 
     with webdriver.Firefox(**kwargs) as driver:
-        wait = WebDriverWait(driver, 180, 1, (JavascriptException, StopIteration))
+        wait = WebDriverWait(driver, max_wait, 1, (JavascriptException, StopIteration))
         for _ in range(60):
             try:
                 driver.get(url)
@@ -94,7 +142,7 @@ def driver(request, ops_test):
         driver.get_screenshot_as_file(f'/tmp/selenium-{request.node.name}.png')
 
 
-def test_notebook(driver, ops_test):
+def test_notebook(driver, ops_test, dummy_resources_for_testing):
     """Ensures a notebook can be created and connected to."""
 
     driver, wait, url = driver
