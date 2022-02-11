@@ -1,6 +1,7 @@
 name: jupyter-controller
 summary: Multi-user server for Jupyter notebooks
 description: Multi-user server for Jupyter notebooks
+min-juju-version: "2.9.0"
 series: [kubernetes]
 resources:
   oci-image:
