@@ -27,3 +27,20 @@ with:
 For more information, see https://juju.is/docs
 
 [integrate]: .github/workflows/integrate.yaml
+
+
+## Running the Tests
+
+To run tests for this repo:
+
+1. Install non-python test prerequisites
+```bash
+sudo apt install -y firefox-geckodriver
+sudo snap install juju-bundle --classic
+sudo snap install juju-wait --classic
+
+```
+2. Execute tests in the `kubeflow` model:
+```bash
+tox -e integration -- --model kubeflow
+```

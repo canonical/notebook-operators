@@ -17,18 +17,15 @@ applications:
     scale: 1
   istio-pilot:
     charm: ch:istio-pilot
-    channel: latest/edge
+    channel: 1.5/edge
     scale: 1
-    trust: true
     options:
-      default-gateways: kubeflow-gateway
+      default-gateway: kubeflow-gateway
   istio-ingressgateway-operator:
     charm: ch:istio-gateway
-    channel: latest/edge
+    channel: 1.5/edge
     scale: 1
     trust: true
-    options:
-      kind: ingress
   admission-webhook:
     charm: ch:admission-webhook
     channel: latest/edge
