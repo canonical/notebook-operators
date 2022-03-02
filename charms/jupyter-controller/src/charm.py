@@ -1,49 +1,83 @@
 #!/usr/bin/env python3
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+"""Charm for the jupyter notebook server.
 
+https://github.com/canonical/notebook-operators
+"""
 import logging
 from pathlib import Path
 
 import yaml
+from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
+from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 
-from oci_image import OCIImageResource, OCIImageResourceError
 
-
-class CheckFailed(Exception):
-    """ Raise this exception if one of the checks in main fails. """
+class CheckFailedError(Exception):
+    """Raise this exception if one of the checks in main fails."""
 
     def __init__(self, msg, status_type=None):
         super().__init__()
 
-        self.msg = msg
+        self.msg = str(msg)
         self.status_type = status_type
         self.status = status_type(msg)
 
 
 class Operator(CharmBase):
+    """Charm for the jupyter notebook server.
+
+    https://github.com/canonical/notebook-operators
+    """
+
     def __init__(self, *args):
         super().__init__(*args)
 
         self.log = logging.getLogger(__name__)
 
         self.image = OCIImageResource(self, "oci-image")
+
+        self.prometheus_provider = MetricsEndpointProvider(
+            charm=self,
+            relation_name="monitoring",
+            jobs=[
+                {
+                    "job_name": "jupyter_controller_metrics",
+                    "scrape_interval": self.config["metrics-scrape-interval"],
+                    "metrics_path": self.config["metrics-api"],
+                    "static_configs": [{"targets": ["*:{}".format(self.config["metrics-port"])]}],
+                }
+            ],
+        )
+
+        self.dashboard_provider = GrafanaDashboardProvider(self)
+
         for event in [
             self.on.install,
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
+            self.on["monitoring"].relation_changed,
+            self.on["monitoring"].relation_broken,
+            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 
     def main(self, event):
+        """Main function of the charm.
+
+        Runs at install, update, config change and relation change.
+        """
         try:
             self._check_leader()
 
             image_details = self._check_image_details()
 
-        except CheckFailed as check_failed:
+        except CheckFailedError as check_failed:
             self.model.unit.status = check_failed.status
             return
 
@@ -60,34 +94,34 @@ class Operator(CharmBase):
                             "global": True,
                             "rules": [
                                 {
-                                    'apiGroups': ['apps'],
-                                    'resources': ['statefulsets'],
-                                    'verbs': ['*'],
+                                    "apiGroups": ["apps"],
+                                    "resources": ["statefulsets"],
+                                    "verbs": ["*"],
                                 },
                                 {
-                                    'apiGroups': [''],
-                                    'resources': ['events'],
-                                    'verbs': ['create', 'get', 'list', 'watch'],
+                                    "apiGroups": [""],
+                                    "resources": ["events"],
+                                    "verbs": ["create", "get", "list", "watch"],
                                 },
                                 {
-                                    'apiGroups': [''],
-                                    'resources': ['pods'],
-                                    'verbs': ['get', 'list', 'watch'],
+                                    "apiGroups": [""],
+                                    "resources": ["pods"],
+                                    "verbs": ["get", "list", "watch"],
                                 },
-                                {'apiGroups': [''], 'resources': ['services'], 'verbs': ['*']},
+                                {"apiGroups": [""], "resources": ["services"], "verbs": ["*"]},
                                 {
-                                    'apiGroups': ['kubeflow.org'],
-                                    'resources': [
-                                        'notebooks',
-                                        'notebooks/finalizers',
-                                        'notebooks/status',
+                                    "apiGroups": ["kubeflow.org"],
+                                    "resources": [
+                                        "notebooks",
+                                        "notebooks/finalizers",
+                                        "notebooks/status",
                                     ],
-                                    'verbs': ['*'],
+                                    "verbs": ["*"],
                                 },
                                 {
-                                    'apiGroups': ['networking.istio.io'],
-                                    'resources': ['virtualservices'],
-                                    'verbs': ['*'],
+                                    "apiGroups": ["networking.istio.io"],
+                                    "resources": ["virtualservices"],
+                                    "verbs": ["*"],
                                 },
                             ],
                         }
@@ -95,13 +129,13 @@ class Operator(CharmBase):
                 },
                 "containers": [
                     {
-                        'name': 'jupyter-controller',
+                        "name": "jupyter-controller",
                         "imageDetails": image_details,
-                        'command': ['./manager'],
-                        'envConfig': {
-                            'USE_ISTIO': 'true',
-                            'ISTIO_GATEWAY': f'{model}/kubeflow-gateway',
-                            'ENABLE_CULLING': config['enable-culling'],
+                        "command": ["./manager"],
+                        "envConfig": {
+                            "USE_ISTIO": "true",
+                            "ISTIO_GATEWAY": f"{model}/kubeflow-gateway",
+                            "ENABLE_CULLING": config["enable-culling"],
                         },
                     }
                 ],
@@ -120,13 +154,13 @@ class Operator(CharmBase):
     def _check_leader(self):
         if not self.unit.is_leader():
             # We can't do anything useful when not the leader, so do nothing.
-            raise CheckFailed("Waiting for leadership", WaitingStatus)
+            raise CheckFailedError("Waiting for leadership", WaitingStatus)
 
     def _check_image_details(self):
         try:
             image_details = self.image.fetch()
         except OCIImageResourceError as e:
-            raise CheckFailed(f"{e.status.message}", e.status_type)
+            raise CheckFailedError(f"{e.status.message}", e.status_type)
         return image_details
 
 

@@ -1,7 +1,10 @@
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
 import pytest
-from charm import Operator
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
+
+from charm import Operator
 
 
 @pytest.fixture
@@ -36,6 +39,6 @@ def test_no_relation(harness):
     assert harness.charm.model.unit.status == ActiveStatus("")
     assert spec is not None
 
-    crds = [crd['name'] for crd in k8s['kubernetesResources']['customResourceDefinitions']]
+    crds = [crd["name"] for crd in k8s["kubernetesResources"]["customResourceDefinitions"]]
 
-    assert crds == ['notebooks.kubeflow.org']
+    assert crds == ["notebooks.kubeflow.org"]

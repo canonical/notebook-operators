@@ -7,3 +7,15 @@ options:
     type: boolean
     default: false
     description: Manually enable Istio integration, instead of via relations
+  metrics-port:
+    type: string
+    default: '8080'
+    description: Metrics port
+  metrics-api:
+    type: string
+    default: '/metrics'
+    description: metrics api route
+  metrics-scrape-interval:
+    type: string
+    default: '30s'
+    description: how often metrics are scraped

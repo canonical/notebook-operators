@@ -14,10 +14,29 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-    - uses: actions/checkout@v2
-    - run: sudo apt update
-    - run: sudo apt install tox
-    - run: tox -e ${{ matrix.charm }}-unit
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install tox
+      - run: tox -e ${{ matrix.charm }}-unit
+
+  charm-integration:
+    name: Individual charm's integration tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm: [controller]
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Setup operator environment
+        uses: charmed-kubernetes/actions-operator@main
+        with:
+          provider: microk8s
+          channel: 1.21/stable
+          bootstrap-options: --agent-version="2.9.22"
+      - run: sg microk8s -c "microk8s config > ~/.kube/config"
+      - run: sudo snap refresh charmcraft --channel latest/candidate
+      - run: tox -e ${{ matrix.charm }}-integration
 
   lint:
     name: Lint Code
@@ -26,13 +45,13 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-    - uses: actions/checkout@v2
-    - run: sudo apt update
-    - run: sudo apt install tox
-    - run: tox -e ${{ matrix.charm }}-lint
+      - uses: actions/checkout@v2
+      - run: sudo apt update
+      - run: sudo apt install tox
+      - run: tox -e ${{ matrix.charm }}-lint
 
-  integration:
-    name: Integration
+  bundle-integration:
+    name: Bundle Integration
     runs-on: ubuntu-latest
     steps:
       - name: Check out code
@@ -40,8 +59,9 @@ jobs:
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
         with:
-            provider: microk8s
-            channel: 1.21/stable
+          provider: microk8s
+          channel: 1.21/stable
+          bootstrap-options: --agent-version="2.9.22"
 
       # TODO: Remove once the actions-operator does this automatically
       - name: Configure kubectl
