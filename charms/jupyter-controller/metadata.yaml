@@ -10,3 +10,8 @@ resources:
 deployment:
   type: stateless
   service: omit
+provides:
+  monitoring:
+    interface: prometheus_scrape
+  grafana-dashboard:
+    interface: grafana_dashboard

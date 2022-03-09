@@ -1,5 +1,6 @@
 bundle: kubernetes
 name: jupyter
+description: charms for jupyter notebook
 applications:
   jupyter-controller:
     charm: ch:jupyter-controller

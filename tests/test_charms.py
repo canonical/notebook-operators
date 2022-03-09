@@ -8,6 +8,8 @@ from urllib.parse import urlparse
 
 import pytest
 import yaml
+import json
+import requests
 
 from lightkube import Client
 from lightkube.resources.rbac_authorization_v1 import Role
@@ -215,3 +217,33 @@ def test_notebook(driver, ops_test, dummy_resources_for_testing):
     wait.until_not(
         EC.presence_of_element_located((By.XPATH, f"//*[contains(text(), '{notebook_name}')]"))
     )
+
+
+async def test_integrate_with_prometheus_and_grafana(ops_test):
+    prometheus = "prometheus-k8s"
+    grafana = "grafana-k8s"
+    jupyter_controller = "jupyter-controller"
+    await ops_test.model.deploy(prometheus, channel="latest/beta")
+    await ops_test.model.deploy(grafana, channel="latest/beta")
+    await ops_test.model.add_relation(prometheus, grafana)
+    await ops_test.model.add_relation(jupyter_controller, grafana)
+    await ops_test.model.add_relation(prometheus, jupyter_controller)
+
+    await ops_test.model.wait_for_idle([jupyter_controller, prometheus, grafana], status="active")
+    status = await ops_test.model.get_status()
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+
+    r = requests.get(
+        f'http://{prometheus_unit_ip}:9090/api/v1/query?query=up{{juju_application="jupyter-controller"}}'
+    )
+    response = json.loads(r.content.decode("utf-8"))
+    assert response["status"] == "success"
+    assert len(response["data"]["result"]) == len(
+        ops_test.model.applications[jupyter_controller].units
+    )
+
+    response_metric = response["data"]["result"][0]["metric"]
+    assert response_metric["juju_application"] == jupyter_controller
+    assert response_metric["juju_charm"] == jupyter_controller
+    assert response_metric["juju_model"] == ops_test.model_name
+    assert response_metric["juju_unit"] == f"{jupyter_controller}/0"
