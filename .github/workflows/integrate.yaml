@@ -33,7 +33,6 @@ jobs:
         with:
           provider: microk8s
           channel: 1.21/stable
-          bootstrap-options: --agent-version="2.9.22"
       - run: sg microk8s -c "microk8s config > ~/.kube/config"
       - run: sudo snap refresh charmcraft --channel latest/candidate
       - run: tox -e ${{ matrix.charm }}-integration
@@ -61,7 +60,6 @@ jobs:
         with:
           provider: microk8s
           channel: 1.21/stable
-          bootstrap-options: --agent-version="2.9.22"
 
       # TODO: Remove once the actions-operator does this automatically
       - name: Configure kubectl
