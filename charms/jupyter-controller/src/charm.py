@@ -16,6 +16,9 @@ from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 
+METRICS_PORT = "8080"
+METRICS_PATH = "/metrics"
+
 
 class CheckFailedError(Exception):
     """Raise this exception if one of the checks in main fails."""
@@ -43,13 +46,11 @@ class Operator(CharmBase):
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
-            relation_name="monitoring",
             jobs=[
                 {
                     "job_name": "jupyter_controller_metrics",
-                    "scrape_interval": self.config["metrics-scrape-interval"],
-                    "metrics_path": self.config["metrics-api"],
-                    "static_configs": [{"targets": ["*:{}".format(self.config["metrics-port"])]}],
+                    "metrics_path": METRICS_PATH,
+                    "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
                 }
             ],
         )
@@ -61,9 +62,6 @@ class Operator(CharmBase):
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on["monitoring"].relation_changed,
-            self.on["monitoring"].relation_broken,
-            self.on["monitoring"].relation_departed,
         ]:
             self.framework.observe(event, self.main)
 

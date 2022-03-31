@@ -222,12 +222,16 @@ def test_notebook(driver, ops_test, dummy_resources_for_testing):
 async def test_integrate_with_prometheus_and_grafana(ops_test):
     prometheus = "prometheus-k8s"
     grafana = "grafana-k8s"
+    prometheus_scrape = "prometheus-scrape-config-k8s"
     jupyter_controller = "jupyter-controller"
+    scrape_config = {"scrape_interval": "30s"}
     await ops_test.model.deploy(prometheus, channel="latest/beta")
     await ops_test.model.deploy(grafana, channel="latest/beta")
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
+    await ops_test.model.add_relation(jupyter_controller, prometheus_scrape)
+    await ops_test.model.add_relation(prometheus, prometheus_scrape)
     await ops_test.model.add_relation(prometheus, grafana)
     await ops_test.model.add_relation(jupyter_controller, grafana)
-    await ops_test.model.add_relation(prometheus, jupyter_controller)
 
     await ops_test.model.wait_for_idle([jupyter_controller, prometheus, grafana], status="active")
     status = await ops_test.model.get_status()

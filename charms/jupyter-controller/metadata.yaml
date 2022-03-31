@@ -12,7 +12,7 @@ deployment:
   type: stateless
   service: omit
 provides:
-  monitoring:
+  metrics-endpoint:
     interface: prometheus_scrape
   grafana-dashboard:
     interface: grafana_dashboard
