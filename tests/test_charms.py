@@ -23,8 +23,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from seleniumwire import webdriver
 
-CONTROLLER_METADATA = yaml.safe_load(Path("charms/jupyter-controller/metadata.yaml").read_text())
-UI_METADATA = yaml.safe_load(Path("charms/jupyter-ui/metadata.yaml").read_text())
+CONTROLLER_PATH = Path("charms/jupyter-controller")
+UI_PATH = Path("charms/jupyter-ui")
+CONTROLLER_METADATA = yaml.safe_load(Path(f"{CONTROLLER_PATH}/metadata.yaml").read_text())
+UI_METADATA = yaml.safe_load(Path(f"{UI_PATH}/metadata.yaml").read_text())
+CONTROLLER_APP_NAME = CONTROLLER_METADATA["name"]
+UI_APP_NAME = UI_METADATA["name"]
 
 
 INGRESSGATEWAY_NAME = "istio-ingressgateway-operator"
@@ -67,7 +71,30 @@ def dummy_resources_for_testing(lightkube_client):
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_testing):
-    await ops_test.deploy_bundle(destructive_mode=True, serial=True, extra_args=["--trust"])
+    controller_charm = await ops_test.build_charm(CONTROLLER_PATH)
+    controller_image_path = CONTROLLER_METADATA["resources"]["oci-image"]["upstream-source"]
+    ui_charm = await ops_test.build_charm(UI_PATH)
+    ui_image_path = UI_METADATA["resources"]["oci-image"]["upstream-source"]
+
+    await ops_test.model.deploy("istio-pilot", channel="1.5/stable")
+    await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
+    await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
+
+    await ops_test.model.wait_for_idle(
+        apps=["istio-pilot", UI_APP_NAME], status="active", timeout=60 * 10
+    )
+
+    await ops_test.model.deploy(
+        "istio-gateway", application_name=INGRESSGATEWAY_NAME, channel="1.5/stable", trust=True
+    )
+    await ops_test.model.add_relation("istio-pilot", INGRESSGATEWAY_NAME)
+
+    await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
+    await ops_test.model.deploy("kubeflow-profiles")
+    await ops_test.model.deploy("kubeflow-dashboard")
+    await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
+
+    await ops_test.model.deploy("admission-webhook")
 
     await patch_ingress_gateway(lightkube_client, ops_test)
 
@@ -119,7 +146,7 @@ def driver(request, ops_test, lightkube_client):
     options = Options()
     options.headless = True
     options.log.level = 'trace'
-    max_wait = 150  # seconds
+    max_wait = 200  # seconds
 
     kwargs = {
         'options': options,
