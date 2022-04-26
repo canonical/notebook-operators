@@ -3,3 +3,4 @@ build/
 __pycache__
 .tox
 .coverage
+geckodriver.log
