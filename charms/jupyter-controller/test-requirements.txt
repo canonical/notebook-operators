@@ -1,3 +1,0 @@
-pytest<6.3
-black==20.8b1
-flake8<4.1

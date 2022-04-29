@@ -1,4 +1,4 @@
-black==20.8b1
+black
 flake8<4.1
 juju<2.10
 lightkube<0.11
