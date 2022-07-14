@@ -12,8 +12,6 @@ import json
 import requests
 
 from lightkube import Client
-from lightkube.resources.rbac_authorization_v1 import Role
-from lightkube.models.rbac_v1 import PolicyRule
 from lightkube.resources.core_v1 import Namespace, ServiceAccount, Service
 from lightkube.models.meta_v1 import ObjectMeta
 from selenium.common.exceptions import JavascriptException, WebDriverException
@@ -31,17 +29,12 @@ CONTROLLER_APP_NAME = CONTROLLER_METADATA["name"]
 UI_APP_NAME = UI_METADATA["name"]
 
 
-INGRESSGATEWAY_NAME = "istio-ingressgateway-operator"
+INGRESSGATEWAY_NAME = "istio-ingressgateway"
 
 
 @pytest.fixture(scope="module")
 def lightkube_client(ops_test):
-    # TODO: Not sure why, but `.get(... namespace=somenamespace)` for the istio role patching
-    #  would not respect the namespace arg, and instead used the Client's default namespace.  Bug?
-    #  remove this when patching is no longer necessary
-    this_namespace = ops_test.model_name
-
-    c = Client(namespace=this_namespace)
+    c = Client()
     yield c
 
 
@@ -71,32 +64,50 @@ def dummy_resources_for_testing(lightkube_client):
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_testing):
+    # FIXME: once tracks for all kubeflow components are released, we should point to
+    # those instead of latest/edge
+    # Build jupyter-controller and jupyter-ui
     controller_charm = await ops_test.build_charm(CONTROLLER_PATH)
-    controller_image_path = CONTROLLER_METADATA["resources"]["oci-image"]["upstream-source"]
     ui_charm = await ops_test.build_charm(UI_PATH)
+
+    # Gather metadata
+    controller_image_path = CONTROLLER_METADATA["resources"]["oci-image"]["upstream-source"]
     ui_image_path = UI_METADATA["resources"]["oci-image"]["upstream-source"]
 
-    await ops_test.model.deploy("istio-pilot", channel="1.5/stable")
-    await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
-    await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
-
-    await ops_test.model.wait_for_idle(
-        apps=["istio-pilot", UI_APP_NAME], status="active", timeout=60 * 10
-    )
-
+    # Deploy istio-operators first
     await ops_test.model.deploy(
-        "istio-gateway", application_name=INGRESSGATEWAY_NAME, channel="1.5/stable", trust=True
+        "istio-pilot",
+        channel="latest/edge",
+        trust=True,
+    )
+    await ops_test.model.deploy(
+        "istio-gateway",
+        application_name=INGRESSGATEWAY_NAME,
+        channel="latest/edge",
+        trust=True,
+        config={"kind": "ingress"},
     )
     await ops_test.model.add_relation("istio-pilot", INGRESSGATEWAY_NAME)
+    await ops_test.model.wait_for_idle(
+        ["istio-pilot", INGRESSGATEWAY_NAME],
+        raise_on_blocked=False,
+        status="active",
+        timeout=90 * 10,
+    )
 
+    # Deploy jupyter-ui and relate to istio
+    await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
+    await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
+    await ops_test.model.wait_for_idle(
+        apps=[UI_APP_NAME], status="active", timeout=60 * 10
+    )
+
+    # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
-    await ops_test.model.deploy("kubeflow-profiles")
-    await ops_test.model.deploy("kubeflow-dashboard")
+    await ops_test.model.deploy("admission-webhook", channel="latest/edge")
+    await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge")
+    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge")
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
-
-    await ops_test.model.deploy("admission-webhook")
-
-    await patch_ingress_gateway(lightkube_client, ops_test)
 
     # Wait for everything to deploy
     await ops_test.model.wait_for_idle(
@@ -104,33 +115,6 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
         raise_on_blocked=True,
         timeout=360,
     )
-
-
-async def patch_ingress_gateway(lightkube_client, ops_test):
-    """Patch the ingress gateway's roles, allowing configmap access, to fix a bug.
-
-    This can be removed once updating to the istio > 1.5 charm
-    """
-    # Wait for gateway to come up (and thus create the role we want to patch)
-    await ops_test.model.wait_for_idle(
-        apps=[INGRESSGATEWAY_NAME],
-        status="waiting",
-        timeout=300,
-    )
-    # Patch the role
-    this_namespace = ops_test.model_name
-    ingressgateway_role_name = f"{INGRESSGATEWAY_NAME}-operator"
-    logging.error(f"Looking for role {ingressgateway_role_name} in namespace {this_namespace}")
-    new_policy_rule = PolicyRule(verbs=["get", "list"], apiGroups=[""], resources=["configmaps"])
-    this_role = lightkube_client.get(Role, ingressgateway_role_name, namespace=this_namespace)
-    this_role.rules.append(new_policy_rule)
-    lightkube_client.patch(Role, ingressgateway_role_name, this_role)
-
-    # Give a few moments of quick updates to get the gateway to notice the fixed role, but don't
-    # leave it this way or the model will never look idle to `wait_for_idle()`
-    await ops_test.model.set_config({"update-status-hook-interval": "10s"})
-    sleep(60)
-    await ops_test.model.set_config({"update-status-hook-interval": "60s"})
 
 
 @pytest.fixture()
