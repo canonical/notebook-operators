@@ -30,6 +30,7 @@ UI_APP_NAME = UI_METADATA["name"]
 
 
 INGRESSGATEWAY_NAME = "istio-ingressgateway"
+PROFILE_NAME = "kubeflow-user"
 
 
 @pytest.fixture(scope="module")
@@ -106,7 +107,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
     await ops_test.model.deploy("admission-webhook", channel="latest/edge")
     await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge")
-    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge")
+    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", config={"profile": PROFILE_NAME})
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
 
     # Wait for everything to deploy
