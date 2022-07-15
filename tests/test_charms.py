@@ -122,7 +122,7 @@ def driver(request, ops_test, lightkube_client):
     this_namespace = ops_test.model_name
 
     ingress_service = lightkube_client.get(
-        res=Service, name=INGRESSGATEWAY_NAME, namespace=this_namespace
+        res=Service, name=f"{INGRESSGATEWAY_NAME}-workload", namespace=this_namespace
     )
     gateway_ip = ingress_service.status.loadBalancer.ingress[0].ip
 
