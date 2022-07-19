@@ -232,7 +232,7 @@ def driver(request, ops_test, lightkube_client):
 #        EC.presence_of_element_located((By.XPATH, f"//*[contains(text(), '{notebook_name}')]"))
 #    )
 
-
+@pytest.mark.skip('Skipping due to this test being inconsistent, and it will be changed soon')
 def test_create_notebook(driver, ops_test, dummy_resources_for_testing):
     """Ensures a notebook can be created. Does not test connection due to upstream bug.
     https://github.com/kubeflow/kubeflow/issues/6056
