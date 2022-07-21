@@ -48,7 +48,7 @@ jobs:
         uses: charmed-kubernetes/actions-operator@main
         with:
           provider: microk8s
-          channel: 1.21/stable
+          channel: 1.22/stable
       - run: sg microk8s -c "microk8s config > ~/.kube/config"
       - run: sudo snap refresh charmcraft --channel latest/candidate
       - run: tox -e ${{ matrix.charm }}-integration
