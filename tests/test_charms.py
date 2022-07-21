@@ -277,7 +277,7 @@ async def test_integrate_with_prometheus_and_grafana(ops_test):
     jupyter_controller = "jupyter-controller"
     scrape_config = {"scrape_interval": "30s"}
     await ops_test.model.deploy(prometheus, channel="latest/beta", trust=True)
-    await ops_test.model.deploy(grafana, channel="latest/beta", trust=True)
+    await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
     await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
     await ops_test.model.add_relation(jupyter_controller, prometheus_scrape)
     await ops_test.model.add_relation(
