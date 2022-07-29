@@ -12,16 +12,22 @@ jobs:
   lib-check:
     name: Check libraries
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        charm:
+        - jupyter-controller
+        - jupyter-ui
     steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - name: Check libs
-        uses: canonical/charming-actions/check-libraries@1.0.3
-        with:
-          credentials: "${{ secrets.charmcraft-credentials }}"
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Check libs
+      uses: canonical/charming-actions/check-libraries@1.0.3
+      with:
+        charm-path: ./charms/${{ matrix.charm }}
+        credentials: "${{ secrets.charmcraft-credentials }}"
+        github-token: "${{ secrets.GITHUB_TOKEN }}"
 
   unit:
     name: Unit Test
@@ -30,10 +36,10 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-      - uses: actions/checkout@v2
-      - run: sudo apt update
-      - run: sudo apt install tox
-      - run: tox -e ${{ matrix.charm }}-unit
+    - uses: actions/checkout@v2
+    - run: sudo apt update
+    - run: sudo apt install tox
+    - run: tox -e ${{ matrix.charm }}-unit
 
   charm-integration:
     name: Individual charm's integration tests
@@ -42,16 +48,16 @@ jobs:
       matrix:
         charm: [controller]
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.22/stable
-      - run: sg microk8s -c "microk8s config > ~/.kube/config"
-      - run: sudo snap refresh charmcraft --channel latest/candidate
-      - run: tox -e ${{ matrix.charm }}-integration
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Setup operator environment
+      uses: charmed-kubernetes/actions-operator@main
+      with:
+        provider: microk8s
+        channel: 1.22/stable
+    - run: sg microk8s -c "microk8s config > ~/.kube/config"
+    - run: sudo snap refresh charmcraft --channel latest/candidate
+    - run: tox -e ${{ matrix.charm }}-integration
 
   lint:
     name: Lint Code
@@ -60,92 +66,92 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-      - uses: actions/checkout@v2
-      - run: sudo apt update
-      - run: sudo apt install tox
-      - run: tox -e ${{ matrix.charm }}-lint
+    - uses: actions/checkout@v2
+    - run: sudo apt update
+    - run: sudo apt install tox
+    - run: tox -e ${{ matrix.charm }}-lint
 
   bundle-integration:
     name: Bundle Integration
     runs-on: ubuntu-latest
     steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.21/stable
+    - name: Check out code
+      uses: actions/checkout@v2
+    - name: Setup operator environment
+      uses: charmed-kubernetes/actions-operator@main
+      with:
+        provider: microk8s
+        channel: 1.21/stable
 
       # TODO: Remove once the actions-operator does this automatically
-      - name: Configure kubectl
-        run: |
-          sg microk8s -c "microk8s config > ~/.kube/config"
+    - name: Configure kubectl
+      run: |
+        sg microk8s -c "microk8s config > ~/.kube/config"
 
-      - name: Run test
-        run: |
-          sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
-          sudo apt install -y firefox-geckodriver
-          sudo snap install juju-bundle --classic
-          sudo snap install juju-wait --classic
-          sudo snap refresh charmcraft --channel=latest/candidate
-          juju add-model kubeflow
-          sg microk8s -c "tox -e integration -- --model kubeflow"
+    - name: Run test
+      run: |
+        sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
+        sudo apt install -y firefox-geckodriver
+        sudo snap install juju-bundle --classic
+        sudo snap install juju-wait --classic
+        sudo snap refresh charmcraft --channel=latest/candidate
+        juju add-model kubeflow
+        sg microk8s -c "tox -e integration -- --model kubeflow"
 
-      - run: kubectl get all -A
-        if: failure()
+    - run: kubectl get all -A
+      if: failure()
 
-      - run: kubectl get notebooks -A
-        if: failure()
+    - run: kubectl get notebooks -A
+      if: failure()
 
-      - run: kubectl get pods -A -oyaml
-        if: failure()
+    - run: kubectl get pods -A -oyaml
+      if: failure()
 
-      - run: juju status
-        if: failure()
+    - run: juju status
+      if: failure()
 
-      - name: Get jupyter-controller workload logs
-        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-controller
-        if: failure()
+    - name: Get jupyter-controller workload logs
+      run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-controller
+      if: failure()
 
-      - name: Get jupyter-controller operator logs
-        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-controller
-        if: failure()
+    - name: Get jupyter-controller operator logs
+      run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-controller
+      if: failure()
 
-      - name: Get jupyter-ui workload logs
-        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-ui
-        if: failure()
+    - name: Get jupyter-ui workload logs
+      run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-ui
+      if: failure()
 
-      - name: Get jupyter-ui operator logs
-        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-ui
-        if: failure()
+    - name: Get jupyter-ui operator logs
+      run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-ui
+      if: failure()
 
-      - name: Generate inspect tarball
-        run: >
-          sg microk8s <<EOF
-            microk8s inspect | \
-            grep -Po "Report tarball is at \K.+" | \
-            xargs -I {} cp {} inspection-report-${{ strategy.job-index }}.tar.gz
-          EOF
-        if: failure()
+    - name: Generate inspect tarball
+      run: >
+        sg microk8s <<EOF
+          microk8s inspect | \
+          grep -Po "Report tarball is at \K.+" | \
+          xargs -I {} cp {} inspection-report-${{ strategy.job-index }}.tar.gz
+        EOF
+      if: failure()
 
-      - name: Upload inspect tarball
-        uses: actions/upload-artifact@v2
-        with:
-          name: inspection-reports
-          path: ./inspection-report-${{ strategy.job-index }}.tar.gz
-        if: failure()
+    - name: Upload inspect tarball
+      uses: actions/upload-artifact@v2
+      with:
+        name: inspection-reports
+        path: ./inspection-report-${{ strategy.job-index }}.tar.gz
+      if: failure()
 
-      - name: Upload selenium screenshots
-        uses: actions/upload-artifact@v2
-        with:
-          name: selenium-screenshots
-          path: /tmp/selenium-*.png
-        if: failure()
+    - name: Upload selenium screenshots
+      uses: actions/upload-artifact@v2
+      with:
+        name: selenium-screenshots
+        path: /tmp/selenium-*.png
+      if: failure()
 
-      - name: Upload HAR logs
-        uses: actions/upload-artifact@v2
-        with:
-          name: selenium-har
-          path: /tmp/selenium-*.har
-        if: failure()
+    - name: Upload HAR logs
+      uses: actions/upload-artifact@v2
+      with:
+        name: selenium-har
+        path: /tmp/selenium-*.har
+      if: failure()
