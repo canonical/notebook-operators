@@ -1,6 +1,9 @@
 black
 flake8<4.1
-juju<2.10
+# need this fix but it is not yet released
+# https://github.com/juju/python-libjuju/pull/696
+# juju
+git+https://github.com/juju/python-libjuju.git@34981c59eac8db89320bf0067bebd2547da12d45
 lightkube<0.11
 pytest-operator<0.10
 pytest<6.3
