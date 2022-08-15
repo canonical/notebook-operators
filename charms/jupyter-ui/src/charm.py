@@ -42,9 +42,7 @@ class Operator(CharmBase):
             self.on['ingress'].relation_changed,
         ]:
             self.framework.observe(event, self.main)
-        self.framework.observe(
-            self.on.sidebar_relation_joined, self._on_sidebar_relation_joined
-        )
+        self.framework.observe(self.on.sidebar_relation_joined, self._on_sidebar_relation_joined)
 
     def main(self, event):
         try:
