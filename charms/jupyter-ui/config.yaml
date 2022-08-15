@@ -19,3 +19,15 @@ options:
     type: boolean
     default: false
     description: Whether cookies should require HTTPS
+  sidebar-text:
+    type: string
+    default: Notebooks
+    description: Label text in dashboard sidebar
+  sidebar-icon:
+    type: string
+    default: book
+    description: Icon name to be used in dashboard sidebar
+  sidebar-link:
+    type: string
+    default: /jupyter/
+    description: Url path associated with the sidebar element
