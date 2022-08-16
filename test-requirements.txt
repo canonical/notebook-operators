@@ -1,5 +1,6 @@
 black
 flake8<4.1
+juju==3.0.1
 lightkube<0.11
 pytest-operator<0.10
 pytest<6.3
