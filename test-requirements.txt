@@ -7,4 +7,5 @@ pytest<6.3
 pyyaml<6.1
 selenium-wire<4.6
 selenium==3.141.0
+tenacity<8.1
 requests
