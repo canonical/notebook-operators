@@ -43,6 +43,10 @@ class Operator(CharmBase):
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.sidebar_relation_joined, self._on_sidebar_relation_joined)
+        self.framework.observe(
+            self.on.sidebar_relation_departed,
+            self._on_sidebar_relation_departed,
+        )
 
     def main(self, event):
         try:
@@ -189,6 +193,7 @@ class Operator(CharmBase):
                     [
                         {
                             "app": self.app.name,
+                            "position": 2,
                             "type": "item",
                             "link": "/jupyter/",
                             "text": "Notebooks",
@@ -198,6 +203,11 @@ class Operator(CharmBase):
                 )
             }
         )
+
+    def _on_sidebar_relation_departed(self, event):
+        if not self.unit.is_leader():
+            return
+        event.relation.data[self.app].update({"config": json.dumps([])})
 
 
 if __name__ == "__main__":
