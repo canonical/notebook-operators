@@ -4,6 +4,7 @@ from string import ascii_lowercase
 from time import sleep
 
 import json
+import logging
 import pytest
 import tenacity
 import requests
@@ -98,9 +99,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     # Deploy jupyter-ui and relate to istio
     await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
     await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
-    await ops_test.model.wait_for_idle(
-        apps=[UI_APP_NAME], status="active", timeout=60 * 10
-    )
+    await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 10)
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
@@ -231,6 +230,7 @@ def driver(request, ops_test, lightkube_client):
 #        EC.presence_of_element_located((By.XPATH, f"//*[contains(text(), '{notebook_name}')]"))
 #    )
 
+
 @pytest.mark.skip('Skipping due to this test being inconsistent, and it will be changed soon')
 def test_create_notebook(driver, ops_test, dummy_resources_for_testing):
     """Ensures a notebook can be created. Does not test connection due to upstream bug.
@@ -300,8 +300,7 @@ async def test_prometheus_grafana_integration(ops_test):
 
     for attempt in retry_for_5_attempts:
         logger.info(
-            f"Testing prometheus deployment (attempt "
-            f"{attempt.retry_state.attempt_number})"
+            f"Testing prometheus deployment (attempt " f"{attempt.retry_state.attempt_number})"
         )
         with attempt:
             r = requests.get(
