@@ -3,10 +3,11 @@ from random import choices
 from string import ascii_lowercase
 from time import sleep
 
-import pytest
-import yaml
 import json
+import pytest
+import tenacity
 import requests
+import yaml
 
 from lightkube import Client
 from lightkube.resources.core_v1 import Namespace, ServiceAccount, Service
@@ -17,6 +18,8 @@ from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from seleniumwire import webdriver
+
+logger = logging.getLogger(__name__)
 
 CONTROLLER_PATH = Path("charms/jupyter-controller")
 UI_PATH = Path("charms/jupyter-ui")
@@ -266,40 +269,58 @@ def test_create_notebook(driver, ops_test, dummy_resources_for_testing):
     )
 
 
-async def test_integrate_with_prometheus_and_grafana(ops_test):
+async def test_prometheus_grafana_integration(ops_test):
+    """Deploy prometheus, grafana and required relations, then test the metrics."""
     prometheus = "prometheus-k8s"
     grafana = "grafana-k8s"
     prometheus_scrape = "prometheus-scrape-config-k8s"
-    jupyter_controller = "jupyter-controller"
     scrape_config = {"scrape_interval": "30s"}
-    await ops_test.model.deploy(prometheus, channel="latest/beta", trust=True)
+
+    # Deploy and relate prometheus
+    await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
     await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
     await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
-    await ops_test.model.add_relation(jupyter_controller, prometheus_scrape)
-    await ops_test.model.add_relation(
-        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
-    )
+
+    await ops_test.model.add_relation(CONTROLLER_APP_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
         f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
     )
     await ops_test.model.add_relation(
-        f"{jupyter_controller}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{CONTROLLER_APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
     )
-    await ops_test.model.wait_for_idle([jupyter_controller, prometheus, grafana], status="active")
+    await ops_test.model.add_relation(
+        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
+    )
+
+    await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
+
     status = await ops_test.model.get_status()
     prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+    logger.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
-    r = requests.get(
-        f'http://{prometheus_unit_ip}:9090/api/v1/query?query=up{{juju_application="jupyter-controller"}}'
-    )
-    response = json.loads(r.content.decode("utf-8"))
-    assert response["status"] == "success"
-    assert len(response["data"]["result"]) == len(
-        ops_test.model.applications[jupyter_controller].units
-    )
+    for attempt in retry_for_5_attempts:
+        logger.info(
+            f"Testing prometheus deployment (attempt "
+            f"{attempt.retry_state.attempt_number})"
+        )
+        with attempt:
+            r = requests.get(
+                f'http://{prometheus_unit_ip}:9090/api/v1/query?'
+                f'query=up{{juju_application="{CONTROLLER_APP_NAME}"}}'
+            )
+            response = json.loads(r.content.decode("utf-8"))
+            response_status = response["status"]
+            logger.info(f"Response status is {response_status}")
+            assert response_status == "success"
 
-    response_metric = response["data"]["result"][0]["metric"]
-    assert response_metric["juju_application"] == jupyter_controller
-    assert response_metric["juju_charm"] == jupyter_controller
-    assert response_metric["juju_model"] == ops_test.model_name
-    assert response_metric["juju_unit"] == f"{jupyter_controller}/0"
+            response_metric = response["data"]["result"][0]["metric"]
+            assert response_metric["juju_application"] == CONTROLLER_APP_NAME
+            assert response_metric["juju_model"] == ops_test.model_name
+
+
+# Helper to retry calling a function over 30 seconds or 5 attempts
+retry_for_5_attempts = tenacity.Retrying(
+    stop=(tenacity.stop_after_attempt(5) | tenacity.stop_after_delay(30)),
+    wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
+    reraise=True,
+)

@@ -1,10 +1,11 @@
 black
 flake8<4.1
-juju<2.10
+juju==3.0.1
 lightkube<0.11
 pytest-operator<0.10
 pytest<6.3
 pyyaml<6.1
 selenium-wire<4.6
 selenium==3.141.0
+tenacity<8.1
 requests
