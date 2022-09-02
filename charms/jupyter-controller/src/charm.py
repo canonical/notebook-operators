@@ -99,7 +99,7 @@ class Operator(CharmBase):
                                 {
                                     "apiGroups": [""],
                                     "resources": ["events"],
-                                    "verbs": ["create", "get", "list", "watch"],
+                                    "verbs": ["create", "get", "list", "patch", "watch"],
                                 },
                                 {
                                     "apiGroups": [""],
