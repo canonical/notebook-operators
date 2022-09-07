@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
-import json
 import logging
 from pathlib import Path
 
 import yaml
+from charms.kubeflow_dashboard.v0.kubeflow_dashboard_sidebar import (
+    KubeflowDashboardSidebar,
+)
 from oci_image import OCIImageResource, OCIImageResourceError
-from ops.charm import CharmBase, RelationJoinedEvent
+from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from serialized_data_interface import (
@@ -14,6 +16,16 @@ from serialized_data_interface import (
     NoVersionsListed,
     get_interfaces,
 )
+
+SIDEBAR_LINK = [
+    {
+        "position": 2,
+        "type": "item",
+        "link": "/jupyter/",
+        "text": "Notebooks",
+        "icon": "book",
+    }
+]
 
 
 class CheckFailed(Exception):
@@ -34,6 +46,7 @@ class Operator(CharmBase):
         self.log = logging.getLogger(__name__)
 
         self.image = OCIImageResource(self, "oci-image")
+        self.kubeflow_dashboard_sidebar = KubeflowDashboardSidebar(self, SIDEBAR_LINK)
         for event in [
             self.on.install,
             self.on.leader_elected,
@@ -42,11 +55,6 @@ class Operator(CharmBase):
             self.on['ingress'].relation_changed,
         ]:
             self.framework.observe(event, self.main)
-        self.framework.observe(self.on.sidebar_relation_joined, self._on_sidebar_relation_joined)
-        self.framework.observe(
-            self.on.sidebar_relation_departed,
-            self._on_sidebar_relation_departed,
-        )
 
     def main(self, event):
         try:
@@ -183,31 +191,6 @@ class Operator(CharmBase):
         except OCIImageResourceError as e:
             raise CheckFailed(f"{e.status_message}: oci-image", e.status_type)
         return image_details
-
-    def _on_sidebar_relation_joined(self, event: RelationJoinedEvent):
-        if not self.unit.is_leader():
-            return
-        event.relation.data[self.app].update(
-            {
-                "config": json.dumps(
-                    [
-                        {
-                            "app": self.app.name,
-                            "position": 2,
-                            "type": "item",
-                            "link": "/jupyter/",
-                            "text": "Notebooks",
-                            "icon": "book",
-                        }
-                    ]
-                )
-            }
-        )
-
-    def _on_sidebar_relation_departed(self, event):
-        if not self.unit.is_leader():
-            return
-        event.relation.data[self.app].update({"config": json.dumps([])})
 
 
 if __name__ == "__main__":
