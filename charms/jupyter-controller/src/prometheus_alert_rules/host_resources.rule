@@ -1,0 +1,24 @@
+groups:
+- name: HostResources
+  rules:
+  - alert: FileDescriptorsExhausted
+    expr: process_open_fds / process_max_fds >= 0.98
+    for: 0m
+    labels:
+      severity: critical
+    annotations:
+      summary: File Descriptors at 98% of maximum
+      description: >
+        The file descriptors have reached 98% of the maximum
+        LABELS = {{ $labels }}
+  - alert: FileDescriptorsSoonToBeExhausted
+    expr: predict_linear((process_open_fds / process_max_fds)[5m:30s], 60*60) >= 1
+    for: 0m
+    labels:
+      severity: high
+    annotations:
+      summary: File Descriptors expected to reach maximum in 1 hour
+      description: >
+        the file descriptors are predicted to be exhausted 1 hour later
+        LABELS = {{ $labels }}
+      
