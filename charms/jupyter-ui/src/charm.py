@@ -8,11 +8,7 @@ from oci_image import OCIImageResource, OCIImageResourceError
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
-from serialized_data_interface import (
-    NoCompatibleVersions,
-    NoVersionsListed,
-    get_interfaces,
-)
+from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
 
 class CheckFailed(Exception):
@@ -38,7 +34,7 @@ class Operator(CharmBase):
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on['ingress'].relation_changed,
+            self.on["ingress"].relation_changed,
         ]:
             self.framework.observe(event, self.main)
 
@@ -64,38 +60,45 @@ class Operator(CharmBase):
                             "global": True,
                             "rules": [
                                 {
-                                    'apiGroups': [''],
-                                    'resources': ['namespaces'],
-                                    'verbs': ['get', 'list', 'create', 'delete'],
+                                    "apiGroups": [""],
+                                    "resources": ["namespaces"],
+                                    "verbs": ["get", "list", "create", "delete"],
                                 },
                                 {
-                                    'apiGroups': ['authorization.k8s.io'],
-                                    'resources': ['subjectaccessreviews'],
-                                    'verbs': ['create'],
+                                    "apiGroups": ["authorization.k8s.io"],
+                                    "resources": ["subjectaccessreviews"],
+                                    "verbs": ["create"],
                                 },
                                 {
-                                    'apiGroups': ['kubeflow.org'],
-                                    'resources': [
-                                        'notebooks',
-                                        'notebooks/finalizers',
-                                        'poddefaults',
+                                    "apiGroups": ["kubeflow.org"],
+                                    "resources": [
+                                        "notebooks",
+                                        "notebooks/finalizers",
+                                        "poddefaults",
                                     ],
-                                    'verbs': ['get', 'list', 'create', 'delete', 'patch', 'update'],
+                                    "verbs": [
+                                        "get",
+                                        "list",
+                                        "create",
+                                        "delete",
+                                        "patch",
+                                        "update",
+                                    ],
                                 },
                                 {
-                                    'apiGroups': [''],
-                                    'resources': ['persistentvolumeclaims'],
-                                    'verbs': ['create', 'delete', 'get', 'list'],
+                                    "apiGroups": [""],
+                                    "resources": ["persistentvolumeclaims"],
+                                    "verbs": ["create", "delete", "get", "list"],
                                 },
                                 {
-                                    'apiGroups': [''],
-                                    'resources': ['events', 'nodes'],
-                                    'verbs': ['list'],
+                                    "apiGroups": [""],
+                                    "resources": ["events", "nodes"],
+                                    "verbs": ["list"],
                                 },
                                 {
-                                    'apiGroups': ['storage.k8s.io'],
-                                    'resources': ['storageclasses'],
-                                    'verbs': ['get', 'list', 'watch'],
+                                    "apiGroups": ["storage.k8s.io"],
+                                    "resources": ["storageclasses"],
+                                    "verbs": ["get", "list", "watch"],
                                 },
                             ],
                         }
@@ -105,15 +108,15 @@ class Operator(CharmBase):
                     {
                         "name": "jupyter-ui",
                         "imageDetails": image_details,
-                        'ports': [{'name': 'http', 'containerPort': config['port']}],
+                        "ports": [{"name": "http", "containerPort": config["port"]}],
                         "envConfig": {
-                            'APP_PREFIX': config['url-prefix'],
-                            'APP_SECURE_COOKIES': str(config['secure-cookies']),
-                            'BACKEND_MODE': config['backend-mode'],
-                            'CLUSTER_DOMAIN': 'cluster.local',
-                            'UI': config['ui'],
-                            'USERID_HEADER': 'kubeflow-userid',
-                            'USERID_PREFIX': '',
+                            "APP_PREFIX": config["url-prefix"],
+                            "APP_SECURE_COOKIES": str(config["secure-cookies"]),
+                            "BACKEND_MODE": config["backend-mode"],
+                            "CLUSTER_DOMAIN": "cluster.local",
+                            "UI": config["ui"],
+                            "USERID_HEADER": "kubeflow-userid",
+                            "USERID_PREFIX": "",
                         },
                         "volumeConfig": [
                             {
@@ -122,7 +125,7 @@ class Operator(CharmBase):
                                 "files": [
                                     {
                                         "path": "spawner_ui_config.yaml",
-                                        "content": Path('src/spawner_ui_config.yaml').read_text(),
+                                        "content": Path("src/spawner_ui_config.yaml").read_text(),
                                     }
                                 ],
                             },
@@ -135,8 +138,8 @@ class Operator(CharmBase):
                                         "content": content,
                                     }
                                     for name, content in yaml.safe_load(
-                                        Path('src/logos-configmap.yaml').read_text()
-                                    )['data'].items()
+                                        Path("src/logos-configmap.yaml").read_text()
+                                    )["data"].items()
                                 ],
                             },
                         ],
@@ -150,7 +153,7 @@ class Operator(CharmBase):
         if interfaces["ingress"]:
             interfaces["ingress"].send_data(
                 {
-                    "prefix": self.model.config['url-prefix'] + '/',
+                    "prefix": self.model.config["url-prefix"] + "/",
                     "rewrite": "/",
                     "service": self.model.app.name,
                     "port": self.model.config["port"],

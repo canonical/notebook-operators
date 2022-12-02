@@ -1,8 +1,9 @@
 import pytest
 import yaml
-from charm import Operator
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
+
+from charm import Operator
 
 
 @pytest.fixture
@@ -33,7 +34,7 @@ def test_no_relation(harness):
     )
     harness.begin_with_initial_hooks()
 
-    assert harness.charm.model.unit.status == ActiveStatus('')
+    assert harness.charm.model.unit.status == ActiveStatus("")
 
 
 def test_with_relation(harness):
