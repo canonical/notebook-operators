@@ -67,15 +67,16 @@ topology = JujuTopology(
 ```
 
 """
+
+import re
 from collections import OrderedDict
 from typing import Dict, List, Optional
-from uuid import UUID
 
 # The unique Charmhub library identifier, never change it
 LIBID = "bced1658f20f49d28b88f61f83c2d232"
 
 LIBAPI = 0
-LIBPATCH = 4
+LIBPATCH = 2
 
 
 class InvalidUUIDError(Exception):
@@ -94,8 +95,8 @@ class JujuTopology:
         model: str,
         model_uuid: str,
         application: str,
-        unit: Optional[str] = None,
-        charm_name: Optional[str] = None,
+        unit: str = None,
+        charm_name: str = None,
     ):
         """Build a JujuTopology object.
 
@@ -125,18 +126,29 @@ class JujuTopology:
         self._unit = unit
 
     def is_valid_uuid(self, uuid):
-        """Validate the supplied UUID against the Juju Model UUID pattern.
-
-        Args:
-            uuid: string that needs to be checked if it is valid v4 UUID.
-
-        Returns:
-            True if parameter is a valid v4 UUID, False otherwise.
-        """
-        try:
-            return str(UUID(uuid, version=4)) == uuid
-        except (ValueError, TypeError):
-            return False
+        """Validate the supplied UUID against the Juju Model UUID pattern."""
+        # TODO:
+        # Harness is harcoding an UUID that is v1 not v4: f2c1b2a6-e006-11eb-ba80-0242ac130004
+        # See: https://github.com/canonical/operator/issues/779
+        #
+        # >>> uuid.UUID("f2c1b2a6-e006-11eb-ba80-0242ac130004").version
+        # 1
+        #
+        # we changed the validation of the 3ed UUID block: 4[a-f0-9]{3} -> [a-f0-9]{4}
+        # See: https://github.com/canonical/operator/blob/main/ops/testing.py#L1094
+        #
+        # Juju in fact generates a UUID v4: https://github.com/juju/utils/blob/master/uuid.go#L62
+        # but does not validate it is actually v4:
+        # See:
+        # - https://github.com/juju/utils/blob/master/uuid.go#L22
+        # - https://github.com/juju/schema/blob/master/strings.go#L79
+        #
+        # Once Harness fixes this, we should remove this comment and refactor the regex or
+        # the entire method using the uuid module to validate UUIDs
+        regex = re.compile(
+            "^[a-f0-9]{8}-?[a-f0-9]{4}-?[a-f0-9]{4}-?[89ab][a-f0-9]{3}-?[a-f0-9]{12}$"
+        )
+        return bool(regex.match(uuid))
 
     @classmethod
     def from_charm(cls, charm):
@@ -181,10 +193,7 @@ class JujuTopology:
         )
 
     def as_dict(
-        self,
-        *,
-        remapped_keys: Optional[Dict[str, str]] = None,
-        excluded_keys: Optional[List[str]] = None,
+        self, *, remapped_keys: Dict[str, str] = None, excluded_keys: List[str] = None
     ) -> OrderedDict:
         """Format the topology information into an ordered dict.
 
