@@ -11,7 +11,7 @@ jobs:
 
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm:
@@ -31,7 +31,7 @@ jobs:
 
   unit:
     name: Unit Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -43,7 +43,7 @@ jobs:
 
   charm-integration:
     name: Individual charm's integration tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller]
@@ -61,7 +61,7 @@ jobs:
 
   lint:
     name: Lint Code
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -73,7 +73,7 @@ jobs:
 
   bundle-integration:
     name: Bundle Integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Check out code
       uses: actions/checkout@v2
