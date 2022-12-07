@@ -2,4 +2,4 @@ black
 flake8
 juju==3.0.*
 pytest
-pytest-operator<1.0
+pytest-operator
