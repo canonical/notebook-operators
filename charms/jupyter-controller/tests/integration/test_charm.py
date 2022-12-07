@@ -1,6 +1,6 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-
+"""Tests for Jupyter controller."""
 import logging
 from pathlib import Path
 
