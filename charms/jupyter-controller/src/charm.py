@@ -68,7 +68,7 @@ class Operator(CharmBase):
             self.framework.observe(event, self.main)
 
     def main(self, event):
-        """Main function of the charm.
+        """Run main operations of the charm.
 
         Runs at install, update, config change and relation change.
         """
