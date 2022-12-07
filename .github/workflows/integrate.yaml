@@ -11,7 +11,7 @@ jobs:
 
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm:
@@ -31,7 +31,7 @@ jobs:
 
   unit:
     name: Unit Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -43,7 +43,7 @@ jobs:
 
   charm-integration:
     name: Individual charm's integration tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller]
@@ -61,7 +61,7 @@ jobs:
 
   lint:
     name: Lint Code
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -73,15 +73,21 @@ jobs:
 
   bundle-integration:
     name: Bundle Integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Check out code
       uses: actions/checkout@v2
     - name: Setup operator environment
-      uses: charmed-kubernetes/actions-operator@main
+      # TODO: Unpin this when https://github.com/charmed-kubernetes/actions-operator/pull/46 is merged
+      uses: claudiubelu/actions-operator@18ebf92ae3043bd3dd15238e5d9b662d7ba08daf
       with:
-        provider: microk8s
-        channel: 1.21/stable
+          provider: microk8s
+          channel: 1.22/stable
+          charmcraft-channel: latest/candidate
+        # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
+        #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
+        #       the "metrics-endpoint-relation-changed" hook.
+          bootstrap-options: --agent-version="2.9.34"
 
       # TODO: Remove once the actions-operator does this automatically
     - name: Configure kubectl
