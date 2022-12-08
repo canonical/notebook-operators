@@ -8,7 +8,7 @@ pytest-operator<0.10
 pytest
 pytest-mock
 pyyaml<6.1
-selenium-wire<4.6
-selenium==3.141.0
+selenium-wire
+selenium
 tenacity<8.1
 requests
