@@ -1,7 +1,7 @@
 groups:
 - name: Controller
   rules:
-  -alert: UnfinishedWorkQueueAlert
+  - alert: UnfinishedWorkQueueAlert
     # TODO figure out the correct threshold
     expr: rate(workqueue_unfinished_work_seconds[5m]) >= 100
     for: 0m

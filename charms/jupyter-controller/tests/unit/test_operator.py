@@ -7,12 +7,9 @@ from ops.testing import Harness
 
 from charm import Operator
 
-
 @pytest.fixture
 def harness():
-    """Instantiate a test harness."""
     return Harness(Operator)
-
 
 def test_not_leader(harness):
     """Test that charm waits if not leader."""

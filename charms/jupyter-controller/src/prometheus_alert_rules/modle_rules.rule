@@ -1,8 +1,12 @@
-groups:
+-groups:
 - name: Model
   rules:
   - alert: JupyterControllerRuntimeReconciliationErrorsExceedThreshold
     expr: rate(controller_runtime_reconcile_errors_total[5m]) > 0
     for: 0m
     labels:
-    severity: critical
+      severity: critical
+    annotations:
+      summary:
+      description:
+      LABELS = {{ $label }}
