@@ -1,4 +1,4 @@
--groups:
+groups:
 - name: Model
   rules:
   - alert: JupyterControllerRuntimeReconciliationErrorsExceedThreshold
@@ -7,6 +7,6 @@
     labels:
       severity: critical
     annotations:
-      summary:
-      description:
-      LABELS = {{ $label }}
+      summary: Total number of reconciliation errors per controller
+      description: Total number of reconciliation errors per controller
+        LABELS = {{ $labels }}
