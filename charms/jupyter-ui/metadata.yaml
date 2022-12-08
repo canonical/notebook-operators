@@ -1,8 +1,9 @@
 name: jupyter-ui
 summary: Multi-user server for Jupyter notebooks
 description: Multi-user server for Jupyter notebooks
-min-juju-version: '2.9.0'
-series: [kubernetes]
+containers:
+  jupyter-ui:
+    resource: oc-image
 resources:
   oci-image:
     type: oci-image
