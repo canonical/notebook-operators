@@ -1,5 +1,5 @@
 black
-flake8
+flake8==4.0.1
 juju==3.0.*
 pytest
 pytest-operator
