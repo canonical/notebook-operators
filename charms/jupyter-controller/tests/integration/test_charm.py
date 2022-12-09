@@ -3,10 +3,10 @@
 
 """Integration tests for Jupyter controller."""
 
+import json
 import logging
 from pathlib import Path
 
-import json
 import pytest
 import requests
 import tenacity
