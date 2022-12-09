@@ -1,6 +1,8 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
 
+"""Unit tests for Jupyter controller."""
+
 import json
 import pytest
 import yaml
@@ -8,8 +10,6 @@ from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import Operator
-
-"""Test for Jupyter controller."""
 
 @pytest.fixture
 def harness():

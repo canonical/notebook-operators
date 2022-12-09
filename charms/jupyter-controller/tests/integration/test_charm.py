@@ -1,6 +1,8 @@
 # Copyright 2022 Canonical Ltd.
 # See LICENSE file for licensing details.
-"""Tests for Jupyter controller."""
+
+"""Integration tests for Jupyter controller."""
+
 import logging
 from pathlib import Path
 
@@ -33,6 +35,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     )
 
     assert ops_test.model.applications[CHARM_NAME].units[0].workload_status == "active"
+
 
 async def test_prometheus_integration(ops_test: OpsTest):
     """Deploy prometheus and required relations, then test the metrics."""
@@ -107,7 +110,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
             log.info(f"Response status is {response_status}")
             assert response_status == "success"
 
-             # verify alerts are available in Prometheus
+            # verify alerts are available in Prometheus
             assert len(response["data"]["groups"]) > 0
             rules = []
             for group in response["data"]["groups"]:
