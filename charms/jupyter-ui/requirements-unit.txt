@@ -9,7 +9,7 @@ attrs==22.1.0
     #   -r ./charms/jupyter-ui/requirements.txt
     #   jsonschema
     #   pytest
-certifi==2022.9.24
+certifi==2022.12.7
     # via
     #   -r ./charms/jupyter-ui/requirements.txt
     #   requests
@@ -37,12 +37,10 @@ ops==1.5.4
     # via
     #   -r ./charms/jupyter-ui/requirements.txt
     #   serialized-data-interface
-packaging==21.3
+packaging==22.0
     # via pytest
 pluggy==1.0.0
     # via pytest
-pyparsing==3.0.9
-    # via packaging
 pyrsistent==0.19.2
     # via
     #   -r ./charms/jupyter-ui/requirements.txt

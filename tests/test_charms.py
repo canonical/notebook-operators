@@ -1,24 +1,21 @@
+import json
 import logging
-import os
 from pathlib import Path
 from random import choices
 from string import ascii_lowercase
 from time import sleep
-from urllib.parse import urlparse
 
-import json
 import pytest
-import tenacity
 import requests
+import tenacity
 import yaml
-
 from lightkube import Client
-from lightkube.resources.core_v1 import Namespace, ServiceAccount, Service
 from lightkube.models.meta_v1 import ObjectMeta
+from lightkube.resources.core_v1 import Namespace, Service, ServiceAccount
 from selenium.common.exceptions import JavascriptException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.ui import WebDriverWait
 from seleniumwire import webdriver
 
@@ -102,9 +99,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     # Deploy jupyter-ui and relate to istio
     await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
     await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
-    await ops_test.model.wait_for_idle(
-        apps=[UI_APP_NAME], status="active", timeout=60 * 10
-    )
+    await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 10)
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
@@ -188,8 +183,8 @@ def driver(request, ops_test, lightkube_client):
 #
 #    # Since upstream doesn't use proper class names or IDs or anything, find the <tr> containing
 #    # elements that contain the notebook name and `ready`, signifying that the notebook is finished
-#    # booting up. Returns a reference to the connect button, suitable for clicking on. The result is
-#    # a fairly unreadable XPath reference, but it works 🤷
+#    # booting up. Returns a reference to the connect button, suitable for clicking on.
+#    # The result is a fairly unreadable XPath reference, but it works 🤷
 #    chonky_boi = [
 #        f"//*[contains(text(), '{notebook_name}')]",
 #        "/ancestor::tr",
@@ -234,6 +229,7 @@ def driver(request, ops_test, lightkube_client):
 #    wait.until_not(
 #        EC.presence_of_element_located((By.XPATH, f"//*[contains(text(), '{notebook_name}')]"))
 #    )
+
 
 @pytest.mark.skip('Skipping due to this test being inconsistent, and it will be changed soon')
 def test_create_notebook(driver, ops_test, dummy_resources_for_testing):
@@ -304,8 +300,7 @@ async def test_prometheus_grafana_integration(ops_test):
 
     for attempt in retry_for_5_attempts:
         logger.info(
-            f"Testing prometheus deployment (attempt "
-            f"{attempt.retry_state.attempt_number})"
+            f"Testing prometheus deployment (attempt " f"{attempt.retry_state.attempt_number})"
         )
         with attempt:
             r = requests.get(

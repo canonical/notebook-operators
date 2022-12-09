@@ -27,7 +27,7 @@ brotli==1.0.9
     # via selenium-wire
 cachetools==5.2.0
     # via google-auth
-certifi==2022.9.24
+certifi==2022.12.7
     # via
     #   httpcore
     #   httpx
@@ -117,7 +117,7 @@ oauthlib==3.2.2
     # via requests-oauthlib
 outcome==1.2.0
     # via trio
-packaging==21.3
+packaging==22.0
     # via pytest
 paramiko==2.12.0
     # via juju
@@ -129,7 +129,7 @@ pickleshare==0.7.5
     # via ipython
 pluggy==1.0.0
     # via pytest
-prompt-toolkit==3.0.33
+prompt-toolkit==3.0.36
     # via ipython
 protobuf==3.20.3
     # via macaroonbakery
@@ -159,9 +159,7 @@ pynacl==1.5.0
 pyopenssl==22.1.0
     # via selenium-wire
 pyparsing==3.0.9
-    # via
-    #   packaging
-    #   selenium-wire
+    # via selenium-wire
 pyrfc3339==1.1
     # via
     #   juju
@@ -175,7 +173,7 @@ pytest==7.2.0
     #   -r ./requirements-integration.in
     #   pytest-asyncio
     #   pytest-operator
-pytest-asyncio==0.20.2
+pytest-asyncio==0.20.3
     # via pytest-operator
 pytest-operator==0.22.0
     # via -r ./requirements-integration.in
@@ -239,7 +237,7 @@ tomli==2.0.1
     # via pytest
 toposort==1.7
     # via juju
-traitlets==5.6.0
+traitlets==5.7.0
     # via
     #   ipython
     #   matplotlib-inline

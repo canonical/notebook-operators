@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-
+# Copyright 2022 Canonical Ltd.
+# See LICENSE file for licensing details.
+"""Charm for the jupyter UI."""
 import logging
 from pathlib import Path
 
@@ -15,6 +17,7 @@ class CheckFailed(Exception):
     """Raise this exception if one of the checks in main fails."""
 
     def __init__(self, msg, status_type=None):
+        """Raise this exception if one of the checks in main fails."""
         super().__init__()
 
         self.msg = msg
@@ -23,7 +26,10 @@ class CheckFailed(Exception):
 
 
 class Operator(CharmBase):
+    """Charm for the Jupyter UI."""
+
     def __init__(self, *args):
+        """Charm for the Jupyter UI."""
         super().__init__(*args)
 
         self.log = logging.getLogger(__name__)
@@ -39,6 +45,10 @@ class Operator(CharmBase):
             self.framework.observe(event, self.main)
 
     def main(self, event):
+        """Run the main function of the charm.
+
+        Runs at all subscribed hook events.
+        """
         try:
             self._check_leader()
             interfaces = self._get_interfaces()

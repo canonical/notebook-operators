@@ -36,7 +36,7 @@ pathspec==0.10.2
     #   black
 pep8-naming==0.13.2
     # via -r ./charms/jupyter-ui/requirements-lint.in
-platformdirs==2.5.4
+platformdirs==2.6.0
     # via
     #   -r ./charms/jupyter-ui/requirements-fmt.txt
     #   black
