@@ -77,7 +77,6 @@ def test_prometheus_data_set(harness: Harness, mocker):
         )[0]["static_configs"][0]["targets"] == ["*:8080"]
 
         # load alert rules from rules files
-        # currently there is single alert per file
         test_alerts = []
         with open("src/prometheus_alert_rules/controller.rule") as f:
             file_alert = yaml.safe_load(f.read())

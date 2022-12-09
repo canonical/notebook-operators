@@ -4,3 +4,4 @@ juju==3.0.*
 pytest
 pytest-mock
 pytest-operator
+tenacity

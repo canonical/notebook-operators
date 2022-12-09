@@ -8,5 +8,6 @@ groups:
       severity: critical
     annotations:
       summary: Total number of reconciliation errors per controller
-      description: Total number of reconciliation errors per controller
+      description: >
+        Total number of reconciliation errors per controller
         LABELS = {{ $labels }}
