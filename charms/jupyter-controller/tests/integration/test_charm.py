@@ -45,9 +45,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
 
     # Deploy and relate prometheus
     await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
-    await ops_test.model.deploy(
-        prometheus_scrape, channel="latest/stable", config=scrape_config
-    )
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
     await ops_test.model.add_relation(CHARM_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
@@ -57,16 +55,11 @@ async def test_prometheus_integration(ops_test: OpsTest):
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"][
-        "address"
-    ]
+    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
-        log.info(
-            f"Testing prometheus deployment (attempt "
-            f"{attempt.retry_state.attempt_number})"
-        )
+        log.info(f"Testing prometheus deployment (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             r = requests.get(
                 f"http://{prometheus_unit_ip}:9090/api/v1/query?"
@@ -87,9 +80,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
         log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             # obtain scrape targets from Prometheus
-            targets_result = requests.get(
-                f"http://{prometheus_unit_ip}:9090/api/v1/targets"
-            )
+            targets_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/targets")
             response = json.loads(targets_result.content.decode("utf-8"))
             response_status = response["status"]
             log.info(f"Response status is {response_status}")
@@ -142,6 +133,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
             # match alerts in the rules files
             for rule in rules:
                 assert rule["name"] in test_alerts
+
 
 # Helper to retry calling a function over 30 seconds or 5 attempts
 retry_for_5_attempts = tenacity.Retrying(

@@ -77,9 +77,9 @@ def test_prometheus_data_set(harness: Harness, mocker):
     harness.begin()
 
     # basic data
-    assert json.loads(
-        harness.get_relation_data(rel_id, harness.model.app.name)["scrape_jobs"]
-    )[0]["static_configs"][0]["targets"] == ["*:8080"]
+    assert json.loads(harness.get_relation_data(rel_id, harness.model.app.name)["scrape_jobs"])[0][
+        "static_configs"
+    ][0]["targets"] == ["*:8080"]
 
     # load alert rules from rules files
     test_alerts = []
