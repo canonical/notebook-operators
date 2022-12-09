@@ -20,7 +20,7 @@ CHARM_NAME = METADATA["name"]
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
     """Test build and deploy."""
-    await ops_test.model.deploy("istio-pilot", channel="1.11/stable")
+    await ops_test.model.deploy("istio-pilot", channel="1.5/beta")
     await ops_test.model.deploy("jupyter-ui")
     await ops_test.model.add_relation("jupyter-ui", "istio-pilot")
 
@@ -118,7 +118,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
             test_alerts = []
             with open("src/prometheus_alert_rules/controller.rule") as f:
                 file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+                test_alerts.append(file_alert["alert"])
             with open("src/prometheus_alert_rules/host_resources.rules") as f:
                 file_alert = yaml.safe_load(f.read())
                 # there 2 alert rules in host_resources.rules
@@ -126,10 +126,10 @@ async def test_prometheus_integration(ops_test: OpsTest):
                     test_alerts.append(rule["alert"])
             with open("src/prometheus_alert_rules/model_errors.rule") as f:
                 file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+                test_alerts.append(file_alert["alert"])
             with open("src/prometheus_alert_rules/unit_unavailable.rule") as f:
                 file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+                test_alerts.append(file_alert["alert"])
 
             # verify number of alerts is the same in Prometheus and in the rules file
             assert len(rules) == len(test_alerts)
