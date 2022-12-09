@@ -1,13 +1,10 @@
-groups:
-- name: Model
-  rules:
-  - alert: JupyterControllerUnitIsUnavailable
-    expr: up < 1
-    for: 0m
-    labels:
-      severity: critical
-    annotations:
-      summary: Jupyter controller unit {{ $labels.juju_model }}/{{ $labels.juju_unit }} unavailable
-      description: >
-        The Jupyter controller unit {{ $labels.juju_model }} {{ $labels.juju_unit }} is unavailable
-        LABELS = {{ $labels }}
+alert: JupyterControllerUnitIsUnavailable
+expr: up < 1
+for: 0m
+labels:
+  severity: critical
+annotations:
+  summary: Jupyter controller unit {{ $labels.juju_model }}/{{ $labels.juju_unit }} unavailable
+  description: >
+    The Jupyter controller unit {{ $labels.juju_model }} {{ $labels.juju_unit }} is unavailable
+    LABELS = {{ $labels }}

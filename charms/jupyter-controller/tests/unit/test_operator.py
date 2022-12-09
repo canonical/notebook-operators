@@ -80,7 +80,7 @@ def test_prometheus_data_set(harness: Harness, mocker):
         test_alerts = []
         with open("src/prometheus_alert_rules/controller.rule") as f:
             file_alert = yaml.safe_load(f.read())
-            test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+            test_alerts.append(file_alert["alert"])
         with open("src/prometheus_alert_rules/host_resources.rules") as f:
             file_alert = yaml.safe_load(f.read())
             # there 2 alert rules in host_resources.rules
@@ -88,10 +88,10 @@ def test_prometheus_data_set(harness: Harness, mocker):
                 test_alerts.append(rule["alert"])
         with open("src/prometheus_alert_rules/model_errors.rule") as f:
             file_alert = yaml.safe_load(f.read())
-            test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+            test_alerts.append(file_alert["alert"])
         with open("src/prometheus_alert_rules/unit_unavailable.rule") as f:
             file_alert = yaml.safe_load(f.read())
-            test_alerts.append(file_alert["groups"][0]["rules"][0]["alert"])
+            test_alerts.append(file_alert["alert"])
 
         # alert rules
         alert_rules = json.loads(
