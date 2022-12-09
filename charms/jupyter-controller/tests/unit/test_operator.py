@@ -4,6 +4,7 @@
 """Unit tests for Jupyter controller."""
 
 import json
+
 import pytest
 import yaml
 from ops.model import ActiveStatus, BlockedStatus, WaitingStatus
