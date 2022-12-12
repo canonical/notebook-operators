@@ -179,7 +179,7 @@ wcwidth==0.2.5
     # via prompt-toolkit
 websocket-client==1.4.2
     # via kubernetes
-websockets==7.0
+websockets==10.4
     # via juju
 
 # The following packages are considered to be unsafe in a requirements file:
