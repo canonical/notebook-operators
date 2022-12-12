@@ -11,7 +11,8 @@
             "(^|/)requirements-fmt.in",
             "(^|/)requirements-lint.in",
             "(^|/)requirements-unit.in",
-            "(^|/)requirements-integration.in"
+            "(^|/)requirements-integration.in",
+            "(^|/)requirements.*\\.in$"
         ],
         "lockFileMaintenance": {
             "enabled": true,
