@@ -1,3 +1,5 @@
 juju
 pytest-operator
+tenacity
+websockets
 -r requirements.txt

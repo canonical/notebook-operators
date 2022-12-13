@@ -48,9 +48,9 @@ class Operator(CharmBase):
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
+            relation_name="metrics-endpoint",
             jobs=[
                 {
-                    "job_name": "jupyter_controller_metrics",
                     "metrics_path": METRICS_PATH,
                     "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
                 }
