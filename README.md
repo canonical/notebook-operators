@@ -15,7 +15,7 @@ providing lifecycle management for each application, handling events (install, u
 This Jupyter bundle requires some other components of Kubeflow to be deployed,
 including istio and the kubeflow dashboard. It also currently requires some 
 manual configuration of the Kubernetes cluster. As these requirements are
-subject to change at this time, the most reliable set-up instuctions are 
+subject to change at this time, the most reliable set-up instructions are 
 contained in the `Deploy charm dependencies` section of the
 [integration workflow][integrate].
 

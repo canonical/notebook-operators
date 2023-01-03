@@ -206,7 +206,7 @@ class JupyterUI(CharmBase):
         if interfaces["ingress"]:
             interfaces["ingress"].send_data(
                 {
-                    "prefix": self.model.config['url-prefix'] + '/',
+                    "prefix": self.model.config["url-prefix"] + "/",
                     "rewrite": "/",
                     "service": self.model.app.name,
                     "port": self.model.config["port"],
