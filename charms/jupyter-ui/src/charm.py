@@ -20,11 +20,7 @@ from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import ChangeError, Layer
-from serialized_data_interface import (
-    NoCompatibleVersions,
-    NoVersionsListed,
-    get_interfaces,
-)
+from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
@@ -50,7 +46,7 @@ class JupyterUI(CharmBase):
         """Initialize charm and setup the container."""
         super().__init__(*args)
 
-        # retrive configuration and base settings
+        # retrieve configuration and base settings
         self.logger = logging.getLogger(__name__)
         self._namespace = self.model.name
         self._lightkube_field_manager = "lightkube"
@@ -78,7 +74,7 @@ class JupyterUI(CharmBase):
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on['ingress'].relation_changed,
+            self.on["ingress"].relation_changed,
             self.on.jupyter_ui_pebble_ready,
         ]:
             self.framework.observe(event, self.main)
@@ -163,11 +159,10 @@ class JupyterUI(CharmBase):
             "spawner_ui_config.yaml",
             make_dirs=True,
         )
-        for file_name, file_content in yaml.safe_load(Path("src/logos-configmap.yaml").read_text())[
-            'data'
-        ].items():
+        for file_name, file_content in yaml.safe_load(
+            Path("src/logos-configmap.yaml").read_text()
+        )["data"].items():
             logo_file = "/src/apps/default/static/assets/logos/" + file_name
-            self.logger.debug(">>>> " + str(logo_file))
             self.container.push(
                 logo_file,
                 file_content,

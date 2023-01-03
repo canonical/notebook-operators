@@ -1,4 +1,5 @@
 ops
 oci-image
 serialized-data-interface<0.4
+charmed-kubeflow-chisme
 # Unittest will fail without pinning
