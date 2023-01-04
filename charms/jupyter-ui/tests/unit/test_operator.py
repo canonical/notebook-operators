@@ -36,7 +36,8 @@ class TestCharm:
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    def test_no_relation(self, harness: Harness):
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_no_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test no relation scenario."""
         harness.set_leader(True)
         harness.add_oci_resource(
@@ -52,7 +53,8 @@ class TestCharm:
         assert harness.charm.model.unit.status == ActiveStatus("")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    def test_with_relation(self, harness: Harness):
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
         harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
@@ -76,7 +78,8 @@ class TestCharm:
         assert isinstance(harness.charm.model.unit.status, ActiveStatus)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    def test_pebble_layer(self, harness: Harness):
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_pebble_layer(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test creation of Pebble layer. Only test specific items."""
         harness.set_leader(True)
         harness.add_oci_resource(
