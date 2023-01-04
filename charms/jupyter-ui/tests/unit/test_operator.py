@@ -36,6 +36,7 @@ class TestCharm:
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
     def test_no_relation(self, harness: Harness):
         """Test no relation scenario."""
         harness.set_leader(True)
@@ -52,6 +53,7 @@ class TestCharm:
         assert harness.charm.model.unit.status == ActiveStatus("")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
     def test_with_relation(self, harness: Harness):
         harness.set_leader(True)
         harness.add_oci_resource(
@@ -76,6 +78,7 @@ class TestCharm:
         assert isinstance(harness.charm.model.unit.status, ActiveStatus)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
     def test_pebble_layer(self, harness: Harness):
         """Test creation of Pebble layer. Only test specific items."""
         harness.set_leader(True)
