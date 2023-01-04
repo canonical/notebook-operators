@@ -61,7 +61,6 @@ jobs:
         #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
         #       the "metrics-endpoint-relation-changed" hook.
           bootstrap-options: --agent-version="2.9.34"
-    - run: sg microk8s -c "microk8s config > ~/.kube/config"
     - run: sudo snap refresh charmcraft --channel latest/candidate
     - run: tox -e ${{ matrix.charm }}-integration
 
