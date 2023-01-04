@@ -95,7 +95,10 @@ class TestCharm:
         assert pebble_plan
         assert pebble_plan.services
         pebble_plan_info = pebble_plan.to_dict()
-        assert pebble_plan_info["services"]["jupyter-ui"]["command"] == "npm start"
+        assert (
+            pebble_plan_info["services"]["jupyter-ui"]["command"]
+            == "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app"
+        )
         test_env = pebble_plan_info["services"]["jupyter-ui"]["environment"]
         # there should be 7 environment variables
         assert 7 == len(test_env)

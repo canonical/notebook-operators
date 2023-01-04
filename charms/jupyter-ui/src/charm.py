@@ -52,7 +52,13 @@ class JupyterUI(CharmBase):
         self._lightkube_field_manager = "lightkube"
         self._name = self.model.app.name
         self._http_port = self.model.config["port"]
-        self._exec_command = "npm start"
+        self._exec_command = (
+            "gunicorn"
+            " -w 3"
+            f" --bind 0.0.0.0:{self._http_port}"
+            " --access-logfile"
+            " - entrypoint:app"
+        )
         self._container_name = "jupyter-ui"
         self._container = self.unit.get_container(self._name)
 
@@ -133,7 +139,15 @@ class JupyterUI(CharmBase):
                     "command": self._exec_command,
                     "startup": "enabled",
                     "environment": env_vars,
+                    "on-check-failure": {"up": "restart"},
                 }
+            },
+            "checks": {
+                "up": {
+                    "override": "replace",
+                    "period": "30s",
+                    "http": {"url": f"http://localhost:{self._http_port}"},
+                },
             },
         }
 
