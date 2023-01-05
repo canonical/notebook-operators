@@ -1,4 +1,4 @@
 ops
 oci-image
-serialized-data-interface<0.4
+serialized-data-interface<0.5
 # Unittest will fail without pinning
