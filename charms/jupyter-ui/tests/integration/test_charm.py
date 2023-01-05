@@ -54,7 +54,7 @@ async def fetch_response(url):
 async def test_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible."""
     # NOTE: This test is re-using deployment created in test_build_and_deploy()
-    # NOTE: This test also tests health checks since it uses the same URL.
+    # NOTE: This test also tests Pebble checks since it uses the same URL.
 
     status = await ops_test.model.get_status()
     jupyter_ui_units = status["applications"]["jupyter-ui"]["units"]
@@ -64,7 +64,7 @@ async def test_ui_is_accessible(ops_test: OpsTest):
     port = CONFIG["options"]["port"]["default"]
     result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{port}")
 
-    # verify that UI is accessible
+    # verify that UI is accessible (NOTE: this also tests Pebbel checks)
     assert result_status == 200
     assert len(result_text) > 0
     assert "Jupyter Management UI" in result_text
