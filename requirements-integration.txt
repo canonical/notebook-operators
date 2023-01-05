@@ -81,7 +81,7 @@ idna==3.4
     #   trio
 iniconfig==1.1.1
     # via pytest
-ipdb==0.13.9
+ipdb==0.13.11
     # via pytest-operator
 ipython==8.7.0
     # via ipdb
@@ -230,10 +230,10 @@ tenacity==8.1.0
     # via -r requirements-integration.in
 theblues==0.5.2
     # via juju
-toml==0.10.2
-    # via ipdb
 tomli==2.0.1
-    # via pytest
+    # via
+    #   ipdb
+    #   pytest
 toposort==1.7
     # via juju
 traitlets==5.7.1
