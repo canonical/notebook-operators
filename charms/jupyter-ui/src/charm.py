@@ -195,6 +195,7 @@ class JupyterUI(CharmBase):
     def _on_install(self, _):
         """Perform installation only actions."""
         # upload files to container
+        self._check_container_connection()
         self._upload_files_to_container()
 
         # proceed with other actions
