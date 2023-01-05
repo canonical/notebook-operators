@@ -46,8 +46,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-#        charm: [controller, ui]
-         charm: [ui]
+        charm: [controller, ui]
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -63,9 +62,6 @@ jobs:
         #       the "metrics-endpoint-relation-changed" hook.
           bootstrap-options: --agent-version="2.9.34"
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
-      timeout-minutes: 60
     - run: tox -e ${{ matrix.charm }}-integration
 
   lint:

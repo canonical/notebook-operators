@@ -85,6 +85,7 @@ class JupyterUI(CharmBase):
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.remove, self._on_remove)
 
     @property
     def container(self):
@@ -168,7 +169,6 @@ class JupyterUI(CharmBase):
 
     def _upload_files_to_container(self):
         """Upload required files to container."""
-        self.logger.info("IC: Uploading!!!")
         self.container.push(
             "/etc/config/spawner_ui_config.yaml",
             "spawner_ui_config.yaml",
@@ -196,7 +196,6 @@ class JupyterUI(CharmBase):
     def _on_install(self, _):
         """Perform installation only actions."""
         # upload files to container
-        self.logger.info("IC: Installing!!!")
         self._check_container_connection()
         self._upload_files_to_container()
 
