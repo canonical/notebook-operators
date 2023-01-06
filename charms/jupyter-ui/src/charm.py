@@ -198,7 +198,8 @@ class JupyterUI(CharmBase):
         """Perform installation only actions."""
         try:
             self._deploy_k8s_resources()
-            self._update_layer()
+            if self.container.can_connect():
+                self._update_layer()
         except CheckFailed as err:
             self.model.unit.status = err.status
         return
