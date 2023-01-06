@@ -196,8 +196,11 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
-        self._deploy_k8s_resources()
-        self._update_layer()
+        try:
+            self._deploy_k8s_resources()
+            self._update_layer()
+        except CheckFailed as err:
+            self.model.unit.status = err.status
         return
 
     def _on_pebble_ready(self, _):
