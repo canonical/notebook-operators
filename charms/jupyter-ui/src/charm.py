@@ -196,7 +196,10 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
-        self._check_container_connection()
+        #self._check_container_connection()
+        if not self.container.can_connect():
+            self.logger.warning(f"Container {self._container_name} is not ready")
+            return
 
         # proceed with the same actions as for Pebble Ready event
         self._on_pebble_ready(_)
