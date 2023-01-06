@@ -11,7 +11,7 @@ jobs:
 
   lib-check:
     name: Check libraries
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm:
@@ -31,7 +31,7 @@ jobs:
 
   unit:
     name: Unit Test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -43,7 +43,7 @@ jobs:
 
   charm-integration:
     name: Individual charm's integration tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller]
@@ -61,7 +61,7 @@ jobs:
 
   lint:
     name: Lint Code
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         charm: [controller, ui]
@@ -73,7 +73,7 @@ jobs:
 
   bundle-integration:
     name: Bundle Integration
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
     - name: Check out code
       uses: actions/checkout@v2
@@ -82,6 +82,9 @@ jobs:
       with:
         provider: microk8s
         channel: 1.21/stable
+        # Pinned to 2.3.34 due to https://bugs.launchpad.net/juju/+bug/1992833
+        # This should be fixed on release of juju 2.3.36 + libjuju 3.0.3
+        bootstrap-options: --agent-version="2.9.34"
 
       # TODO: Remove once the actions-operator does this automatically
     - name: Configure kubectl
@@ -91,7 +94,11 @@ jobs:
     - name: Run test
       run: |
         sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
-        sudo apt install -y firefox-geckodriver
+        sudo apt install tar wget
+        # Install firefox-geckodriver from source to avoid issues
+        wget https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz
+        tar xf geckodriver-v0.28.0-linux64.tar.gz
+        sudo mv geckodriver /usr/local/bin
         sudo snap install juju-bundle --classic
         sudo snap install juju-wait --classic
         sudo snap refresh charmcraft --channel=latest/candidate
