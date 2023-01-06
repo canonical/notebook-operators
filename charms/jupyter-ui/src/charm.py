@@ -198,6 +198,7 @@ class JupyterUI(CharmBase):
         """Perform installation only actions."""
         self._deploy_k8s_resources()
         self._update_layer()
+        return
 
     def _on_pebble_ready(self, _):
         """Configure started container."""
