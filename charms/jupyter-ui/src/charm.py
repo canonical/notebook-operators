@@ -214,15 +214,6 @@ class JupyterUI(CharmBase):
         # proceed with other actions
         self.main(_)
 
-    def _on_install(self, _):
-        """Perform installation only actions."""
-        # upload files to container
-        self._check_container_connection()
-        self._upload_files_to_container()
-
-        # proceed with other actions
-        self.main(_)
-
     def _on_remove(self, _):
         """Remove all resources."""
         self.unit.status = MaintenanceStatus("Removing K8S resources")
