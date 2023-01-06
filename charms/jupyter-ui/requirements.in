@@ -1,7 +1,7 @@
 ops
 oci-image
-serialized-data-interface<0.4
 charmed-kubeflow-chisme
 lightkube-models==1.25.4.4
 pyyaml
+serialized-data-interface<0.5
 # Unittest will fail without pinning
