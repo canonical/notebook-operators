@@ -64,7 +64,7 @@ async def test_ui_is_accessible(ops_test: OpsTest):
     port = CONFIG["options"]["port"]["default"]
     result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{port}")
 
-    # verify that UI is accessible (NOTE: this also tests Pebbel checks)
+    # verify that UI is accessible (NOTE: this also tests Pebble checks)
     assert result_status == 200
     assert len(result_text) > 0
     assert "Jupyter Management UI" in result_text
