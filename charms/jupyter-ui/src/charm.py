@@ -196,20 +196,16 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
+        self._check_container_connection()
         try:
             self._deploy_k8s_resources()
-            if self.container.can_connect():
-                self._update_layer()
         except CheckFailed as err:
             self.model.unit.status = err.status
         return
 
     def _on_pebble_ready(self, _):
         """Configure started container."""
-        if not self.container.can_connect():
-            raise ErrorWithStatus(
-                f"Container {self._container_name} failed to start", BlockedStatus
-            )
+        self._check_container_connection()
 
         # upload files to container
         self._upload_files_to_container()
@@ -242,7 +238,8 @@ class JupyterUI(CharmBase):
     def _check_container_connection(self):
         """Check if connection can be made with container."""
         if not self.container.can_connect():
-            raise CheckFailed("Pod startup is not complete", MaintenanceStatus)
+            self.unit.status = MaintenanceStatus("Waiting for pod startup to complete")
+        return
 
     def _check_leader(self):
         """Check if this unit is a leader."""
