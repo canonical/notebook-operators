@@ -240,7 +240,7 @@ class JupyterUI(CharmBase):
 
         Returns: False if container is not available
                  True if connection can be made
-        Sets maintanance status is container is not acvailable.
+        Sets maintenance status is container is not acvailable.
         """
         if not self.container.can_connect():
             self.unit.status = MaintenanceStatus("Waiting for pod startup to complete")
