@@ -19,7 +19,7 @@ jobs:
         - jupyter-ui
     steps:
     - name: Checkout
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - name: Check libs
@@ -36,7 +36,7 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: sudo apt update
     - run: sudo apt install tox
     - run: tox -e ${{ matrix.charm }}-unit
@@ -49,7 +49,7 @@ jobs:
         charm: [controller]
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Setup operator environment
       uses: charmed-kubernetes/actions-operator@main
       with:
@@ -66,7 +66,7 @@ jobs:
       matrix:
         charm: [controller, ui]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - run: sudo apt update
     - run: sudo apt install tox
     - run: tox -e ${{ matrix.charm }}-lint
@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - name: Check out code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
     - name: Setup operator environment
       # TODO: Unpin this when https://github.com/charmed-kubernetes/actions-operator/pull/46 is merged
       uses: claudiubelu/actions-operator@18ebf92ae3043bd3dd15238e5d9b662d7ba08daf
