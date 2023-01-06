@@ -196,10 +196,8 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
-        self._check_container_connection()
-
-        # proceed with the same actions as for Pebble Ready event
-        self._on_pebble_ready(_)
+        self._deploy_k8s_resources()
+        self._update_layer()
 
     def _on_pebble_ready(self, _):
         """Configure started container."""

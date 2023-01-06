@@ -29,7 +29,8 @@ class TestCharm:
     """Test class for JupyterUI."""
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    def test_not_leader(self, harness: Harness):
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_not_leader(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test not a leader scenario."""
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-ui")
