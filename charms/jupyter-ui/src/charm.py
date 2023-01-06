@@ -84,6 +84,7 @@ class JupyterUI(CharmBase):
             self.on.jupyter_ui_pebble_ready,
         ]:
             self.framework.observe(event, self.main)
+        self.framework.observe(self.on.jupyter_ui_pebble_ready, self._on_pebble_ready)
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.remove, self._on_remove)
 
@@ -192,6 +193,26 @@ class JupyterUI(CharmBase):
         except ApiError:
             raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
         self.model.unit.status = MaintenanceStatus("K8S resources created")
+
+    def _on_install(self, _):
+        """Perform installation only actions."""
+        self._check_container_connection()
+
+        # proceed with the same actions as for Pebble Ready event
+        self._on_pebble_ready(_)
+
+    def _on_pebble_ready(self, _):
+        """Configure started container."""
+        if not self.container.can_connect():
+            raise ErrorWithStatus(
+                f"Container {self._container_name} failed to start", BlockedStatus
+            )
+
+        # upload files to container
+        self._upload_files_to_container()
+
+        # proceed with other actions
+        self.main(_)
 
     def _on_install(self, _):
         """Perform installation only actions."""
