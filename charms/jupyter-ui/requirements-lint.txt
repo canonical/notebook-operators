@@ -22,7 +22,7 @@ flake8-builtins==2.0.1
     # via -r requirements-lint.in
 flake8-copyright==0.2.3
     # via -r requirements-lint.in
-isort==5.10.1
+isort==5.11.2
     # via -r requirements-fmt.txt
 mccabe==0.7.0
     # via flake8
@@ -52,7 +52,9 @@ tomli==2.0.1
     #   black
     #   pyproject-flake8
 typing-extensions==4.4.0
-    # via black
+    # via
+    #   -r requirements-fmt.txt
+    #   black
 
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
