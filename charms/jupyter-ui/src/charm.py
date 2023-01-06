@@ -196,7 +196,6 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
-        #self._check_container_connection()
         if not self.container.can_connect():
             self.logger.warning(f"Container {self._container_name} is not ready")
             return
