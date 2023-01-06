@@ -196,7 +196,6 @@ class JupyterUI(CharmBase):
 
     def _on_install(self, _):
         """Perform installation only actions."""
-        self._check_container_connection()
         try:
             self._deploy_k8s_resources()
         except CheckFailed as err:
@@ -205,7 +204,8 @@ class JupyterUI(CharmBase):
 
     def _on_pebble_ready(self, _):
         """Configure started container."""
-        self._check_container_connection()
+        if not self._is_container_ready():
+            return
 
         # upload files to container
         self._upload_files_to_container()
@@ -235,11 +235,17 @@ class JupyterUI(CharmBase):
                 }
             )
 
-    def _check_container_connection(self):
-        """Check if connection can be made with container."""
+    def _is_container_ready(self):
+        """Check if connection can be made with container.
+
+        Returns: False if container is not available
+                 True if connection can be made
+        Sets maintanance status is container is not acvailable.
+        """
         if not self.container.can_connect():
             self.unit.status = MaintenanceStatus("Waiting for pod startup to complete")
-        return
+            return False
+        return True
 
     def _check_leader(self):
         """Check if this unit is a leader."""
@@ -259,11 +265,11 @@ class JupyterUI(CharmBase):
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
         try:
-            self._check_container_connection()
             self._check_leader()
             self._deploy_k8s_resources()
-            interfaces = self._get_interfaces()
-            self._update_layer()
+            if self._is_container_ready():
+                interfaces = self._get_interfaces()
+                self._update_layer()
         except CheckFailed as err:
             self.model.unit.status = err.status
             return
