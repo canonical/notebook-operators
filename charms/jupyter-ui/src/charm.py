@@ -265,12 +265,11 @@ class JupyterUI(CharmBase):
 
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
-        interfaces = {}
         try:
             self._check_leader()
             self._deploy_k8s_resources()
+            interfaces = self._get_interfaces()
             if self._is_container_ready():
-                interfaces = self._get_interfaces()
                 self._update_layer()
         except CheckFailed as err:
             self.model.unit.status = err.status
