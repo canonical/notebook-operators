@@ -60,7 +60,7 @@ async def test_ui_is_accessible(ops_test: OpsTest):
     jupyter_ui_units = status["applications"]["jupyter-ui"]["units"]
     jupyter_ui_url = jupyter_ui_units["jupyter-ui/0"]["address"]
 
-    # obtain scrape targets from Prometheus
+    # obtain status and response text from Jupyter UI URL
     port = CONFIG["options"]["port"]["default"]
     result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{port}")
 

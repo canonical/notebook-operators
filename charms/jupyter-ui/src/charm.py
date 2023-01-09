@@ -197,6 +197,7 @@ class JupyterUI(CharmBase):
     def _on_install(self, _):
         """Perform installation only actions."""
         try:
+            # deploy K8S resources to speed up deployment
             self._deploy_k8s_resources()
         except CheckFailed as err:
             self.model.unit.status = err.status
@@ -240,7 +241,7 @@ class JupyterUI(CharmBase):
 
         Returns: False if container is not available
                  True if connection can be made
-        Sets maintenance status is container is not acvailable.
+        Sets maintenance status if container is not available.
         """
         if not self.container.can_connect():
             self.unit.status = MaintenanceStatus("Waiting for pod startup to complete")
@@ -264,6 +265,7 @@ class JupyterUI(CharmBase):
 
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
+        interfaces = {}
         try:
             self._check_leader()
             self._deploy_k8s_resources()
