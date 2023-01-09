@@ -268,14 +268,13 @@ class JupyterUI(CharmBase):
         try:
             self._check_leader()
             self._deploy_k8s_resources()
-            interfaces = self._get_interfaces()
             if self._is_container_ready():
                 self._update_layer()
+                interfaces = self._get_interfaces()
+                self._configure_mesh(interfaces)
         except CheckFailed as err:
             self.model.unit.status = err.status
             return
-
-        self._configure_mesh(interfaces)
 
         self.model.unit.status = ActiveStatus()
 
