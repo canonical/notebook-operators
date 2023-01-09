@@ -101,7 +101,7 @@ jobs:
 
     - name: Run test
       run: |
-        sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
+        sg microk8s -c "microk8s enable storage rbac ingress metallb:10.64.140.43-10.64.140.49"
         sudo apt install tar wget
         # Install firefox-geckodriver from source to avoid issues
         wget https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz

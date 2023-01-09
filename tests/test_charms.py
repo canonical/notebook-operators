@@ -79,6 +79,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     await ops_test.model.deploy(
         "istio-pilot",
         channel="latest/edge",
+        config={"default-gateway": "test-gateway"},
         trust=True,
     )
     await ops_test.model.deploy(
@@ -97,7 +98,9 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     )
 
     # Deploy jupyter-ui and relate to istio
-    await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
+    await ops_test.model.deploy(
+        ui_charm, resources={"oci-image": ui_image_path}, application_name=UI_APP_NAME, trust=True
+    )
     await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
     await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 10)
 
