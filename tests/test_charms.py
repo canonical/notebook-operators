@@ -105,11 +105,9 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 15)
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
-    await ops_test.model.deploy(
-        controller_charm, resources={"oci-image": controller_image_path}, trust=True
-    )
-    await ops_test.model.deploy("admission-webhook", channel="latest/edge", trust=True)
-    await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge", trust=True)
+    await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
+    await ops_test.model.deploy("admission-webhook", channel="latest/edge")
+    await ops_test.model.deploy("kubeflow-profiles", channel="1.6/edge")
     await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", trust=True)
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
 
