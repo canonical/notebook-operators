@@ -46,17 +46,22 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        charm: [controller]
+        charm: [controller, ui]
     steps:
     - name: Check out code
       uses: actions/checkout@v3
     - name: Setup operator environment
-      uses: charmed-kubernetes/actions-operator@main
+      # TODO: Unpin this when https://github.com/charmed-kubernetes/actions-operator/pull/46 is merged
+      uses: charmed-kubernetes/actions-operator@1.0.0
       with:
-        provider: microk8s
-        channel: 1.22/stable
-    - run: sg microk8s -c "microk8s config > ~/.kube/config"
-    - run: sudo snap refresh charmcraft --channel latest/candidate
+          provider: microk8s
+          channel: 1.22/stable
+          charmcraft-channel: latest/candidate
+        # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
+        #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
+        #       the "metrics-endpoint-relation-changed" hook.
+          bootstrap-options: --agent-version="2.9.34"
+          microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
     - run: tox -e ${{ matrix.charm }}-integration
 
   lint:
@@ -79,7 +84,7 @@ jobs:
       uses: actions/checkout@v3
     - name: Setup operator environment
       # TODO: Unpin this when https://github.com/charmed-kubernetes/actions-operator/pull/46 is merged
-      uses: claudiubelu/actions-operator@18ebf92ae3043bd3dd15238e5d9b662d7ba08daf
+      uses: charmed-kubernetes/actions-operator@1.0.0
       with:
           provider: microk8s
           channel: 1.22/stable
@@ -88,6 +93,7 @@ jobs:
         #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
         #       the "metrics-endpoint-relation-changed" hook.
           bootstrap-options: --agent-version="2.9.34"
+          microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
 
       # TODO: Remove once the actions-operator does this automatically
     - name: Configure kubectl
@@ -96,15 +102,11 @@ jobs:
 
     - name: Run test
       run: |
-        sg microk8s -c "microk8s enable ingress metallb:10.64.140.43-10.64.140.49"
         sudo apt install tar wget
         # Install firefox-geckodriver from source to avoid issues
         wget https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz
         tar xf geckodriver-v0.28.0-linux64.tar.gz
         sudo mv geckodriver /usr/local/bin
-        sudo snap install juju-bundle --classic
-        sudo snap install juju-wait --classic
-        sudo snap refresh charmcraft --channel=latest/candidate
         juju add-model kubeflow
         sg microk8s -c "tox -e integration -- --model kubeflow"
 

@@ -22,7 +22,7 @@ flake8-builtins==2.0.1
     # via -r requirements-lint.in
 flake8-copyright==0.2.3
     # via -r requirements-lint.in
-isort==5.10.1
+isort==5.11.2
     # via -r requirements-fmt.txt
 mccabe==0.7.0
     # via flake8
