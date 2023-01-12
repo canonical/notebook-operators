@@ -16,7 +16,7 @@ asttokens==2.2.1
     # via stack-data
 async-timeout==4.0.2
     # via aiohttp
-attrs==22.1.0
+attrs==22.2.0
     # via
     #   -r requirements.txt
     #   aiohttp
@@ -26,7 +26,7 @@ backcall==0.2.0
     # via ipython
 bcrypt==4.0.1
     # via paramiko
-cachetools==5.2.0
+cachetools==5.2.1
     # via google-auth
 certifi==2022.12.7
     # via
@@ -53,7 +53,7 @@ decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-deepdiff==6.2.2
+deepdiff==6.2.3
     # via
     #   -r requirements.txt
     #   charmed-kubeflow-chisme
@@ -65,7 +65,7 @@ frozenlist==1.3.3
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.15.0
+google-auth==2.16.0
     # via kubernetes
 h11==0.14.0
     # via
@@ -75,7 +75,7 @@ httpcore==0.16.3
     # via
     #   -r requirements.txt
     #   httpx
-httpx==0.23.2
+httpx==0.23.3
     # via
     #   -r requirements.txt
     #   lightkube
@@ -86,7 +86,7 @@ idna==2.10
     #   requests
     #   rfc3986
     #   yarl
-iniconfig==1.1.1
+iniconfig==2.0.0
     # via pytest
 ipdb==0.13.11
     # via pytest-operator
@@ -116,7 +116,7 @@ lightkube==0.12.0
     # via
     #   -r requirements.txt
     #   charmed-kubeflow-chisme
-lightkube-models==1.25.4.4
+lightkube-models==1.26.0.4
     # via
     #   -r requirements.txt
     #   lightkube
@@ -149,7 +149,11 @@ ordered-set==4.1.0
     # via
     #   -r requirements.txt
     #   deepdiff
-packaging==22.0
+orjson==3.8.5
+    # via
+    #   -r requirements.txt
+    #   deepdiff
+packaging==23.0
     # via pytest
 paramiko==2.12.0
     # via juju
@@ -191,7 +195,7 @@ pyrfc3339==1.1
     # via
     #   juju
     #   macaroonbakery
-pyrsistent==0.19.2
+pyrsistent==0.19.3
     # via
     #   -r requirements.txt
     #   jsonschema
@@ -201,7 +205,7 @@ pytest==7.2.0
     #   pytest-operator
 pytest-asyncio==0.20.3
     # via pytest-operator
-pytest-operator==0.22.0
+pytest-operator==0.23.0
     # via -r requirements-integration.in
 python-dateutil==2.8.2
     # via kubernetes
@@ -271,9 +275,9 @@ tomli==2.0.1
     # via
     #   ipdb
     #   pytest
-toposort==1.7
+toposort==1.9
     # via juju
-traitlets==5.8.0
+traitlets==5.8.1
     # via
     #   ipython
     #   matplotlib-inline
@@ -281,7 +285,7 @@ typing-extensions==4.4.0
     # via typing-inspect
 typing-inspect==0.8.0
     # via juju
-urllib3==1.26.13
+urllib3==1.26.14
     # via
     #   -r requirements.txt
     #   kubernetes
