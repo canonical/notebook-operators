@@ -24,6 +24,7 @@ class CheckFailedError(Exception):
     """Raise this exception if one of the checks in main fails."""
 
     def __init__(self, msg, status_type=None):
+        """Raise this exception if one of the checks in main fails."""
         super().__init__()
 
         self.msg = str(msg)
@@ -38,6 +39,7 @@ class Operator(CharmBase):
     """
 
     def __init__(self, *args):
+        """Charm for the jupyter notebook server."""
         super().__init__(*args)
 
         self.log = logging.getLogger(__name__)
@@ -46,9 +48,9 @@ class Operator(CharmBase):
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
+            relation_name="metrics-endpoint",
             jobs=[
                 {
-                    "job_name": "jupyter_controller_metrics",
                     "metrics_path": METRICS_PATH,
                     "static_configs": [{"targets": ["*:{}".format(METRICS_PORT)]}],
                 }
@@ -66,7 +68,7 @@ class Operator(CharmBase):
             self.framework.observe(event, self.main)
 
     def main(self, event):
-        """Main function of the charm.
+        """Run main operations of the charm.
 
         Runs at install, update, config change and relation change.
         """

@@ -1,0 +1,9 @@
+juju
+lightkube
+pytest-operator
+pytest
+pyyaml
+selenium-wire
+selenium
+tenacity
+requests

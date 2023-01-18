@@ -6,17 +6,16 @@ from time import sleep
 import json
 import logging
 import pytest
-import tenacity
 import requests
+import tenacity
 import yaml
-
 from lightkube import Client
-from lightkube.resources.core_v1 import Namespace, ServiceAccount, Service
 from lightkube.models.meta_v1 import ObjectMeta
+from lightkube.resources.core_v1 import Namespace, Service, ServiceAccount
 from selenium.common.exceptions import JavascriptException, WebDriverException
 from selenium.webdriver.common.by import By
 from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support import expected_conditions as EC  # noqa: N812
 from selenium.webdriver.support.ui import WebDriverWait
 from seleniumwire import webdriver
 
@@ -79,6 +78,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     await ops_test.model.deploy(
         "istio-pilot",
         channel="latest/edge",
+        config={"default-gateway": "test-gateway"},
         trust=True,
     )
     await ops_test.model.deploy(
@@ -97,14 +97,17 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     )
 
     # Deploy jupyter-ui and relate to istio
-    await ops_test.model.deploy(ui_charm, resources={"oci-image": ui_image_path})
+    await ops_test.model.deploy(
+        ui_charm, resources={"oci-image": ui_image_path}, application_name=UI_APP_NAME, trust=True
+    )
     await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
-    await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 10)
+    await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 15)
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
     await ops_test.model.deploy("admission-webhook", channel="latest/edge")
-    await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge")
+    # NOTE: Pinning kubeflow-prodiles to 1.6/edge. This needs to be reviewed.
+    await ops_test.model.deploy("kubeflow-profiles", channel="1.6/edge")
     await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", trust=True)
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
 
@@ -112,7 +115,7 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     await ops_test.model.wait_for_idle(
         status="active",
         raise_on_blocked=True,
-        timeout=360,
+        timeout=60 * 20,
     )
 
 
@@ -183,8 +186,8 @@ def driver(request, ops_test, lightkube_client):
 #
 #    # Since upstream doesn't use proper class names or IDs or anything, find the <tr> containing
 #    # elements that contain the notebook name and `ready`, signifying that the notebook is finished
-#    # booting up. Returns a reference to the connect button, suitable for clicking on. The result is
-#    # a fairly unreadable XPath reference, but it works 🤷
+#    # booting up. Returns a reference to the connect button, suitable for clicking on.
+#    # The result is a fairly unreadable XPath reference, but it works 🤷
 #    chonky_boi = [
 #        f"//*[contains(text(), '{notebook_name}')]",
 #        "/ancestor::tr",
