@@ -18,7 +18,11 @@ Additional resources are also located in this repository such as `base` and `com
 
 ## Usage
 
-This repository contains tools that help in maintenance of image definitions.
+This repository contains tools that help in maintenance of image definitions. Optionally these tools can be made executable for easy maintenance:
+
+```
+chmod +x *.sh
+```
 
 ### Required tools
 

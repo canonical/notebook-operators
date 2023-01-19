@@ -10,18 +10,19 @@
 TAG=$1
 REGISTRY=$2
 
-# setup default tag and registry
-TAG?=$(git describe --tags --always --dirty)
-REGISTRY?=charmedkubeflow
+# if not specified, TAG is taken from corresponding version.txt
+# setup default registry
+REGISTRY=${REGISTRY:-"charmedkubeflow"}
 
 echo "Build image-definitions"
-echo "Registry: $REGSITRY"
+echo "Registry: $REGISTRY"
 echo "Tag: $TAG"
-cd image-definitions
 
 REPO_DIR="kubeflow"
 
 echo "Build container images for $REPO_DIR/"
+TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
+
 echo "Build example-notebook-servers"
 cd $REPO_DIR/components/example-notebook-servers
 export TAG=$TAG
@@ -41,6 +42,7 @@ export IMG=$REGISTRY/notebook-controller
 make docker-build TAG=$TAG
 cd -
 
+echo "Docker images ready"
 docker images
 
 echo "Done."

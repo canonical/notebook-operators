@@ -69,6 +69,9 @@ done
 git sparse-checkout set $SPARSE_CHECKOUT_DIRS
 git pull -q origin $BRANCH
 
+# generate version prior to cleaning up git information
+git describe --tags --always --dirty  > ./version.txt
+
 # cleanup git
 rm -rf .git
 cd ..
