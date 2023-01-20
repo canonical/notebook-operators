@@ -70,6 +70,8 @@ build.sh <tag> <registry>
 
 ### Security scan
 
+Scanning for vulnerabilities is done using `trivy` tool. Unfixed CVEs are ignored.
+
 To perform security scan:
 
 ```
