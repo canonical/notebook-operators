@@ -10,18 +10,16 @@
 TAG=$1
 REGISTRY=$2
 
+# Kubeflow container images build
+echo "Build image definitions for Kubeflow"
+REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
-# setup default registry
+TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
+# if not specified, setup default registry
 REGISTRY=${REGISTRY:-"charmedkubeflow"}
 
-echo "Build image-definitions"
 echo "Registry: $REGISTRY"
 echo "Tag: $TAG"
-
-REPO_DIR="kubeflow"
-
-echo "Build container images for $REPO_DIR/"
-TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
 
 echo "Build example-notebook-servers"
 cd $REPO_DIR/components/example-notebook-servers
@@ -41,6 +39,9 @@ cd $REPO_DIR/components/notebook-controller
 export IMG=$REGISTRY/notebook-controller
 make docker-build TAG=$TAG
 cd -
+
+# no need to tag images with repository because they already built properly
+# End of Kubeflow container images build
 
 echo "Docker images ready"
 docker images

@@ -24,10 +24,12 @@ then
     exit
 fi
 
-echo "Setup image definitions based on upstream"
-REMOTE_REPO="https://github.com/kubeflow/kubeflow.git"
+# Kubeflow image definitions setup
+echo "Setup image definitions for Kubeflow based on upstream"
 LOCAL_REPO_DIR="kubeflow"
+REMOTE_REPO="https://github.com/kubeflow/kubeflow.git"
 BRANCH=master
+
 echo "Remote repository: $REMOTE_REPO"
 echo "Local directory: $DIR/$LOCAL_REPO_DIR"
 echo "Branch: $BRANCH"
@@ -75,5 +77,6 @@ git describe --tags --always --dirty  > ./version.txt
 # cleanup git
 rm -rf .git
 cd ..
+# End of Kubeflow image definitions setup
 
 echo "Done."

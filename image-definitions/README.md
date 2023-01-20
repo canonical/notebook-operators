@@ -1,6 +1,6 @@
 # Image Definitions
 
-This directory contains image definitions for containers that are used in deployment of Notebook Operators. Only selected container images are maintained. The list of images can change. In addition, tools required to maintain container images are included in this repository:
+This directory contains image definitions for containers that are used in deployment of Notebook Operators. Only selected container images are maintained. The list of images and/or repositories can change. In addition, tools required to maintain container images are included in this repository:
 
 - `setup.sh` - Setup initial image definitions and in maintanance of image definitions.
 - `install-tools.sh` - Install all required tools for building, scanning, and publishing container images.
@@ -10,26 +10,28 @@ This directory contains image definitions for containers that are used in deploy
 
 See [#Usage] for more details on each tool.
 
-## Image Definitions - Kubeflow
+## Image Definitions
+
+Image definitions contain copies of selected sources from upstream. These differ from one repository to the next. Scripts should be updated accordingly. In addtion, it is a good practice to update this README file with what repositories are tracked.
+
+### Kubeflow
 
 `setup.sh` contains a list of container images that are maintained in this repository from Kubeflow upstream repository (https://github.com/kubeflow/kubeflow.git). Sources for those images are located in `./kubeflow/` directory.
 
 Additional resources are also located in this repository such as `base` and `common`. For detailed resources that these images require refer to `setup.sh` script.
 
-There were modification done to `Makefile(s)` to ensure bulding only required images.
+There were modification done to `Makefile(s)` and `Dockerfiles(s)` to ensure bulding only required images.
 
 Version of Kubeflow is retrieved and stored in `./kubeflow/version.txt`
 
 ## Usage
 
-This repository contains tools - a collection of `bash` scripts - that help in maintenance of image definitions.
-
-### Required tools
+This repository contains tools - a collection of `bash` scripts - that help in maintenance of image definitions. All these tools are specific to image definitions for the repository they are in. Different repositories can be included and scripts are adjusted accordingly.
 
 Required tools include Docker which might cause some conflicts on development machines. If required, image definiton work can be done in isolation on a VM. Using `multipass` create a VM and log into it:
 
 ```
-multipass launch 20.04 --cpus 2 --mem 8G --disk 30G --name docker-vm
+multipass launch 20.04 --cpus 2 --mem 8G --disk 50G --name docker-vm
 multipass shell docker-vm
 ```
 Checkout this repository and perform all steps inside the VM.
@@ -54,24 +56,16 @@ This will create image definitions in current (`.`) directory. Refer to `setup.s
 
 ### Build
 
-To build all container images.
+To build all container images:
 
 ```
 build.sh
 ```
 
-Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters, otherwise :
+Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters:
 
 ```
 build.sh <tag> <registry>
-```
-
-### Publish
-
-To publish all container images to the registry specified during build process:
-
-```
-publish.sh
 ```
 
 ### Security scan
@@ -80,6 +74,28 @@ To perform security scan:
 
 ```
 scan.sh
+```
+
+Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters:
+
+```
+scan.sh <tag> <registry>
+```
+
+### Publish
+
+Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools re-used in different scenarios such as Github workflows and manual publishing.
+
+To publish all container images to the registry specified during build process:
+
+```
+publish.sh
+```
+
+Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters:
+
+```
+publish.sh <tag> <registry>
 ```
 
 ### Maintenance
@@ -94,5 +110,9 @@ setup.sh ./update
 diff ./update/kubeflow kubeflow
 ```
 
-Analyze differences and act accordingly, i.e. change `Makefiles`, add, remove, or modify image definitions in this repository.
+Analyze differences and act accordingly, i.e. change `Makefiles` and/or `Dockerfile(s)`, add, remove, or modify image definitions in this repository.
+
+In many cases only difference in `Makefile(s)` and `Dockerfile(s)` should be considered.
+
+Whenever making changes to image definitions include meaninful commit message that explains why changes were made.
 
