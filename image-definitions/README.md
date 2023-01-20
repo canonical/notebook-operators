@@ -109,12 +109,19 @@ For Kubeflow:
 ```
 mkdir ./update
 setup.sh ./update
-diff ./update/kubeflow kubeflow
+diff -r ./update/kubeflow kubeflow
 ```
 
 Analyze differences and act accordingly, i.e. change `Makefiles` and/or `Dockerfile(s)`, add, remove, or modify image definitions in this repository.
 
-In many cases only difference in `Makefile(s)` and `Dockerfile(s)` should be considered.
+In many cases difference in `Makefile(s)`, `Dockerfile(s)`, and `requirements.*` files should be considered.
 
 Whenever making changes to image definitions include meaninful commit message that explains why changes were made.
 
+Changes to the scripts might be required if Makefiles have changed.
+
+To clean up all Docker images creared during build process:
+
+```
+docker rmi -f $(docker images -aq)
+```

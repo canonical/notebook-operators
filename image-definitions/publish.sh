@@ -26,6 +26,7 @@ IMAGE_LIST=$(docker images $REGISTRY/*:$TAG | awk 'NR>1 {print $1, $2}' | sed 's
 
 echo $IMAGE_LIST
 for IMAGE in "${IMAGE_LIST[@]}"; do
+    # tag image with registry
 	echo "docker push $IMAGE"
     #docker push $IMAGE
 done

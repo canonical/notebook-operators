@@ -31,17 +31,16 @@ cd -
 
 echo "Build Jupyter UI"
 cd $REPO_DIR/components/crud-web-apps/jupyter
-export IMG=$REGISTRY/jupyter-web-app
+export IMG=jupyter-web-app
 make docker-build TAG=$TAG
 cd -
 
 echo "Build Jupyter controller"
 cd $REPO_DIR/components/notebook-controller
-export IMG=$REGISTRY/notebook-controller
+export IMG=notebook-controller
 make docker-build TAG=$TAG
 cd -
 
-# no need to tag images with repository because they already built properly
 # End of Kubeflow container images build
 
 echo "Docker images ready"

@@ -1,5 +1,7 @@
 #!/bin/bash
 # Copyright 2023 Canonical Ltd.
+#!/bin/bash
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 #
 # Setup image definitions based on upstream.
@@ -28,22 +30,22 @@ fi
 echo "Setup image definitions for Kubeflow based on upstream"
 LOCAL_REPO_DIR="kubeflow"
 REMOTE_REPO="https://github.com/kubeflow/kubeflow.git"
-BRANCH=master
+BRANCH=v1.6-branch
 
 echo "Remote repository: $REMOTE_REPO"
 echo "Local directory: $DIR/$LOCAL_REPO_DIR"
 echo "Branch: $BRANCH"
 
 # if directory already exists do not proceed
-if [ -d "$LOCAL_REPO_DIR" ]
+if [ -d "$DIR/$LOCAL_REPO_DIR" ]
 then
     echo "Specified directory $LOCAL_REPO_DIR already exists."
     exit
 fi
 
 # setup local directory
-mkdir -p $LOCAL_REPO_DIR
-cd $LOCAL_REPO_DIR
+mkdir -p $DIR/$LOCAL_REPO_DIR
+cd $DIR/$LOCAL_REPO_DIR
 git init -q
 git remote add -f origin "$REMOTE_REPO" &> /dev/null
 
@@ -66,7 +68,7 @@ COMPONENTS_LIST=(
 # perform sparse checkout for the specified components
 SPARSE_CHECKOUT_DIRS=""
 for COMPONENT in "${COMPONENTS_LIST[@]}"; do
-	SPARSE_CHECKOUT_DIRS+="$COMPONENT "
+        SPARSE_CHECKOUT_DIRS+="$COMPONENT "
 done
 git sparse-checkout set $SPARSE_CHECKOUT_DIRS
 git pull -q origin $BRANCH
@@ -76,7 +78,7 @@ git describe --tags --always --dirty  > ./version.txt
 
 # cleanup git
 rm -rf .git
-cd ..
+cd -
 # End of Kubeflow image definitions setup
 
 echo "Done."
