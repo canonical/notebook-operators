@@ -8,26 +8,34 @@
 #
 
 TAG=$1
-REGISTRY=$2
-
-# if not specified, setup default registry
-REGISTRY=${REGISTRY:-"charmedkubeflow"}
 
 # Kubeflow container images scan
 echo "Scan container images for Kubeflow"
 REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
 TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
-
-echo "Registry: $REGISTRY"
+DATE=$(date +'%Y%-m%d')
 echo "Tag: $TAG"
+echo "Date: $DATE"
 
+# create directory for trivy reports
 mkdir -p trivy-reports
-IMAGE_LIST=($(docker images $TAG | awk 'NR>1 {print $1, $2}' | sed 's/ /:/g'))
+
+# get all images that are available for scanning
+# exclueded:
+# - tagged with `<none>`
+# - aquasec/trivy repository (scanner)
+IMAGE_LIST=($(docker images --format="{{json .}}" | jq -r 'select((.Tag=="v1.6.1") or (.Tag!="<none>" and .Repository!="aquasec/trivy")) | "\(.Repository):\(.Tag)"'))
+
+# for every image generate trivy report and store it in `trivy-reports/` directory
+# ':' and '/' in image names is replaced with '-' for files
 for IMAGE in "${IMAGE_LIST[@]}"; do
-    TRIVY_REPORT="trivy-reports/fixed-cve-$IMAGE.txt"
+    TRIVY_REPORT="fixed-cve-$DATE-$IMAGE"
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/:/-/g')
-    docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image --ignore-unfixed $IMAGE > $TRIVY_REPORT
+    TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
+    TRIVY_REPORT=$(echo "trivy-reports/$TRIVY_REPORT")
+    echo "IMG---> $IMAGE"
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image -f json -o $TRIVY_REPORT.json --ignore-unfixed $IMAGE
 done
 
 # End of Kubeflow container images scan

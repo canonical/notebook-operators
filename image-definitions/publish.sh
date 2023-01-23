@@ -22,13 +22,14 @@ TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
 echo "Registry: $REGISTRY"
 echo "Tag: $TAG"
 
-IMAGE_LIST=$(docker images $REGISTRY/*:$TAG | awk 'NR>1 {print $1, $2}' | sed 's/ /:/g')
+# get all images that need to be published
+IMAGE_LIST=($(docker image ls *:$TAG --format="{{.Repository}}:{{.Tag}}"))
 
 echo $IMAGE_LIST
 for IMAGE in "${IMAGE_LIST[@]}"; do
-    # tag image with registry
-	echo "docker push $IMAGE"
-    #docker push $IMAGE
+    # tag image with registry and push it
+    docker tag $IMAGE $REGISTRY/$IMAGE
+    docker push $REGISTRY/$IMAGE
 done
 
 # End of Kubeflow container images publish

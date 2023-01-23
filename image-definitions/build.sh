@@ -4,14 +4,12 @@
 #
 # Build all images
 #
-# Usage: build.sh <tag> <registry> or build.sh
+# Usage: build.sh <tag> or build.sh
 #
 
 TAG=$1
-REGISTRY=$2
 
-# if not specified, setup default registry
-REGISTRY=${REGISTRY:-"charmedkubeflow"}
+echo "Cleanup Docker images"
 
 # Kubeflow container images build
 echo "Build image definitions for Kubeflow"
@@ -19,13 +17,11 @@ REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
 TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
 
-echo "Registry: $REGISTRY"
 echo "Tag: $TAG"
 
 echo "Build example-notebook-servers"
 cd $REPO_DIR/components/example-notebook-servers
 export TAG=$TAG
-export REGISTRY=$REGISTRY
 make docker-build-all
 cd -
 

@@ -7,7 +7,8 @@
 sudo apt update
 sudo apt install -y make
 sudo apt install -y docker.io
-snap install go
+sudo snap install jq
+sudo snap install go --classic
 sudo snap install trivy
 sudo snap install docker
 sudo groupadd docker

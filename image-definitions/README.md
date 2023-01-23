@@ -2,7 +2,7 @@
 
 This directory contains image definitions for containers that are used in deployment of Notebook Operators. Only selected container images are maintained. The list of images and/or repositories can change. In addition, tools required to maintain container images are included in this repository:
 
-- `setup.sh` - Setup initial image definitions and in maintanance of image definitions.
+- `setup.sh` - Used to setup initial image definitions and in maintanance of image definitions.
 - `install-tools.sh` - Install all required tools for building, scanning, and publishing container images.
 - `build.sh` - Build container images.
 - `publish.sh` - Publish container images.
@@ -62,11 +62,13 @@ To build all container images:
 build.sh
 ```
 
-Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters:
+Tag will be set to contents of `version.txt` file. If different tag and registry required supply required parameters:
 
 ```
 build.sh <tag> <registry>
 ```
+
+Note that in some of `Makefile(s)` registry is ignored.
 
 ### Security scan
 
@@ -78,7 +80,7 @@ To perform security scan:
 scan.sh
 ```
 
-Tag will be set to contents of `version.txt` file and registry will be set to default `charmedkubeflow`. If different tag and registry required supply required parameters:
+Tag will be set to contents of `version.txt`. If different tag and registry required supply required parameters:
 
 ```
 scan.sh <tag> <registry>
@@ -86,7 +88,7 @@ scan.sh <tag> <registry>
 
 ### Publish
 
-Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools re-used in different scenarios such as Github workflows and manual publishing.
+Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools to be re-used in different scenarios such as Github workflows and manual publishing.
 
 To publish all container images to the registry specified during build process:
 
@@ -100,9 +102,11 @@ Tag will be set to contents of `version.txt` file and registry will be set to de
 publish.sh <tag> <registry>
 ```
 
+In many cases only single image should be published. In such cases perform publishing manually based on the instructions in `publish.sh` script.
+
 ### Maintenance
 
-From time to time an update in upstream source or an addition of new container image will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source in temporary directory and diff the contents with current image definitions.
+From time to time an update in upstream source, an addition of new container image, or a new vulnerability fix will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source in temporary directory and diff the contents with current image definitions.
 
 For Kubeflow:
 
@@ -114,7 +118,9 @@ diff -r ./update/kubeflow kubeflow
 
 Analyze differences and act accordingly, i.e. change `Makefiles` and/or `Dockerfile(s)`, add, remove, or modify image definitions in this repository.
 
-In many cases difference in `Makefile(s)`, `Dockerfile(s)`, and `requirements.*` files should be considered.
+In many cases difference in `Makefile(s)`, `Dockerfile(s)`, and `requirements.*` files should be carefully reviewed. Other files could be copied directrly.
+
+This is a manual merge process. No automation can be done at this point.
 
 Whenever making changes to image definitions include meaninful commit message that explains why changes were made.
 

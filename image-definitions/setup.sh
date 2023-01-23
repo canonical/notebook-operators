@@ -1,7 +1,5 @@
 #!/bin/bash
 # Copyright 2023 Canonical Ltd.
-#!/bin/bash
-# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 #
 # Setup image definitions based on upstream.
