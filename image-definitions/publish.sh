@@ -28,6 +28,7 @@ IMAGE_LIST=($(docker image ls *:$TAG --format="{{.Repository}}:{{.Tag}}"))
 echo $IMAGE_LIST
 for IMAGE in "${IMAGE_LIST[@]}"; do
     # tag image with registry and push it
+    # NOTE: tag is already applied
     docker tag $IMAGE $REGISTRY/$IMAGE
     docker push $REGISTRY/$IMAGE
 done

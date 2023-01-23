@@ -88,7 +88,11 @@ scan.sh <tag> <registry>
 
 ### Publish
 
-Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools to be re-used in different scenarios such as Github workflows and manual publishing.
+Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools to be re-used in different scenarios such as Github workflows and manual publishing. For example, to login into Docker hub:
+
+```
+docker login --username <username> --password <password-or-access-token>
+```
 
 To publish all container images to the registry specified during build process:
 
