@@ -7,13 +7,11 @@ describe('DetailsListComponent', () => {
   let component: DetailsListComponent;
   let fixture: ComponentFixture<DetailsListComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [DetailsListModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [DetailsListModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(DetailsListComponent);

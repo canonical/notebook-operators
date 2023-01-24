@@ -1,8 +1,5 @@
 {
   "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
-  "cli": {
-    "analytics": false
-  },
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
@@ -17,13 +14,13 @@
           "options": {
             "tsConfig": "projects/kubeflow/tsconfig.lib.json",
             "project": "projects/kubeflow/ng-package.json"
-          },
-          "configurations": {
+          }
+        ,          "configurations": {
             "production": {
               "tsConfig": "projects/kubeflow/tsconfig.lib.prod.json"
             }
           }
-        },
+},
         "test": {
           "builder": "@angular-devkit/build-angular:karma",
           "options": {
@@ -33,19 +30,18 @@
           }
         },
         "lint": {
-          "builder": "@angular-eslint/builder:lint",
+          "builder": "@angular-devkit/build-angular:tslint",
           "options": {
-            "lintFilePatterns": [
-              "projects/kubeflow/**/*.ts",
-              "projects/kubeflow/**/*.html"
+            "tsConfig": [
+              "projects/kubeflow/tsconfig.lib.json",
+              "projects/kubeflow/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
             ]
           }
         }
       }
-    }
-  },
-  "defaultProject": "kubeflow",
-  "cli": {
-    "defaultCollection": "@angular-eslint/schematics"
-  }
+    }},
+  "defaultProject": "kubeflow"
 }

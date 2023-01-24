@@ -42,8 +42,11 @@
 }
 
 .toolbar-buttons {
-  display: flex;
   margin: auto 0px;
+}
+
+.toolbar-button {
+  margin-left: 0.2rem;
 }
 
 .toolbar-buttons .toolbar-button:last-child {

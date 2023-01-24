@@ -107,6 +107,8 @@ function getExistingVolumeDesc(vol: Volume): string {
   }
 
   return name;
+
+  const values: string[] = [];
 }
 
 function getNewVolumeDesc(vol: Volume): string {

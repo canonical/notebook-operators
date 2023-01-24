@@ -7,13 +7,11 @@ describe('ConditionsTableComponent', () => {
   let component: ConditionsTableComponent;
   let fixture: ComponentFixture<ConditionsTableComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [ConditionsTableModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [ConditionsTableModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ConditionsTableComponent);

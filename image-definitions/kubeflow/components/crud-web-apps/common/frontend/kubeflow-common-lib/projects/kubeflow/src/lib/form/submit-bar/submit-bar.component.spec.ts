@@ -7,13 +7,11 @@ describe('SubmitBarComponent', () => {
   let component: SubmitBarComponent;
   let fixture: ComponentFixture<SubmitBarComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [FormModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [FormModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(SubmitBarComponent);

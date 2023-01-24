@@ -16,14 +16,12 @@ describe('TableChipsListComponent', () => {
   let component: TableChipsListComponent;
   let fixture: ComponentFixture<TableChipsListComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [TableChipsListComponent],
-        imports: [MatTooltipModule, MatChipsModule, CommonModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [TableChipsListComponent],
+      imports: [MatTooltipModule, MatChipsModule, CommonModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(TableChipsListComponent);

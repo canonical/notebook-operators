@@ -1,22 +1,13 @@
-import { HttpClientModule } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { SnackBarService } from 'kubeflow';
-import { JWABackendService } from './backend.service';
 
-const SnackBarServiceStub: Partial<SnackBarService> = {
-  open: () => {},
-  close: () => {},
-};
+import { BackendService } from './backend.service';
 
-describe('JWABackendService', () => {
-  let service: JWABackendService;
+describe('BackendService', () => {
+  let service: BackendService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({
-      imports: [HttpClientModule],
-      providers: [{ provide: SnackBarService, useValue: SnackBarServiceStub }],
-    }).compileComponents();
-    service = TestBed.inject(JWABackendService);
+    TestBed.configureTestingModule({});
+    service = TestBed.inject(BackendService);
   });
 
   it('should be created', () => {

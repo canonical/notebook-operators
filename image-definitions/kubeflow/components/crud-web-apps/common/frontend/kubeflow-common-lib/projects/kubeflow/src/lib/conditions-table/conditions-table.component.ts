@@ -2,7 +2,6 @@ import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { Condition, ConditionIR } from './types';
 import { STATUS_TYPE } from '../resource-table/status/types';
 import { generateConfig } from './config';
-import { TableConfig } from '../resource-table/types';
 
 @Component({
   selector: 'lib-conditions-table',
@@ -12,7 +11,7 @@ import { TableConfig } from '../resource-table/types';
 })
 export class ConditionsTableComponent {
   private conditionsPrv: ConditionIR[] = [];
-  public config: TableConfig = generateConfig();
+  public config = generateConfig();
 
   @Input()
   set title(t: string) {
@@ -28,17 +27,6 @@ export class ConditionsTableComponent {
       condition.statusPhase = STATUS_TYPE.WARNING;
       if (condition.status === 'True') {
         condition.statusPhase = STATUS_TYPE.READY;
-      }
-
-      // Set default values that are necessary for sorting functionality
-      if (!condition.lastTransitionTime) {
-        condition.lastTransitionTime = '';
-      }
-      if (!condition.message) {
-        condition.message = '';
-      }
-      if (!condition.reason) {
-        condition.reason = '';
       }
 
       condition.statusMessage = condition.status;

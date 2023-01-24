@@ -16,14 +16,16 @@
     ],
     "lib": [
       "es2018",
-      "dom",
-      "es2019"
+      "dom"
     ],
     "paths": {
-      "kubeflow": ["dist/kubeflow"],
-      "kubeflow/*": ["dist/kubeflow/*"]
-    },
-    "allowSyntheticDefaultImports": true
+      "kubeflow": [
+        "dist/kubeflow"
+      ],
+      "kubeflow/*": [
+        "dist/kubeflow/*"
+      ]
+    }
   },
   "angularCompilerOptions": {
     "fullTemplateTypeCheck": true,

@@ -1,8 +1,7 @@
 TAG ?= $(shell git describe --tags --always --dirty)
-REGISTRY ?= kubeflownotebookswg
 
 docker-build:
-	docker build -t ${REGISTRY}/base:${TAG} -f Dockerfile .
+	docker build -t base:${TAG} -f Dockerfile .
 
 docker-push:
-	docker push ${REGISTRY}/base:${TAG}
+	docker push base:${TAG}

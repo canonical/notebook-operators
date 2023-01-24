@@ -35,7 +35,7 @@ for IMAGE in "${IMAGE_LIST[@]}"; do
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
     TRIVY_REPORT=$(echo "trivy-reports/$TRIVY_REPORT")
     docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image -f json -o $TRIVY_REPORT.json --ignore-unfixed $IMAGE
-    # generate CVE record fo KF-CVE (prototype)
+    # TO-DO: generate CVE record fo KF-CVE (prototype)
     #cat $TRIVY_REPORT | jq '.Results[].Vulnerabilities[]' | jq -r 'select(.Severity=="CRITICAL" or .Severity=="HIGH") | "Source: Trivy scan Component or Image: $IMAGE Library:\(.PkgID) Vulnerability:\(.VulnerabilityID) Severity:\(.Severity) Installed Version:\(.InstalledVersion) Fixed Version:\(.FixedVersion) Title:\(.Title) Description:\(.Description) References:\(.References)"'
 done
 

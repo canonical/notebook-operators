@@ -7,13 +7,11 @@ describe('PanelComponent', () => {
   let component: PanelComponent;
   let fixture: ComponentFixture<PanelComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [PanelModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [PanelModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(PanelComponent);

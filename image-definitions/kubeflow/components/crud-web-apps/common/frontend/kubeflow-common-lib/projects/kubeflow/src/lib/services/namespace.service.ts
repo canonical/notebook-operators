@@ -1,13 +1,5 @@
 import { Injectable } from '@angular/core';
-import {
-  ReplaySubject,
-  Subscription,
-  fromEvent,
-  BehaviorSubject,
-  Observable,
-  Subject,
-  merge,
-} from 'rxjs';
+import { ReplaySubject, Subscription, fromEvent, BehaviorSubject } from 'rxjs';
 import { DashboardState } from '../enums/dashboard';
 
 declare global {
@@ -21,7 +13,6 @@ declare global {
 })
 export class NamespaceService {
   private currNamespace: string;
-  private allNamespaces: string[];
 
   // Observable string sources
   private selectedNamespaceSource = new ReplaySubject<string>(1);
@@ -31,7 +22,6 @@ export class NamespaceService {
 
   // Observable string streams
   selectedNamespace$ = this.selectedNamespaceSource.asObservable();
-  selectedNamespace2$ = new ReplaySubject<string | string[]>(1);
   dashboardConnected$ = this.dashboardConnectedSource.asObservable();
 
   constructor() {
@@ -47,8 +37,6 @@ export class NamespaceService {
             // Binds a callback that gets invoked anytime the Dashboard's
             // namespace is changed
             cdeh.onNamespaceSelected = this.updateSelectedNamespace.bind(this);
-            cdeh.onAllNamespacesSelected =
-              this.updateAllSelectedNamespaces.bind(this);
           },
         );
 
@@ -65,12 +53,8 @@ export class NamespaceService {
   }
 
   // GETers
-  getSelectedNamespace(): Observable<string> {
+  getSelectedNamespace() {
     return this.selectedNamespace$;
-  }
-
-  getSelectedNamespace2(): Observable<string | string[]> {
-    return this.selectedNamespace2$;
   }
 
   // Service message commands
@@ -78,13 +62,7 @@ export class NamespaceService {
     if (namespace.length !== 0) {
       this.currNamespace = namespace;
       this.selectedNamespaceSource.next(namespace);
-      this.selectedNamespace2$.next(namespace);
     }
-  }
-
-  updateAllSelectedNamespaces(namespaces: string[]) {
-    this.allNamespaces = namespaces;
-    this.selectedNamespace2$.next(namespaces);
   }
 
   dashboardConnected() {

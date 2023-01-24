@@ -187,7 +187,7 @@ func (r *NotebookReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			return ctrl.Result{}, err
 		}
 	} else if err != nil {
-		log.Error(err, "error getting Service")
+		log.Error(err, "error getting Statefulset")
 		return ctrl.Result{}, err
 	}
 	// Update the foundService object and write the result back if there are any changes

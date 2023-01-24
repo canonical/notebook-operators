@@ -1,13 +1,6 @@
 import { Status } from 'kubeflow';
 import { PodDefault } from './poddefault';
 import { GPU } from './gpu';
-import {
-  V1ContainerState,
-  V1ObjectMeta,
-  V1PodSpec,
-} from '@kubernetes/client-node';
-import { Condition } from './condition';
-import { Params } from '@angular/router';
 
 export type ServerType = 'jupyter' | 'group-one' | 'group-two';
 
@@ -34,11 +27,6 @@ export interface NotebookProcessedObject extends NotebookResponseObject {
   deleteAction?: string;
   connectAction?: string;
   startStopAction?: string;
-  link: {
-    text: string;
-    url: string;
-    queryParams?: Params | null;
-  };
 }
 
 export interface NotebookFormObject {
@@ -56,27 +44,11 @@ export interface NotebookFormObject {
   cpuLimit: number | string;
   memory: number | string;
   memoryLimit: number | string;
-  gpus?: GPU;
+  gpus: GPU;
   environment?: string;
   noWorkspace: boolean;
   workspace: any;
   datavols: any[];
   shm: boolean;
   configurations: PodDefault[];
-}
-
-export interface NotebookRawObject {
-  apiVersion: string;
-  kind: string;
-  metadata: V1ObjectMeta;
-  spec: {
-    template: {
-      spec: V1PodSpec;
-    };
-  };
-  status: {
-    conditions: Condition[];
-    containerState: V1ContainerState;
-    readyReplicas: number;
-  };
 }

@@ -2,22 +2,26 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { environment } from '@app/environment';
 import {
   NamespaceService,
+  ExponentialBackoff,
   ActionEvent,
   STATUS_TYPE,
+  DialogConfig,
   ConfirmDialogService,
   SnackBarService,
   DIALOG_RESP,
   SnackType,
   ToolbarButton,
-  PollerService,
-  DashboardState,
 } from 'kubeflow';
 import { JWABackendService } from 'src/app/services/backend.service';
 import { Subscription } from 'rxjs';
-import { defaultConfig } from './config';
+import {
+  defaultConfig,
+  getDeleteDialogConfig,
+  getStopDialogConfig,
+} from './config';
+import { isEqual } from 'lodash';
 import { NotebookResponseObject, NotebookProcessedObject } from 'src/app/types';
 import { Router } from '@angular/router';
-import { ActionsService } from 'src/app/services/actions.service';
 
 @Component({
   selector: 'app-index-default',
@@ -26,25 +30,25 @@ import { ActionsService } from 'src/app/services/actions.service';
 })
 export class IndexDefaultComponent implements OnInit, OnDestroy {
   env = environment;
+  poller: ExponentialBackoff;
 
-  nsSub = new Subscription();
-  pollSub = new Subscription();
+  currNamespace = '';
+  subs = new Subscription();
 
-  currNamespace: string | string[];
   config = defaultConfig;
+  rawData: NotebookResponseObject[] = [];
   processedData: NotebookProcessedObject[] = [];
-  dashboardDisconnectedState = DashboardState.Disconnected;
 
-  private newNotebookButton = new ToolbarButton({
-    text: $localize`New Notebook`,
-    icon: 'add',
-    stroked: true,
-    fn: () => {
-      this.router.navigate(['/new']);
-    },
-  });
-
-  buttons: ToolbarButton[] = [this.newNotebookButton];
+  buttons: ToolbarButton[] = [
+    new ToolbarButton({
+      text: `New Notebook`,
+      icon: 'add',
+      stroked: true,
+      fn: () => {
+        this.router.navigate(['/new']);
+      },
+    }),
+  ];
 
   constructor(
     public ns: NamespaceService,
@@ -52,40 +56,49 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
     public confirmDialog: ConfirmDialogService,
     public snackBar: SnackBarService,
     public router: Router,
-    public poller: PollerService,
-    public actions: ActionsService,
   ) {}
 
   ngOnInit(): void {
+    this.poller = new ExponentialBackoff({ interval: 1000, retries: 3 });
+
+    // Poll for new data and reset the poller if different data is found
+    this.subs.add(
+      this.poller.start().subscribe(() => {
+        if (!this.currNamespace) {
+          return;
+        }
+
+        this.backend.getNotebooks(this.currNamespace).subscribe(notebooks => {
+          if (!isEqual(this.rawData, notebooks)) {
+            this.rawData = notebooks;
+
+            // Update the frontend's state
+            this.processedData = this.processIncomingData(notebooks);
+            this.poller.reset();
+          }
+        });
+      }),
+    );
+
     // Reset the poller whenever the selected namespace changes
-    this.nsSub = this.ns.getSelectedNamespace2().subscribe(ns => {
-      this.currNamespace = ns;
-      this.poll(ns);
-      this.newNotebookButton.namespaceChanged(ns, $localize`Notebook`);
-    });
+    this.subs.add(
+      this.ns.getSelectedNamespace().subscribe(ns => {
+        this.currNamespace = ns;
+        this.poller.reset();
+      }),
+    );
   }
 
   ngOnDestroy() {
-    this.nsSub.unsubscribe();
-    this.pollSub.unsubscribe();
-  }
-
-  public poll(ns: string | string[]) {
-    this.pollSub.unsubscribe();
-    this.processedData = [];
-
-    const request = this.backend.getNotebooks(ns);
-
-    this.pollSub = this.poller.exponential(request).subscribe(notebooks => {
-      this.processedData = this.processIncomingData(notebooks);
-    });
+    this.subs.unsubscribe();
+    this.poller.stop();
   }
 
   // Event handling functions
   reactToAction(a: ActionEvent) {
     switch (a.action) {
       case 'delete':
-        this.deleteNotebookClicked(a.data);
+        this.deleteVolumeClicked(a.data);
         break;
       case 'connect':
         this.connectClicked(a.data);
@@ -93,26 +106,35 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
       case 'start-stop':
         this.startStopClicked(a.data);
         break;
-      case 'name:link':
-        if (a.data.status.phase === STATUS_TYPE.TERMINATING) {
-          a.event.stopPropagation();
-          a.event.preventDefault();
-          this.snackBar.open(
-            'Notebook is being deleted, cannot show details.',
-            SnackType.Info,
-            4000,
-          );
-          return;
-        }
-        break;
     }
   }
 
-  deleteNotebookClicked(notebook: NotebookProcessedObject) {
-    this.actions
-      .deleteNotebook(notebook.namespace, notebook.name)
-      .subscribe(result => {
-        if (result !== DIALOG_RESP.ACCEPT) {
+  public deleteVolumeClicked(notebook: NotebookProcessedObject) {
+    const deleteDialogConfig = getDeleteDialogConfig(notebook.name);
+
+    const ref = this.confirmDialog.open(notebook.name, deleteDialogConfig);
+    const delSub = ref.componentInstance.applying$.subscribe(applying => {
+      if (!applying) {
+        return;
+      }
+
+      // Close the open dialog only if the DELETE request succeeded
+      this.backend.deleteNotebook(this.currNamespace, notebook.name).subscribe({
+        next: _ => {
+          this.poller.reset();
+          ref.close(DIALOG_RESP.ACCEPT);
+        },
+        error: err => {
+          const errorMsg = err;
+          deleteDialogConfig.error = errorMsg;
+          ref.componentInstance.applying$.next(false);
+        },
+      });
+
+      // DELETE request has succeeded
+      ref.afterClosed().subscribe(res => {
+        delSub.unsubscribe();
+        if (res !== DIALOG_RESP.ACCEPT) {
           return;
         }
 
@@ -120,10 +142,12 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
         notebook.status.message = 'Preparing to delete the Notebook...';
         this.updateNotebookFields(notebook);
       });
+    });
   }
 
   public connectClicked(notebook: NotebookProcessedObject) {
-    this.actions.connectToNotebook(notebook.namespace, notebook.name);
+    // Open new tab to work on the Notebook
+    window.open(`/notebook/${notebook.namespace}/${notebook.name}/`);
   }
 
   public startStopClicked(notebook: NotebookProcessedObject) {
@@ -135,27 +159,60 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
   }
 
   public startNotebook(notebook: NotebookProcessedObject) {
-    this.actions
-      .startNotebook(notebook.namespace, notebook.name)
-      .subscribe(_ => {
-        notebook.status.phase = STATUS_TYPE.WAITING;
-        notebook.status.message = 'Starting the Notebook Server...';
-        this.updateNotebookFields(notebook);
-      });
+    this.snackBar.open(
+      $localize`Starting Notebook server '${notebook.name}'...`,
+      SnackType.Info,
+      3000,
+    );
+
+    notebook.status.phase = STATUS_TYPE.WAITING;
+    notebook.status.message = 'Starting the Notebook Server...';
+    this.updateNotebookFields(notebook);
+
+    this.backend.startNotebook(notebook).subscribe(() => {
+      this.poller.reset();
+    });
   }
 
   public stopNotebook(notebook: NotebookProcessedObject) {
-    this.actions
-      .stopNotebook(notebook.namespace, notebook.name)
-      .subscribe(result => {
-        if (result !== DIALOG_RESP.ACCEPT) {
+    const stopDialogConfig = getStopDialogConfig(notebook.name);
+    const ref = this.confirmDialog.open(notebook.name, stopDialogConfig);
+    const stopSub = ref.componentInstance.applying$.subscribe(applying => {
+      if (!applying) {
+        return;
+      }
+
+      // Close the open dialog only if the request succeeded
+      this.backend.stopNotebook(notebook).subscribe({
+        next: _ => {
+          this.poller.reset();
+          ref.close(DIALOG_RESP.ACCEPT);
+        },
+        error: err => {
+          const errorMsg = err;
+          stopDialogConfig.error = errorMsg;
+          ref.componentInstance.applying$.next(false);
+        },
+      });
+
+      // request has succeeded
+      ref.afterClosed().subscribe(res => {
+        stopSub.unsubscribe();
+        if (res !== DIALOG_RESP.ACCEPT) {
           return;
         }
+
+        this.snackBar.open(
+          $localize`Stopping Notebook server '${notebook.name}'...`,
+          SnackType.Info,
+          3000,
+        );
 
         notebook.status.phase = STATUS_TYPE.TERMINATING;
         notebook.status.message = 'Preparing to stop the Notebook Server...';
         this.updateNotebookFields(notebook);
       });
+    });
   }
 
   // Data processing functions
@@ -163,10 +220,6 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
     notebook.deleteAction = this.processDeletionActionStatus(notebook);
     notebook.connectAction = this.processConnectActionStatus(notebook);
     notebook.startStopAction = this.processStartStopActionStatus(notebook);
-    notebook.link = {
-      text: notebook.name,
-      url: `/notebook/details/${notebook.namespace}/${notebook.name}`,
-    };
   }
 
   processIncomingData(notebooks: NotebookResponseObject[]) {
@@ -219,9 +272,5 @@ export class IndexDefaultComponent implements OnInit, OnDestroy {
 
   public notebookTrackByFn(index: number, notebook: NotebookProcessedObject) {
     return `${notebook.name}/${notebook.image}`;
-  }
-
-  private updateButtons(): void {
-    this.buttons = [this.newNotebookButton];
   }
 }

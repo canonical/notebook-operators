@@ -128,13 +128,6 @@ export function createMetadataFormGroupFromPvc(
     );
   }
 
-  if (metadata.generateName) {
-    group.addControl(
-      'generateName',
-      new FormControl(metadata.generateName, Validators.required),
-    );
-  }
-
   if (metadata.annotations) {
     group.addControl('annotations', new FormGroup({}));
 

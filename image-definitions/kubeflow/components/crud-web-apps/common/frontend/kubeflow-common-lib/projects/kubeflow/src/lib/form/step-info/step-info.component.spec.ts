@@ -6,13 +6,12 @@ describe('StepInfoComponent', () => {
   let component: StepInfoComponent;
   let fixture: ComponentFixture<StepInfoComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        declarations: [StepInfoComponent],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      declarations: [ StepInfoComponent ]
+    })
+    .compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(StepInfoComponent);

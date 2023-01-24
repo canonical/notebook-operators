@@ -7,13 +7,11 @@ describe('HeadingSubheadingRowComponent', () => {
   let component: HeadingSubheadingRowComponent;
   let fixture: ComponentFixture<HeadingSubheadingRowComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [HeadingSubheadingRowModule],
-      }).compileComponents();
-    }),
-  );
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [HeadingSubheadingRowModule],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(HeadingSubheadingRowComponent);

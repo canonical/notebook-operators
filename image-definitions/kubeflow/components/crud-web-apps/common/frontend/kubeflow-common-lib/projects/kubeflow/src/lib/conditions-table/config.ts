@@ -20,7 +20,6 @@ export function generateConfig(): TableConfig {
           fieldPhase: 'statusPhase',
           fieldMessage: 'statusMessage',
         }),
-        sort: true,
       },
       {
         matHeaderCellDef: 'Type',
@@ -29,7 +28,6 @@ export function generateConfig(): TableConfig {
         value: new PropertyValue({
           field: 'type',
         }),
-        sort: true,
       },
       {
         matHeaderCellDef: 'Last Transition Time',
@@ -38,7 +36,6 @@ export function generateConfig(): TableConfig {
         value: new DateTimeValue({
           field: 'lastTransitionTime',
         }),
-        sort: true,
       },
       {
         matHeaderCellDef: 'Reason',
@@ -47,7 +44,6 @@ export function generateConfig(): TableConfig {
         value: new PropertyValue({
           field: 'reason',
         }),
-        sort: true,
       },
       {
         matHeaderCellDef: 'Message',
@@ -56,10 +52,7 @@ export function generateConfig(): TableConfig {
         value: new PropertyValue({
           field: 'message',
         }),
-        sort: true,
       },
     ],
-    sortByColumn: 'lastTransitionTime',
-    sortDirection: 'desc',
   };
 }

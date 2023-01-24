@@ -8,29 +8,27 @@ describe('ConfirmDialogComponent', () => {
   let component: ConfirmDialogComponent;
   let fixture: ComponentFixture<ConfirmDialogComponent>;
 
-  beforeEach(
-    waitForAsync(() => {
-      TestBed.configureTestingModule({
-        imports: [ConfirmDialogModule],
-        providers: [
-          { provide: MatDialogRef, useValue: {} },
-          {
-            provide: MAT_DIALOG_DATA,
-            useValue: {
-              title: '',
-              message: '',
-              accept: '',
-              applying: '',
-              error: '',
-              confirmColor: '',
-              cancel: '',
-              width: '',
-            },
+  beforeEach(waitForAsync(() => {
+    TestBed.configureTestingModule({
+      imports: [ConfirmDialogModule],
+      providers: [
+        { provide: MatDialogRef, useValue: {} },
+        {
+          provide: MAT_DIALOG_DATA,
+          useValue: {
+            title: '',
+            message: '',
+            accept: '',
+            applying: '',
+            error: '',
+            confirmColor: '',
+            cancel: '',
+            width: '',
           },
-        ],
-      }).compileComponents();
-    }),
-  );
+        },
+      ],
+    }).compileComponents();
+  }));
 
   beforeEach(() => {
     fixture = TestBed.createComponent(ConfirmDialogComponent);
