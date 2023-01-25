@@ -1,0 +1,62 @@
+$row-padding: 8px;
+
+:host {
+  display: block;
+}
+
+.grey {
+  background-color: rgb(245, 245, 245);
+}
+
+.row-right-padding {
+  padding-right: $row-padding;
+}
+
+tr th.right-align {
+  text-align: right;
+}
+
+.action-list {
+  display: flex;
+  width: fit-content;
+  margin: auto 0 auto auto;
+}
+
+.action-button {
+  margin: auto 0.2rem;
+}
+
+.mat-cell-truncate {
+  max-width: 20px;
+}
+
+th.mat-header-cell {
+  padding-right: $row-padding;
+  padding-left: $row-padding;
+}
+
+td.mat-cell {
+  padding-right: $row-padding;
+  padding-left: $row-padding;
+}
+
+.mat-row:hover {
+  background-color: rgb(245, 245, 245);
+}
+
+.mat-row:hover .link {
+  text-decoration: underline;
+}
+
+.link:hover {
+  text-decoration: underline;
+  color: blue;
+  cursor: pointer;
+}
+
+lib-action {
+  width: 40px;
+  display: inline-flex;
+  justify-content: center;
+  height: 40px;
+}
