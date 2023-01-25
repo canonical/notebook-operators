@@ -6,7 +6,7 @@
 #
 # This is necessary because the Jupyter controller now depends on
 # components/common
-ARG GOLANG_VERSION=1.17
+ARG GOLANG_VERSION=1.19
 FROM golang:${GOLANG_VERSION} as builder
 
 WORKDIR /workspace
@@ -17,7 +17,7 @@ COPY common /workspace/common
 
 # cache deps before building and copying source so that we don't need to re-download as much
 # and so that source changes don't invalidate our downloaded layer
-RUN cd /workspace/notebook-controller && go mod download
+RUN cd /workspace/notebook-controller && go mod download all
 
 WORKDIR /workspace/notebook-controller
 
