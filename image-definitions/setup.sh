@@ -77,6 +77,7 @@ git describe --tags --always --dirty  > ./version.txt
 # cleanup git
 rm -rf .git
 cd -
+
 # End of Kubeflow image definitions setup
 
 echo "Done."

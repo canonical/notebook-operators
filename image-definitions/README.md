@@ -52,7 +52,7 @@ Initial setup of image definitions was already peformed. If required, initial se
 setup.sh .
 ```
 
-This will create image definitions in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created.
+This will create image definitions in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created. In addition, `kubeflow/version.txt` is created to track version.
 
 ### Build
 
@@ -62,10 +62,10 @@ To build all container images:
 build.sh
 ```
 
-Tag will be set to contents of `version.txt` file. If different tag and registry required supply required parameters:
+Tag will be set to contents of `version.txt` file. If different tag is required supply required parameters:
 
 ```
-build.sh <tag> <registry>
+build.sh <tag>
 ```
 
 Note that in some of `Makefile(s)` registry is ignored.
@@ -80,11 +80,13 @@ To perform security scan:
 scan.sh
 ```
 
-Tag will be set to contents of `version.txt`. If different tag and registry required supply required parameters:
+Tag will be set to contents of `version.txt`. If different tag is required supply required parameters:
 
 ```
-scan.sh <tag> <registry>
+scan.sh <tag>
 ```
+
+Some images could be excluded from security scanning, because they are used as builder images. At this point all images are scanned for vulnerabilities.
 
 ### Publish
 
