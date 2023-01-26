@@ -26,11 +26,13 @@ echo "Tag: $TAG"
 #IMAGE_LIST=($(docker image ls *:$TAG --format="{{.Repository}}:{{.Tag}}"))
 # selected images that need to be published
 IMAGE_LIST=(
-"jupyter-scipy:v1.6.1"
-"jupyter-pytorch-full:v1.6.1"
-"jupyter-pytorch-cuda-full:v1.6.1"
-"jupyter-tensorflow-full:v1.6.1"
-"jupyter-tensorflow-cuda-full:v1.6.1"
+"jupyter-scipy:$TAG"
+"jupyter-pytorch-full:$TAG"
+"jupyter-pytorch-cuda-full:$TAG"
+"jupyter-tensorflow-full:$TAG"
+"jupyter-tensorflow-cuda-full:$TAG"
+"notebook-controller:$TAG"
+"jupyter-web-app:$TAG"
 )
 
 echo $IMAGE_LIST
