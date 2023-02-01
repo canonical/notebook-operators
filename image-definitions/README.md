@@ -134,7 +134,7 @@ For Kubeflow:
 ```
 setup.sh .
 cd kubeflow
-patch . < ../kubeflow.patch
+git apply ../kubeflow.patch
 git diff
 ```
 
