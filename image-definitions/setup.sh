@@ -74,8 +74,6 @@ git pull -q origin $BRANCH
 # generate version prior to cleaning up git information
 git describe --tags --always --dirty  > ./version.txt
 
-# cleanup git
-rm -rf .git
 cd -
 
 # End of Kubeflow image definitions setup

@@ -12,17 +12,19 @@ See [#Usage] for more details on each tool.
 
 ## Image Definitions
 
-Image definitions contain copies of selected sources from upstream. These differ from one repository to the next. Scripts should be updated accordingly. In addtion, it is a good practice to update this README file with what repositories are tracked.
+Image definitions contain patches for selected sources from upstream. These differ from one repository to the next. Scripts should be updated accordingly. In addtion, it is a good practice to update this README file with what repositories are tracked.
 
 ### Kubeflow
 
-`setup.sh` contains a list of container images that are maintained in this repository from Kubeflow upstream repository (https://github.com/kubeflow/kubeflow.git). Sources for those images are located in `./kubeflow/` directory.
+Kubeflow repository `https://github.com/kubeflow/kubeflow.git`.
 
-Additional resources are also located in this repository such as `base` and `common`. For detailed resources that these images require refer to `setup.sh` script.
+`setup.sh` contains a list of container images that are maintained in this repository from Kubeflow upstream repository (https://github.com/kubeflow/kubeflow.git). Patches for this repository are contained in `kubeflow*.patch` files.
 
-There were modification done to `Makefile(s)` and `Dockerfiles(s)` to ensure bulding only required images.
+For detailed resources that these images require refer to `setup.sh` script.
 
-Version of Kubeflow is retrieved and stored in `./kubeflow/version.txt`
+There were modification done to `Makefile`, `Dockerfile`, and `requirements.*` files to ensure bulding only required images.
+
+Version of Kubeflow is retrieved and stored in `./kubeflow/version.txt` when repository is setup.
 
 ## Usage
 
@@ -34,6 +36,7 @@ Required tools include Docker which might cause some conflicts on development ma
 multipass launch 20.04 --cpus 2 --mem 8G --disk 50G --name docker-vm
 multipass shell docker-vm
 ```
+
 Checkout this repository and perform all steps inside the VM.
 
 ### Tools install
@@ -52,7 +55,7 @@ Initial setup of image definitions was already peformed. If required, initial se
 setup.sh .
 ```
 
-This will create image definitions in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created. In addition, `kubeflow/version.txt` is created to track version.
+This will perform a sparse checkout of all required repositories in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created. Those are also described in [##Image-Definitions] section of this README.
 
 ### Build
 
@@ -68,7 +71,7 @@ Tag will be set to contents of `version.txt` file. If different tag is required 
 build.sh <tag>
 ```
 
-Note that in some of `Makefile(s)` registry is ignored.
+Note that in some of `Makefile(s)` `REGISTRY` is ignored.
 
 ### Security scan
 
@@ -112,14 +115,27 @@ In many cases only single image should be published. In such cases perform publi
 
 ### Maintenance
 
-From time to time an update in upstream source, an addition of new container image, or a new vulnerability fix will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source in temporary directory and diff the contents with current image definitions.
+To create initial patch setup a clean copy of upstream source, make required adjustments that would resolve CVEs and produced the initial patch:
 
 For Kubeflow:
 
 ```
-mkdir ./update
-setup.sh ./update
-diff -r ./update/kubeflow kubeflow
+setup.sh .
+cd kubeflow
+git diff > ../kubeflow.patch
+```
+
+Commit this patch to this repository.
+
+From time to time an update in upstream source, an addition of new container image, or a new vulnerability fix will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source, apply existing patch and diff the contents with current image definitions.
+
+For Kubeflow:
+
+```
+setup.sh .
+cd kubeflow
+patch . < ../kubeflow.patch
+git diff
 ```
 
 Analyze differences and act accordingly, i.e. change `Makefiles` and/or `Dockerfile(s)`, add, remove, or modify image definitions in this repository.
@@ -131,6 +147,8 @@ This is a manual merge process. No automation can be done at this point.
 Whenever making changes to image definitions include meaninful commit message that explains why changes were made.
 
 Changes to the scripts might be required if Makefiles have changed.
+
+Produce updated patch (in `kubeflow/` execute `git diff > ../kubeflow.patch`) and commit to this repository.
 
 To clean up all Docker images creared during build process:
 
