@@ -33,7 +33,7 @@ This repository contains tools - a collection of `bash` scripts - that help in m
 Required tools include Docker which might cause some conflicts on development machines. If required, image definiton work can be done in isolation on a VM. Using `multipass` create a VM and log into it:
 
 ```
-multipass launch 20.04 --cpus 2 --mem 8G --disk 50G --name docker-vm
+multipass launch 20.04 --cpus 2 --mem 8G --disk 100G --name docker-vm
 multipass shell docker-vm
 ```
 
@@ -154,4 +154,12 @@ To clean up all Docker images creared during build process:
 
 ```
 docker rmi -f $(docker images -aq)
+```
+
+#### Notes
+
+As of 23.01.01 when building upstream Kubeflow images the following error is seen:
+```
+ERROR: pip's dependency resolver does not currently take into account all the packages that are installed. This behaviour is the source of the following dependency conflicts.
+jupyterlab-server 2.19.0 requires jsonschema>=4.17.3, but you have jsonschema 3.2.0 which is incompatible.
 ```
