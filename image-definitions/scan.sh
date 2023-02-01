@@ -14,7 +14,7 @@ echo "Scan container images for Kubeflow"
 REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
 TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
-DATE=$(date +'%Y.%-m.%-d')
+DATE=$(date +%F)
 SCAN_SUMMARY_FILE="scan-summary-$DATE.txt"
 echo "Tag: $TAG" > $SCAN_SUMMARY_FILE
 echo "Date: $DATE" >> $SCAN_SUMMARY_FILE
