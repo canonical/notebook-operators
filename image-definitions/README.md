@@ -120,8 +120,14 @@ To create initial patch setup a clean copy of upstream source, make required adj
 For Kubeflow:
 
 ```
+cd image-definitions
 setup.sh .
 cd kubeflow
+
+# Manually make any modifications in the kubeflow directory, either by changing the files yourself
+# or applying a patch
+
+# Save a patch file describing your modified state
 git diff > ../kubeflow.patch
 ```
 
