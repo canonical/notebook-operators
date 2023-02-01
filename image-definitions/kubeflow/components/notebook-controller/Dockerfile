@@ -6,7 +6,7 @@
 #
 # This is necessary because the Jupyter controller now depends on
 # components/common
-ARG GOLANG_VERSION=1.19
+ARG GOLANG_VERSION=1.20
 FROM golang:${GOLANG_VERSION} as builder
 
 WORKDIR /workspace
