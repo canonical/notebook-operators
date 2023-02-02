@@ -152,9 +152,11 @@ This is a manual merge process. No automation can be done at this point.
 
 Whenever making changes to image definitions include meaninful commit message that explains why changes were made.
 
+If patch fails, examine which lines cause the problem and analyze the differences. In some cases upstream change could be integrated into patch. In other cases changes should be made to override that change.
+
 Changes to the scripts might be required if Makefiles have changed.
 
-Produce updated patch (in `kubeflow/` execute `git diff > ../kubeflow.patch`) and commit to this repository.
+Produce updated patch (in `kubeflow/` execute `git diff > ../kubeflow.patch`) and commit it to this repository.
 
 To clean up all Docker images creared during build process:
 
