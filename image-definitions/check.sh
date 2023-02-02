@@ -18,4 +18,5 @@ if [ $KF_REPO_COMMIT != KF_PATCH_COMMIT ]; then
     echo "Latest commit $KF_REPO_COMMIT Patch commit $KF_PATCH_COMMIT"
 fi
 
+cd -
 # End of Kubeflow repository check
