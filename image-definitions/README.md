@@ -49,13 +49,15 @@ install-tools.sh
 
 ### Setup
 
-Initial setup of image definitions was already peformed. If required, initial setup can be done again using:
+To setup all required repositories:
 
 ```
 setup.sh .
 ```
 
-This will perform a sparse checkout of all required repositories in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created. Those are also described in [##Image-Definitions] section of this README.
+This will perform a sparse checkout of all required repositories in current (`.`) directory. Refer to `setup.sh` script for more detail on what directories are created. Those are also described in [Image Definitions](#image-definitions) section of this README.
+
+Refere to [Maintenance](#maintenance) section for more details on how to use and create patches.
 
 ### Build
 
