@@ -129,9 +129,12 @@ cd kubeflow
 
 # Save a patch file describing your modified state
 git diff > ../kubeflow.patch
+
+# Save commit ID as base commit for the patch
+git rev-parse --short HEAD > ../kubeflow-patch-commit.txt
 ```
 
-Commit this patch to this repository. Commit `./kubeflow-patch-commit.txt` to this repository as well. This will ensure that it is possible to retrieve exact copy of the tree which `./kubeflow.patch` was based on. If required to work on particular version/commit of Kubeflow tree, after cloning this repo make a note of the commig stored in `./kubeflow-patch-commit.txt`, setup Kubeflow tree (not that `./kubeflow-patch-commit.txt` will be overwritten with the latest commit ID), and checkout the noted commit ID. Then do the required work.
+Commit this patch to this repository. Commit `./kubeflow-patch-commit.txt` to this repository as well. This will ensure that it is possible to retrieve exact copy of the tree which `./kubeflow.patch` was based on. If required to work on particular version/commit of Kubeflow tree, after cloning this repo make a note of the commig stored in `./kubeflow-patch-commit.txt`, setup Kubeflow tree and checkout the noted commit ID. Then do the required work. Also note that scripts depend on `kubeflow-patch-commit.txt` file for tagging images.
 
 From time to time an update in upstream source, an addition of new container image, or a new vulnerability fix will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source, apply existing patch and diff the contents with current image definitions.
 

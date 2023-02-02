@@ -74,7 +74,6 @@ git pull -q origin $BRANCH
 
 # generate version and commit information
 git describe --tags --always --dirty  > ./version.txt
-git rev-parse --short HEAD > ../kubeflow-patch-commit.txt
 
 cd -
 
