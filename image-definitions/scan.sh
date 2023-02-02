@@ -6,6 +6,7 @@
 #
 # Usage: scan.sh <tag> or scan.sh
 #
+set -e
 
 TAG=$1
 

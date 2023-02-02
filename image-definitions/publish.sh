@@ -18,6 +18,7 @@ echo "Publish container images for Kubeflow"
 REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
 TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
+KF_PATCH_COMMIT=$(eval "cat ./kubeflow-patch-commit.txt")
 
 echo "Registry: $REGISTRY"
 echo "Tag: $TAG"
@@ -41,6 +42,11 @@ for IMAGE in "${IMAGE_LIST[@]}"; do
     # NOTE: tag is already applied
     docker tag $IMAGE $REGISTRY/$IMAGE
     docker push $REGISTRY/$IMAGE
+    if [ -n "${KF_PATCH_COMMIT}" ]; then
+        # tag with commit that was used as base to produce the kubeflow patch
+        docker tag $IMAGE $REGISTRY/$IMAGE-$KF_PATCH_COMMIT
+        docker push $REGISTRY/$IMAGE-$KF_PATCH_COMMIT
+    fi
 done
 
 # End of Kubeflow container images publish

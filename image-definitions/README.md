@@ -24,7 +24,7 @@ For detailed resources that these images require refer to `setup.sh` script.
 
 There were modification done to `Makefile`, `Dockerfile`, and `requirements.*` files to ensure bulding only required images.
 
-Version of Kubeflow is retrieved and stored in `./kubeflow/version.txt` when repository is setup.
+When repository is setup a version of Kubeflow is retrieved and stored in `./kubeflow/version.txt` and a current commit is stored in `./kubeflow-patch-commit.txt`. The latter file is used in tagging images with specific commit ID. In addition, it can be used to the exact version of the tree the patch was created with.
 
 ## Usage
 
@@ -131,7 +131,7 @@ cd kubeflow
 git diff > ../kubeflow.patch
 ```
 
-Commit this patch to this repository.
+Commit this patch to this repository. Commit `./kubeflow-patch-commit.txt` to this repository as well. This will ensure that it is possible to retrieve exact copy of the tree which `./kubeflow.patch` was based on.
 
 From time to time an update in upstream source, an addition of new container image, or a new vulnerability fix will require re-evaluation of image definitions. To perform difference analysis between upstream, set up a clean copy of upstream source, apply existing patch and diff the contents with current image definitions.
 

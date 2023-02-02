@@ -15,6 +15,7 @@
 # Usage:
 #  setup.sh <local-directory>
 #
+set -e
 
 DIR=$1
 if [ -z $DIR ]
@@ -71,8 +72,9 @@ done
 git sparse-checkout set $SPARSE_CHECKOUT_DIRS
 git pull -q origin $BRANCH
 
-# generate version prior to cleaning up git information
+# generate version and commit information
 git describe --tags --always --dirty  > ./version.txt
+git rev-parse --short HEAD > ../kubeflow-patch-commit.txt
 
 cd -
 
