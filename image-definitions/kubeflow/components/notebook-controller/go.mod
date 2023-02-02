@@ -3,7 +3,7 @@ module github.com/kubeflow/kubeflow/components/notebook-controller
 go 1.17
 
 require (
-	github.com/go-logr/logr v1.2.0
+	github.com/go-logr/logr v1.2.3
 	github.com/kubeflow/kubeflow/components/common v0.0.0-20220218084159-4ad0158e955e
 	github.com/onsi/ginkgo v1.16.5
 	github.com/onsi/gomega v1.17.0
