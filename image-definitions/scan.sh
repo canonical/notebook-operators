@@ -15,6 +15,7 @@ echo "Scan container images for Kubeflow"
 REPO_DIR="kubeflow"
 # if not specified, TAG is taken from corresponding version.txt
 TAG=${TAG:-$(eval "cat $REPO_DIR/version.txt")}
+KF_PATCH_COMMIT=$(eval "cat ./kubeflow-patch-commit.txt")
 DATE=$(date +%F)
 SCAN_SUMMARY_FILE="scan-summary-$DATE.txt"
 echo "Tag: $TAG" > $SCAN_SUMMARY_FILE
@@ -27,7 +28,7 @@ mkdir -p trivy-reports
 # excluded:
 # - tagged with `<none>`
 # - aquasec/trivy repository (scanner)
-IMAGE_LIST=($(docker images --format="{{json .}}" | jq -r 'select((.Tag=="v1.6.1") or (.Tag!="<none>" and .Repository!="aquasec/trivy")) | "\(.Repository):\(.Tag)"'))
+IMAGE_LIST=($(docker images --format="{{json .}}" | jq -r 'select((.Tag=="$TAG") or (.Tag!="<none>" and .Tag!="$TAG-$KF_PATCH_COMMIT" and .Repository!="aquasec/trivy")) | "\(.Repository):\(.Tag)"'))
 
 echo "CVEs per image:" >> $SCAN_SUMMARY_FILE
 echo " IMAGE | BASE | CRITICAL | HIGH | MEDIUM | LOW " >> $SCAN_SUMMARY_FILE
