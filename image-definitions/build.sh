@@ -6,6 +6,7 @@
 #
 # Usage: build.sh <tag> or build.sh
 #
+set -e
 
 TAG=$1
 
