@@ -16,7 +16,7 @@ KF_PATCH_COMMIT=$(eval "cat ../kubeflow-patch-commit.txt")
 if [ $KF_REPO_COMMIT != KF_PATCH_COMMIT ]; then
     echo "Repository $REPO_DIR/ has been updated since patch was generated"
     echo "Latest commit $KF_REPO_COMMIT Patch commit $KF_PATCH_COMMIT"
-    exit -1
+    exit 1
 fi
 
 cd -
