@@ -21,5 +21,5 @@ jobs:
       - name: Scan and send vulnerability records
         run: |
           cd image-definitions/
-          scan.sh
+          scan.sh 
           send-scan.sh ./trivy-reports
