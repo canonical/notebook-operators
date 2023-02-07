@@ -169,11 +169,13 @@ class JupyterUI(CharmBase):
 
     def _upload_files_to_container(self):
         """Upload required files to container."""
-        self.container.push(
-            "/etc/config/spawner_ui_config.yaml",
-            "spawner_ui_config.yaml",
-            make_dirs=True,
-        )
+        with open("src/spawner_ui_config.yaml", "r") as ui_config:
+            file_content = ui_config.read()
+            self.container.push(
+                "/etc/config/spawner_ui_config.yaml",
+                file_content,
+                make_dirs=True,
+            )
         for file_name, file_content in yaml.safe_load(
             Path("src/logos-configmap.yaml").read_text()
         )["data"].items():
