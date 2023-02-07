@@ -1,0 +1,25 @@
+name: Build and scan OCI images
+
+on:
+  schedule:
+    # every day at 1:00AM UTC
+    - cron: '0 21 * * *'
+
+
+jobs:
+  build-scan:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Build
+        run: |
+          cd image-definitions/
+          install-tools.sh
+          setup.sh .
+          apply-patches.sh
+          build.sh
+      - name: Scan and send vulnerability records
+        run: |
+          cd image-definitions/
+          scan.sh
+          send-scan.sh ./trivy-reports
