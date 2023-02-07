@@ -36,11 +36,12 @@ echo " -- | -- | -- | -- | -- | -- " >> $SCAN_SUMMARY_FILE
 # for every image generate trivy report and store it in `trivy-reports/` directory
 # ':' and '/' in image names are replaced with '-' for files
 for IMAGE in "${IMAGE_LIST[@]}"; do
-    TRIVY_REPORT="fixed-cve-$DATE-$IMAGE"
+    # trivy report name should contain artifact name being scanned with ':' and '\' replaced with '-'
+    TRIVY_REPORT="$IMAGE"
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/:/-/g')
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
     TRIVY_REPORT=$(echo "trivy-reports/$TRIVY_REPORT")
-    docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image -f json -o $TRIVY_REPORT.json --ignore-unfixed $IMAGE
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image -f sarif -o $TRIVY_REPORT.sarif --ignore-unfixed $IMAGE
     NUM_CRITICAL=$(grep CRITICAL $TRIVY_REPORT.json | wc -l)
     NUM_HIGH=$(grep HIGH $TRIVY_REPORT.json | wc -l)
     NUM_MEDIUM=$(grep MEDIUM $TRIVY_REPORT.json | wc -l)

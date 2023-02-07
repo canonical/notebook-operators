@@ -93,6 +93,8 @@ scan.sh <tag>
 
 Some images could be excluded from security scanning, because they are used as builder images. At this point all images are scanned for vulnerabilities.
 
+Name of a file for scanning tool report should contain artifact (image) being scanned with ':' and '/' replaced with '-'. See `scan.sh` for more details. This is to streamline reporting.
+
 ### Publish
 
 Login into the registry before running publishing of images. This step is left out of the tools on purposed to enable tools to be re-used in different scenarios such as Github workflows and manual publishing. For example, to login into Docker hub:
