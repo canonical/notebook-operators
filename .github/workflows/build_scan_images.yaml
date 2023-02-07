@@ -3,7 +3,7 @@ name: Build and scan OCI images
 on:
   schedule:
     # every day at 1:00AM UTC
-    - cron: '0 1 * * *'
+    - cron: '0 21 * * *'
 
 
 jobs:
