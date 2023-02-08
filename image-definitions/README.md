@@ -165,9 +165,10 @@ Changes to the scripts might be required if Makefiles have changed.
 
 Produce updated patch (in `kubeflow/` execute `git diff > ../kubeflow.patch`) and commit it to this repository.
 
-To clean up all Docker images creared during build process:
+To clean up all Docker images and containers creared during build and scan process:
 
 ```
+docker rm $(docker ps -aq)
 docker rmi -f $(docker images -aq)
 ```
 

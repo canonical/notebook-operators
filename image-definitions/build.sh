@@ -10,8 +10,6 @@ set -e
 
 TAG=$1
 
-echo "Cleanup Docker images"
-
 # Kubeflow container images build
 echo "Build image definitions for Kubeflow"
 REPO_DIR="kubeflow"
@@ -33,7 +31,7 @@ cd -
 echo "Build Jupyter UI"
 cd $REPO_DIR/components/crud-web-apps/jupyter
 export IMG=jupyter-web-app
-#make docker-build TAG=$TAG
+make docker-build TAG=$TAG
 echo "Clean up intermediate images"
 set +e
 docker rmi $(docker images --filter=dangling=true -q) 2>/dev/null
@@ -43,7 +41,7 @@ cd -
 echo "Build Jupyter controller"
 cd $REPO_DIR/components/notebook-controller
 export IMG=notebook-controller
-#make docker-build TAG=$TAG
+make docker-build TAG=$TAG
 echo "Clean up intermediate images"
 set +e
 docker rmi $(docker images --filter=dangling=true -q) 2>/dev/null
