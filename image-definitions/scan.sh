@@ -36,7 +36,7 @@ echo " -- | -- | -- | -- | -- | -- " >> $SCAN_SUMMARY_FILE
 # for every image generate trivy report and store it in `trivy-reports/` directory
 # ':' and '/' in image names are replaced with '-' for files
 for IMAGE in "${IMAGE_LIST[@]}"; do
-    # trivy report name should contain artifact name being scanned with ':' and '\' replaced with '-'
+    # trivy report name should contain artifact name being scanned with ':' and '/' replaced with '-'
     TRIVY_REPORT="$IMAGE"
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/:/-/g')
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
@@ -48,6 +48,8 @@ for IMAGE in "${IMAGE_LIST[@]}"; do
     NUM_LOW=$(grep LOW $TRIVY_REPORT.json | wc -l)
     BASE=$(cat $TRIVY_REPORT.json | jq '.Metadata.OS | "\(.Family):\(.Name)"' | sed 's/"//g')
     echo " $IMAGE | $BASE | $NUM_CRITICAL | $NUM_HIGH | $NUM_MEDIUM | $NUM_LOW " >> $SCAN_SUMMARY_FILE
+    # remove image to save space
+    docker rmi -f $IMAGE
 done
 
 NUM_CRITICAL=$(grep CRITICAL trivy-reports/* | wc -l)
