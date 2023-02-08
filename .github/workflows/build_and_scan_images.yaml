@@ -16,15 +16,14 @@ jobs:
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
-      - name: Build
+      - name: Build and scan for vulnerabilities
         run: |
           cd image-definitions/
           ./install-tools.sh
           ./setup.sh .
           ./apply-patches.sh
-          ./build.sh
-      - name: Scan and send vulnerability records
+          ./build-scan.sh
+      - name: Send vulnerability records
         run: |
           cd image-definitions/
-          ./scan.sh
           ./send-scan.sh ./trivy-reports
