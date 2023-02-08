@@ -3,8 +3,7 @@ name: Build and scan OCI images
 on:
   schedule:
     # every day at 1:00AM UTC
-    - cron: '10 0 * * *'
-
+    - cron: '5 2 * * *'
 
 jobs:
   build-scan:
@@ -18,12 +17,12 @@ jobs:
       - name: Build
         run: |
           cd image-definitions/
-          install-tools.sh
-          setup.sh .
-          apply-patches.sh
-          build.sh
+          ./install-tools.sh
+          ./setup.sh .
+          ./apply-patches.sh
+          ./build.sh
       - name: Scan and send vulnerability records
         run: |
           cd image-definitions/
-          scan.sh
-          send-scan.sh ./trivy-reports
+          ./scan.sh
+          ./send-scan.sh ./trivy-reports
