@@ -7,8 +7,12 @@ This directory contains image definitions for containers that are used in deploy
 - `build.sh` - Build container images.
 - `publish.sh` - Publish container images.
 - `scan.sh` - Scan container images for vulnerabilities.
+- `apply-patches.sh` - Apply all patches that are tracked in this image definitions.
+- `check-update.sh` - Check for updates to tarcked repositories. Return false if updates are detected.
+- `build-scan.sh` - Build and scan images one by one, deleting intermediate images to save disk space (used in Github runner).
+- `send-scan.sh` - Send scan results to Jira through common scriont fom `kubeflow-ci`.
 
-See [#Usage] for more details on each tool.
+See [Usage](#usage) for more details on each tool.
 
 ## Image Definitions
 
@@ -73,6 +77,12 @@ Tag will be set to contents of `version.txt` file. If different tag is required 
 build.sh <tag>
 ```
 
+To build and scan images one by one while deleting intermediate and scanned images to save disk space:
+
+```
+build-scan.sh
+```
+
 Note that in some of `Makefile(s)` `REGISTRY` is ignored.
 
 ### Security scan
@@ -94,6 +104,14 @@ scan.sh <tag>
 Some images could be excluded from security scanning, because they are used as builder images. At this point all images are scanned for vulnerabilities.
 
 Name of a file for scanning tool report should contain artifact (image) being scanned with ':' and '/' replaced with '-'. See `scan.sh` for more details. This is to streamline reporting.
+
+To send scan results to Jira to create a ticket:
+
+```
+send-scan.sh <directory-with-scan-reports>
+```
+
+The scan sending script uses common method defined in `kubeflow-ci` repository. Refer to `send-scan.sh` and `kubeflow-ci` for more details.
 
 ### Publish
 
@@ -149,6 +167,18 @@ setup.sh .
 cd kubeflow
 git apply ../kubeflow.patch
 git diff
+```
+
+To apply all patches:
+
+```
+apply-patches.sh
+```
+
+To check if there was an update to repositories:
+
+```
+check-update.sh
 ```
 
 Analyze differences and act accordingly, i.e. change `Makefiles` and/or `Dockerfile(s)`, add, remove, or modify image definitions in this repository.

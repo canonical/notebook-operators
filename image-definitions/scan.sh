@@ -45,9 +45,9 @@ mkdir -p "$TRIVY_REPORTS_DIR"
 IMAGE_LIST=($(docker images --format="{{json .}}" | jq -r 'select((.Tag=="$TAG") or (.Tag!="<none>" and .Tag!="$TAG-$KF_PATCH_COMMIT" and .Repository!="aquasec/trivy")) | "\(.Repository):\(.Tag)"'))
 
 # for every image generate trivy report and store it in `$TRIVY_REPORTS_DIR/` directory
-# ':' and '/' in image names are replaced with '-' for files
+# '.', ':' and '/' in image names are replaced with '-' for files
 for IMAGE in "${IMAGE_LIST[@]}"; do
-    # trivy report name should contain artifact name being scanned with ':' and '/' replaced with '-'
+    # trivy report name should contain artifact name being scanned with where '.', ':' and '/' replaced with '-'
     TRIVY_REPORT="$IMAGE"
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/:/-/g')
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
