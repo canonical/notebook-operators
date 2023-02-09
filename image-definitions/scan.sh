@@ -51,6 +51,7 @@ for IMAGE in "${IMAGE_LIST[@]}"; do
     TRIVY_REPORT="$IMAGE"
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/:/-/g')
     TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\//-/g')
+    TRIVY_REPORT=$(echo $TRIVY_REPORT | sed 's/\./-/g')
     TRIVY_REPORT=$(echo "$TRIVY_REPORTS_DIR/$TRIVY_REPORT.$TRIVY_REPORT_TYPE")
     if [ -f "$TRIVY_REPORT" ]; then
       echo "Trivy report '$TRIVY_REPORT' for $IMAGE already exist, skip it"
