@@ -57,7 +57,7 @@ for IMAGE in "${IMAGE_LIST[@]}"; do
       continue
     fi
     echo "Scan image $IMAGE report in $TRIVY_REPORT"
-    docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image -f $TRIVY_REPORT_TYPE -o $TRIVY_REPORT --ignore-unfixed $IMAGE
+    docker run -v /var/run/docker.sock:/var/run/docker.sock -v `pwd`:`pwd` -w `pwd` aquasec/trivy image --timeout 20m -f $TRIVY_REPORT_TYPE -o $TRIVY_REPORT --ignore-unfixed $IMAGE
     if [ "$TRIVY_REPORT_TYPE" = "json" ]; then
       # for JSON type retrieve severity counts
       NUM_CRITICAL=$(grep CRITICAL $TRIVY_REPORT | wc -l)
