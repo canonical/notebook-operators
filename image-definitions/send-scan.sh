@@ -17,7 +17,7 @@ fi
 
 # get script that sends scan results from Kubeflow CI repo
 CI_REPO="https://github.com/canonical/kubeflow-ci.git"
-BRANCH=main
+BRANCH=kf-942-gh188-feat-auto-build-and-scan
 mkdir -p kubeflow-ci
 cd kubeflow-ci
 git init -q
