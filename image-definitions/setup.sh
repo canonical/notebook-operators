@@ -7,9 +7,9 @@
 # Create directory and checkout specified components from upstream repositories.
 # The directory specified below should not exist in <local-directory>.
 # Updated upstream version of component is checked out from specified branch and then all git
-# information is deleted, leaving only the resouces required for image definitions.
+# information is deleted, leaving only the resources required for image definitions.
 # Use this script in setting up new image definitions or creating a copy to check for
-# differences between existing image definitions and upstream vesions.
+# differences between existing image definitions and upstream versions.
 # This script should be specific for the charm repository.
 #
 # Usage:
