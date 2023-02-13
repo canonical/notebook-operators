@@ -3,15 +3,22 @@
 # See LICENSE file for licensing details.
 #
 # Usage:
-#  send-scan.sh <directory-with-scan-results>
+#  send-scan.sh <directory-with-scan-results> <jira-token>
 #
 set -e
 
 DIR=$1
+JIRA_TOKEN=$2
 if [ -z $DIR ]
 then
     echo "ERROR: Directory with scan results is not specified."
-    echo "Usage: send-scan.sh <directory-with-scan-results>"
+    echo "Usage: send-scan.sh <directory-with-scan-results> <jira-token>"
+    exit
+fi
+if [ -z $JIRA_TOKEN ]
+then
+echo "ERROR: Token is not specified."
+    echo "Usage: send-scan.sh <directory-with-scan-results> <jira-token>"
     exit
 fi
 
@@ -27,6 +34,6 @@ git pull -q origin $BRANCH
 cd -
 
 # send scans from supplied directory
-./kubeflow-ci/scripts/send-scan.py --report-path="$DIR" --jira-url="https://automation.atlassian.com/pro/hooks/b92681c4b13f9e7f3b1b7f5d7de6167aaa3454a9"
+./kubeflow-ci/scripts/send-scan.py --report-path="$DIR" --jira-url="https://automation.atlassian.com/pro/hooks/$JIRA_TOKEN"
 
 echo "Done."
