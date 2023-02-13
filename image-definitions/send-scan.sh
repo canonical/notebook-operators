@@ -27,6 +27,6 @@ git pull -q origin $BRANCH
 cd -
 
 # send scans from supplied directory
-./kubeflow-ci/scripts/send-scan.py $DIR
+./kubeflow-ci/scripts/send-scan.py --report-path="$DIR" --jira-url="https://automation.atlassian.com/pro/hooks/b92681c4b13f9e7f3b1b7f5d7de6167aaa3454a9"
 
 echo "Done."
