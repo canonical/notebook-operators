@@ -20,7 +20,7 @@ jobs:
         working-directory: image-definitions
       - name: Pull remote files and apply patches
         run: |
-          setup.sh .
+          ./setup.sh .
           ./check-updates.sh || true
           ./apply-patches.sh
         working-directory: image-definitions
