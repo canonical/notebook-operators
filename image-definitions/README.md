@@ -10,7 +10,7 @@ This directory contains image definitions for containers that are used in deploy
 - `apply-patches.sh` - Apply all patches that are tracked in this image definitions.
 - `check-update.sh` - Check for updates to tarcked repositories. Return false if updates are detected.
 - `build-scan.sh` - Build and scan images one by one, deleting intermediate images to save disk space (used in Github runner).
-- `send-scan.sh` - Send scan results to Jira through common scriont fom `kubeflow-ci`.
+- `send-scan.sh` - Send scan results to Jira through common script from `kubeflow-ci`.
 
 See [Usage](#usage) for more details on each tool.
 
