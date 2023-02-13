@@ -33,5 +33,5 @@ jobs:
         working-directory: image-definitions
       - name: Send vulnerability records
         run: |
-          ./send-scan.sh ./trivy-reports {{ secrets.jira-token }}
+          ./send-scan.sh ./trivy-reports ${{ secrets.jira-token }}
         working-directory: image-definitions
