@@ -32,3 +32,11 @@ jobs:
         run: |
           ./send-scan.sh ./trivy-reports ${{ secrets.JIRA_TOKEN }}
         working-directory: image-definitions
+      - name: Prepare artifacts
+        run: |
+          tar zcvf trivy-reports-${{ strategy.job-index }}.tar.gz trivy-reports
+      - name: Upload Trivy reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-reports
+          path: ./trivy-reports-${{ strategy.job-index }}.tar.gz
