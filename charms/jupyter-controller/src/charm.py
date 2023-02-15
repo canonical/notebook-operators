@@ -89,7 +89,7 @@ class Operator(CharmBase):
             {
                 "version": 3,
                 "serviceAccount": {
-                    "roles": [
+                    "roles": [  # Source: manifests/apps/jupyter/notebook-controller/upstream/rbac/role.yaml    # noqa: E501
                         {
                             "global": True,
                             "rules": [
@@ -101,7 +101,7 @@ class Operator(CharmBase):
                                 {
                                     "apiGroups": [""],
                                     "resources": ["events"],
-                                    "verbs": ["create", "get", "list", "watch"],
+                                    "verbs": ["create", "get", "list", "patch", "watch"],
                                 },
                                 {
                                     "apiGroups": [""],
