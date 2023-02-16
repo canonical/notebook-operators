@@ -25,6 +25,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.deploy(
         "istio-pilot",
         channel="latest/edge",
+        config={"default-gateway": "test-gateway"},
         trust=True,
     )
     await ops_test.model.deploy("jupyter-ui")
