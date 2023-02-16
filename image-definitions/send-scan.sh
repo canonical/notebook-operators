@@ -24,16 +24,15 @@ fi
 
 # get script that sends scan results from Kubeflow CI repo
 CI_REPO="https://github.com/canonical/kubeflow-ci.git"
-BRANCH=kf-942-gh188-feat-auto-build-and-scan
 mkdir -p kubeflow-ci
 cd kubeflow-ci
 git init -q
 git remote add -f origin "$CI_REPO" &> /dev/null
-git sparse-checkout set scripts/send-scan.py
-git pull -q origin $BRANCH
+git sparse-checkout set scripts/cve-reports/send-scan.py
+git pull -q origin main
 cd -
 
 # send scans from supplied directory
-./kubeflow-ci/scripts/send-scan.py --report-path="$DIR" --jira-url="https://automation.atlassian.com/pro/hooks/$JIRA_TOKEN"
+./kubeflow-ci/scripts/cve-reports/send-scan.py --report-path="$DIR" --jira-url="https://automation.atlassian.com/pro/hooks/$JIRA_TOKEN"
 
 echo "Done."
