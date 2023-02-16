@@ -28,6 +28,21 @@ async def test_build_and_deploy(ops_test: OpsTest):
         config={"default-gateway": "test-gateway"},
         trust=True,
     )
+    await ops_test.model.deploy(
+        "istio-gateway",
+        application_name="istio-ingressgateway",
+        channel="latest/edge",
+        config={"kind": "ingress"},
+        trust=True,
+    )
+    await ops_test.model.add_relation("istio-pilot", "istio-ingressgateway")
+    await ops_test.model.wait_for_idle(
+        ["istio-pilot", "istio-ingressgateway"],
+        raise_on_blocked=False,
+        status="active",
+        timeout=90 * 10,
+    )
+
     await ops_test.model.deploy("jupyter-ui")
     await ops_test.model.add_relation("jupyter-ui", "istio-pilot")
 
