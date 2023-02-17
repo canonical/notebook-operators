@@ -34,9 +34,11 @@ jobs:
         working-directory: image-definitions
       - name: Prepare artifacts
         run: |
-          tar zcvf trivy-reports-${{ strategy.job-index }}.tar.gz trivy-reports
+          tar zcvf trivy-reports-${{ strategy.job-index }}.tar.gz ./trivy-reports
+        working-directory: image-definitions
       - name: Upload Trivy reports
         uses: actions/upload-artifact@v3
         with:
           name: trivy-reports
           path: ./trivy-reports-${{ strategy.job-index }}.tar.gz
+        working-directory: image-definitions
