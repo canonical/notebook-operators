@@ -106,9 +106,11 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
-    await ops_test.model.deploy("admission-webhook", channel="latest/edge")
+    # TO-DO: When updating to 1.7 this should be bumped to 1.7/edge, since this charm is already at 1.7
+    await ops_test.model.deploy("admission-webhook", channel="1.6/edge")
     await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge", trust=True)
-    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", trust=True)
+    # TO-DO: When updating to 1.7 this should be bumped to 1.7/edge, since this charm is already at 1.7
+    await ops_test.model.deploy("kubeflow-dashboard", channel="1.6/stable", trust=True)
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
 
     # Wait for everything to deploy
