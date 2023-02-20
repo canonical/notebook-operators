@@ -41,4 +41,4 @@ jobs:
         with:
           name: trivy-reports
           path: ./trivy-reports-${{ strategy.job-index }}.tar.gz
-        working-directory: image-definitions
+          working-directory: image-definitions
