@@ -26,6 +26,7 @@ spawnerFormDefaults:
     - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.7.0-rc.0
     - kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0-rc.0
     - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.7.0-rc.0
+    - swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore:v1.6.1
   imageGroupOne:
     # The container Image for the user's Group One Server
     # The annotation `notebooks.kubeflow.org/http-rewrite-uri: /`
