@@ -135,39 +135,57 @@ data:
       </g>
     </svg>
   group-two-icon.svg: |-
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid" width="724" height="561" viewBox="0 0 724 561">
-      <defs>
-        <linearGradient id="gradientFill-1" x1="0" x2="1" y1="0" y2="1" gradientUnits="objectBoundingBox" spreadMethod="pad">
-          <stop offset="0" stop-color="rgb(203,206,208)" stop-opacity="1"/>
-          <stop offset="1" stop-color="rgb(132,131,139)" stop-opacity="1"/>
-        </linearGradient>
-        <linearGradient id="gradientFill-2" x1="0" x2="1" y1="0" y2="1" gradientUnits="objectBoundingBox" spreadMethod="pad">
-          <stop offset="0" stop-color="rgb(39,109,195)" stop-opacity="1"/>
-          <stop offset="1" stop-color="rgb(22,92,170)" stop-opacity="1"/>
-        </linearGradient>
-      </defs>
-      <path d="M361.453,485.937 C162.329,485.937 0.906,377.828 0.906,244.469 C0.906,111.109 162.329,3.000 361.453,3.000 C560.578,3.000 722.000,111.109 722.000,244.469 C722.000,377.828 560.578,485.937 361.453,485.937 ZM416.641,97.406 C265.289,97.406 142.594,171.314 142.594,262.484 C142.594,353.654 265.289,427.562 416.641,427.562 C567.992,427.562 679.687,377.033 679.687,262.484 C679.687,147.971 567.992,97.406 416.641,97.406 Z" fill="url(#gradientFill-1)" fill-rule="evenodd"/>
-      <path d="M550.000,377.000 C550.000,377.000 571.822,383.585 584.500,390.000 C588.899,392.226 596.510,396.668 602.000,402.500 C607.378,408.212 610.000,414.000 610.000,414.000 L696.000,559.000 L557.000,559.062 L492.000,437.000 C492.000,437.000 478.690,414.131 470.500,407.500 C463.668,401.969 460.755,400.000 454.000,400.000 C449.298,400.000 420.974,400.000 420.974,400.000 L421.000,558.974 L298.000,559.026 L298.000,152.938 L545.000,152.938 C545.000,152.938 657.500,154.967 657.500,262.000 C657.500,369.033 550.000,377.000 550.000,377.000 ZM496.500,241.024 L422.037,240.976 L422.000,310.026 L496.500,310.002 C496.500,310.002 531.000,309.895 531.000,274.877 C531.000,239.155 496.500,241.024 496.500,241.024 Z" fill="url(#gradientFill-2)" fill-rule="evenodd"/>
+    <?xml version="1.0" encoding="utf-8"?>
+    <!-- Generator: Adobe Illustrator 13.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
+    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+    <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      width="14.35px" height="42.88px" viewBox="0 0 14.35 42.88" enable-background="new 0 0 14.35 42.88" xml:space="preserve">
+    <g>
+      <path d="M12.583,28.057v2.027H1.228c-0.016-0.508,0.066-0.996,0.246-1.465c0.289-0.773,0.752-1.535,1.389-2.285
+        s1.557-1.617,2.76-2.602c1.867-1.531,3.129-2.744,3.785-3.639s0.984-1.74,0.984-2.537c0-0.836-0.299-1.541-0.896-2.115
+        s-1.377-0.861-2.338-0.861c-1.016,0-1.828,0.305-2.438,0.914s-0.918,1.453-0.926,2.531l-2.168-0.223
+        c0.148-1.617,0.707-2.85,1.676-3.697s2.27-1.271,3.902-1.271c1.648,0,2.953,0.457,3.914,1.371s1.441,2.047,1.441,3.398
+        c0,0.688-0.141,1.363-0.422,2.027s-0.748,1.363-1.4,2.098s-1.736,1.742-3.252,3.023c-1.266,1.063-2.078,1.783-2.438,2.162
+        s-0.656,0.76-0.891,1.143H12.583z"/>
+    </g>
     </svg>
   group-two-logo.svg: |-
-    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" preserveAspectRatio="xMidYMid" width="724" height="561" viewBox="0 0 724 561">
-      <defs>
-        <linearGradient id="gradientFill-1" x1="0" x2="1" y1="0" y2="1" gradientUnits="objectBoundingBox" spreadMethod="pad">
-          <stop offset="0" stop-color="rgb(203,206,208)" stop-opacity="1"/>
-          <stop offset="1" stop-color="rgb(132,131,139)" stop-opacity="1"/>
-        </linearGradient>
-        <linearGradient id="gradientFill-2" x1="0" x2="1" y1="0" y2="1" gradientUnits="objectBoundingBox" spreadMethod="pad">
-          <stop offset="0" stop-color="rgb(39,109,195)" stop-opacity="1"/>
-          <stop offset="1" stop-color="rgb(22,92,170)" stop-opacity="1"/>
-        </linearGradient>
-      </defs>
-      <path d="M361.453,485.937 C162.329,485.937 0.906,377.828 0.906,244.469 C0.906,111.109 162.329,3.000 361.453,3.000 C560.578,3.000 722.000,111.109 722.000,244.469 C722.000,377.828 560.578,485.937 361.453,485.937 ZM416.641,97.406 C265.289,97.406 142.594,171.314 142.594,262.484 C142.594,353.654 265.289,427.562 416.641,427.562 C567.992,427.562 679.687,377.033 679.687,262.484 C679.687,147.971 567.992,97.406 416.641,97.406 Z" fill="url(#gradientFill-1)" fill-rule="evenodd"/>
-      <path d="M550.000,377.000 C550.000,377.000 571.822,383.585 584.500,390.000 C588.899,392.226 596.510,396.668 602.000,402.500 C607.378,408.212 610.000,414.000 610.000,414.000 L696.000,559.000 L557.000,559.062 L492.000,437.000 C492.000,437.000 478.690,414.131 470.500,407.500 C463.668,401.969 460.755,400.000 454.000,400.000 C449.298,400.000 420.974,400.000 420.974,400.000 L421.000,558.974 L298.000,559.026 L298.000,152.938 L545.000,152.938 C545.000,152.938 657.500,154.967 657.500,262.000 C657.500,369.033 550.000,377.000 550.000,377.000 ZM496.500,241.024 L422.037,240.976 L422.000,310.026 L496.500,310.002 C496.500,310.002 531.000,309.895 531.000,274.877 C531.000,239.155 496.500,241.024 496.500,241.024 Z" fill="url(#gradientFill-2)" fill-rule="evenodd"/>
+    <?xml version="1.0" encoding="utf-8"?>
+    <!-- Generator: Adobe Illustrator 13.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
+    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+    <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      width="14.35px" height="42.88px" viewBox="0 0 14.35 42.88" enable-background="new 0 0 14.35 42.88" xml:space="preserve">
+    <g>
+      <path d="M12.583,28.057v2.027H1.228c-0.016-0.508,0.066-0.996,0.246-1.465c0.289-0.773,0.752-1.535,1.389-2.285
+        s1.557-1.617,2.76-2.602c1.867-1.531,3.129-2.744,3.785-3.639s0.984-1.74,0.984-2.537c0-0.836-0.299-1.541-0.896-2.115
+        s-1.377-0.861-2.338-0.861c-1.016,0-1.828,0.305-2.438,0.914s-0.918,1.453-0.926,2.531l-2.168-0.223
+        c0.148-1.617,0.707-2.85,1.676-3.697s2.27-1.271,3.902-1.271c1.648,0,2.953,0.457,3.914,1.371s1.441,2.047,1.441,3.398
+        c0,0.688-0.141,1.363-0.422,2.027s-0.748,1.363-1.4,2.098s-1.736,1.742-3.252,3.023c-1.266,1.063-2.078,1.783-2.438,2.162
+        s-0.656,0.76-0.891,1.143H12.583z"/>
+    </g>
     </svg>
   group-one-icon.svg: |-
-    <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://web.resource.org/cc/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="110px" height="110px" viewBox="0.21 -0.077 110 110" enable-background="new 0.21 -0.077 110 110" xml:space="preserve"><linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="63.8159" y1="56.6829" x2="118.4934" y2="1.8225" gradientTransform="matrix(1 0 0 -1 -53.2974 66.4321)"> <stop offset="0" style="stop-color:#387EB8"/> <stop offset="1" style="stop-color:#366994"/></linearGradient><path fill="url(#SVGID_1_)" d="M55.023-0.077c-25.971,0-26.25,10.081-26.25,12.156c0,3.148,0,12.594,0,12.594h26.75v3.781 c0,0-27.852,0-37.375,0c-7.949,0-17.938,4.833-17.938,26.25c0,19.673,7.792,27.281,15.656,27.281c2.335,0,9.344,0,9.344,0 s0-9.765,0-13.125c0-5.491,2.721-15.656,15.406-15.656c15.91,0,19.971,0,26.531,0c3.902,0,14.906-1.696,14.906-14.406 c0-13.452,0-17.89,0-24.219C82.054,11.426,81.515-0.077,55.023-0.077z M40.273,8.392c2.662,0,4.813,2.15,4.813,4.813 c0,2.661-2.151,4.813-4.813,4.813s-4.813-2.151-4.813-4.813C35.46,10.542,37.611,8.392,40.273,8.392z"/><linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="97.0444" y1="21.6321" x2="155.6665" y2="-34.5308" gradientTransform="matrix(1 0 0 -1 -53.2974 66.4321)"> <stop offset="0" style="stop-color:#FFE052"/> <stop offset="1" style="stop-color:#FFC331"/></linearGradient><path fill="url(#SVGID_2_)" d="M55.397,109.923c25.959,0,26.282-10.271,26.282-12.156c0-3.148,0-12.594,0-12.594H54.897v-3.781 c0,0,28.032,0,37.375,0c8.009,0,17.938-4.954,17.938-26.25c0-23.322-10.538-27.281-15.656-27.281c-2.336,0-9.344,0-9.344,0 s0,10.216,0,13.125c0,5.491-2.631,15.656-15.406,15.656c-15.91,0-19.476,0-26.532,0c-3.892,0-14.906,1.896-14.906,14.406 c0,14.475,0,18.265,0,24.219C28.366,100.497,31.562,109.923,55.397,109.923z M70.148,101.454c-2.662,0-4.813-2.151-4.813-4.813 s2.15-4.813,4.813-4.813c2.661,0,4.813,2.151,4.813,4.813S72.809,101.454,70.148,101.454z"/></svg>
+    <?xml version="1.0" encoding="utf-8"?>
+    <!-- Generator: Adobe Illustrator 13.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
+    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+    <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      width="14.35px" height="42.88px" viewBox="0 0 14.35 42.88" enable-background="new 0 0 14.35 42.88" xml:space="preserve">
+    <g>
+      <path d="M9.442,30.084H7.333V16.643c-0.508,0.484-1.174,0.969-1.998,1.453s-1.564,0.848-2.221,1.09v-2.039
+        c1.18-0.555,2.211-1.227,3.094-2.016s1.508-1.555,1.875-2.297h1.359V30.084z"/>
+    </g>
+    </svg>
   group-one-logo.svg: |-
-    <?xml version="1.0" encoding="utf-8"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg version="1.1" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://web.resource.org/cc/" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="110px" height="110px" viewBox="0.21 -0.077 110 110" enable-background="new 0.21 -0.077 110 110" xml:space="preserve"><linearGradient id="SVGID_1_" gradientUnits="userSpaceOnUse" x1="63.8159" y1="56.6829" x2="118.4934" y2="1.8225" gradientTransform="matrix(1 0 0 -1 -53.2974 66.4321)"> <stop offset="0" style="stop-color:#387EB8"/> <stop offset="1" style="stop-color:#366994"/></linearGradient><path fill="url(#SVGID_1_)" d="M55.023-0.077c-25.971,0-26.25,10.081-26.25,12.156c0,3.148,0,12.594,0,12.594h26.75v3.781 c0,0-27.852,0-37.375,0c-7.949,0-17.938,4.833-17.938,26.25c0,19.673,7.792,27.281,15.656,27.281c2.335,0,9.344,0,9.344,0 s0-9.765,0-13.125c0-5.491,2.721-15.656,15.406-15.656c15.91,0,19.971,0,26.531,0c3.902,0,14.906-1.696,14.906-14.406 c0-13.452,0-17.89,0-24.219C82.054,11.426,81.515-0.077,55.023-0.077z M40.273,8.392c2.662,0,4.813,2.15,4.813,4.813 c0,2.661-2.151,4.813-4.813,4.813s-4.813-2.151-4.813-4.813C35.46,10.542,37.611,8.392,40.273,8.392z"/><linearGradient id="SVGID_2_" gradientUnits="userSpaceOnUse" x1="97.0444" y1="21.6321" x2="155.6665" y2="-34.5308" gradientTransform="matrix(1 0 0 -1 -53.2974 66.4321)"> <stop offset="0" style="stop-color:#FFE052"/> <stop offset="1" style="stop-color:#FFC331"/></linearGradient><path fill="url(#SVGID_2_)" d="M55.397,109.923c25.959,0,26.282-10.271,26.282-12.156c0-3.148,0-12.594,0-12.594H54.897v-3.781 c0,0,28.032,0,37.375,0c8.009,0,17.938-4.954,17.938-26.25c0-23.322-10.538-27.281-15.656-27.281c-2.336,0-9.344,0-9.344,0 s0,10.216,0,13.125c0,5.491-2.631,15.656-15.406,15.656c-15.91,0-19.476,0-26.532,0c-3.892,0-14.906,1.896-14.906,14.406 c0,14.475,0,18.265,0,24.219C28.366,100.497,31.562,109.923,55.397,109.923z M70.148,101.454c-2.662,0-4.813-2.151-4.813-4.813 s2.15-4.813,4.813-4.813c2.661,0,4.813,2.151,4.813,4.813S72.809,101.454,70.148,101.454z"/></svg>
+    <?xml version="1.0" encoding="utf-8"?>
+    <!-- Generator: Adobe Illustrator 13.0.2, SVG Export Plug-In . SVG Version: 6.00 Build 14948)  -->
+    <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+    <svg version="1.1" id="Ebene_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+      width="14.35px" height="42.88px" viewBox="0 0 14.35 42.88" enable-background="new 0 0 14.35 42.88" xml:space="preserve">
+    <g>
+      <path d="M9.442,30.084H7.333V16.643c-0.508,0.484-1.174,0.969-1.998,1.453s-1.564,0.848-2.221,1.09v-2.039
+        c1.18-0.555,2.211-1.227,3.094-2.016s1.508-1.555,1.875-2.297h1.359V30.084z"/>
+    </g>
+    </svg>
 kind: ConfigMap
 metadata:
   name: logos
