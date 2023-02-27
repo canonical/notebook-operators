@@ -40,5 +40,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: trivy-reports
-          path: ./trivy-reports-${{ strategy.job-index }}.tar.gz
-          working-directory: image-definitions
+          path: image-definitions/trivy-reports-${{ strategy.job-index }}.tar.gz
