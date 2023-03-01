@@ -21,7 +21,7 @@ jobs:
       - name: Pull remote files and apply patches
         run: |
           ./setup.sh .
-          ./check-updates.sh || true
+          ./check-update.sh || true
           ./apply-patches.sh
         working-directory: image-definitions
       - name: Build and scan for vulnerabilities
