@@ -1,4 +1,4 @@
-juju<3.1
+juju<3.2
 pytest-operator
 tenacity
 websockets
