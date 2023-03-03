@@ -58,6 +58,7 @@ def test_prometheus_data_set(harness: Harness, mocker):
     """Test Prometheus data setting."""
     harness.set_leader(True)
     harness.set_model_name("test_kubeflow")
+    harness.begin()
 
     mock_net_get = mocker.patch("ops.testing._TestingModelBackend.network_get")
 
@@ -71,10 +72,10 @@ def test_prometheus_data_set(harness: Harness, mocker):
         ]
     }
     mock_net_get.return_value = fake_network
+
     rel_id = harness.add_relation("metrics-endpoint", "otherapp")
     harness.add_relation_unit(rel_id, "otherapp/0")
     harness.update_relation_data(rel_id, "otherapp", {})
-    harness.begin()
 
     # basic data
     assert json.loads(harness.get_relation_data(rel_id, harness.model.app.name)["scrape_jobs"])[0][
