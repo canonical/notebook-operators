@@ -4,6 +4,7 @@
 
 """Unit tests for JupyterUI Charm."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -27,6 +28,33 @@ def harness() -> Harness:
 
 class TestCharm:
     """Test class for JupyterUI."""
+
+    def test_spawner_ui(self):
+        """Test spawner UI.
+
+        spawner_ui_config.yaml contains a number of changes that were done for Charmed
+        Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml
+        should be reviewed and changes to this tests should be made, if required.
+        """
+        spawner_ui_config = yaml.safe_load(Path("./src/spawner_ui_config.yaml").read_text())
+
+        # test for default configurations
+        # only single configuration value is currently set in the list of values
+        config_value = spawner_ui_config["spawnerFormDefaults"]["configurations"]["value"]
+        assert config_value == ["access-ml-pipeline"]
+
+        # test for default images
+        default_image_list = [
+            "kubeflownotebookswg/jupyter-scipy:v1.7.0-rc.1",
+            "kubeflownotebookswg/jupyter-pytorch-full:v1.7.0-rc.1",
+            "kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.7.0-rc.1",
+            "kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0-rc.1",
+            "kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.7.0-rc.1",
+            "swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore:v1.6.1",
+        ]
+        image_list = spawner_ui_config["spawnerFormDefaults"]["image"]["options"]
+        for image in image_list:
+            assert image in default_image_list
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
