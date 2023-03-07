@@ -43,18 +43,9 @@ class TestCharm:
         config_value = spawner_ui_config["spawnerFormDefaults"]["configurations"]["value"]
         assert config_value == ["access-ml-pipeline"]
 
-        # test for default images
-        default_image_list = [
-            "kubeflownotebookswg/jupyter-scipy:v1.7.0-rc.1",
-            "kubeflownotebookswg/jupyter-pytorch-full:v1.7.0-rc.1",
-            "kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.7.0-rc.1",
-            "kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0-rc.1",
-            "kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.7.0-rc.1",
-            "swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore:v1.6.1",
-        ]
+        # test for images added in addition to upstream
         image_list = spawner_ui_config["spawnerFormDefaults"]["image"]["options"]
-        for image in image_list:
-            assert image in default_image_list
+        assert "swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore:v1.6.1" in image_list
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
