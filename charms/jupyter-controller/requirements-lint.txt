@@ -18,11 +18,11 @@ flake8==5.0.4
     #   flake8-builtins
     #   pep8-naming
     #   pyproject-flake8
-flake8-builtins==2.0.1
+flake8-builtins==2.1.0
     # via -r requirements-lint.in
-flake8-copyright==0.2.3
+flake8-copyright==0.2.4
     # via -r requirements-lint.in
-isort==5.10.1
+isort==5.11.2
     # via -r requirements-fmt.txt
 mccabe==0.7.0
     # via flake8
@@ -34,7 +34,7 @@ pathspec==0.10.3
     # via
     #   -r requirements-fmt.txt
     #   black
-pep8-naming==0.13.2
+pep8-naming==0.13.3
     # via -r requirements-lint.in
 platformdirs==2.6.0
     # via

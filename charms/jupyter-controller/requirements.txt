@@ -6,7 +6,9 @@
 #
 oci-image==1.0.0
     # via -r requirements.in
-ops==1.5.4
+ops==2.1.1
     # via -r requirements.in
 pyyaml==6.0
+    # via ops
+websocket-client==1.5.1
     # via ops
