@@ -1,0 +1,43 @@
+name: Build and scan OCI images
+
+on:
+  schedule:
+  # every day at 1:12AM UTC
+  - cron: '12 1 * * *'
+
+jobs:
+  build-scan:
+    runs-on: ubuntu-20.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install requirements for image building
+        run: |
+          ./install-tools.sh
+        working-directory: image-definitions
+      - name: Pull remote files and apply patches
+        run: |
+          ./setup.sh .
+          ./check-update.sh || true
+          ./apply-patches.sh
+        working-directory: image-definitions
+      - name: Build and scan for vulnerabilities
+        run: |
+          ./build-scan.sh
+        working-directory: image-definitions
+      - name: Send vulnerability records
+        run: |
+          ./send-scan.sh ./trivy-reports ${{ secrets.JIRA_TOKEN }}
+        working-directory: image-definitions
+      - name: Prepare artifacts
+        run: |
+          tar zcvf trivy-reports-${{ strategy.job-index }}.tar.gz ./trivy-reports
+        working-directory: image-definitions
+      - name: Upload Trivy reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: trivy-reports
+          path: image-definitions/trivy-reports-${{ strategy.job-index }}.tar.gz

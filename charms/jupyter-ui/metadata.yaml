@@ -8,9 +8,45 @@ resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    upstream-source: docker.io/kubeflownotebookswg/jupyter-web-app:v1.6.1
+    upstream-source: docker.io/kubeflownotebookswg/jupyter-web-app:v1.7.0-rc.1
 requires:
   ingress:
     interface: ingress
-    schema: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
+    schema:
+      v2:
+        requires:
+          type: object
+          properties:
+            service:
+              type: string
+            port:
+              type: integer
+            namespace:
+              type: string
+            prefix:
+              type: string
+            rewrite:
+              type: string
+          required:
+          - service
+          - port
+          - namespace
+          - prefix
+      v1:
+        requires:
+          type: object
+          properties:
+            service:
+              type: string
+            port:
+              type: integer
+            prefix:
+              type: string
+            rewrite:
+              type: string
+          required:
+          - service
+          - port
+          - prefix
     versions: [v1]
+    __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
