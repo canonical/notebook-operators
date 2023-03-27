@@ -11,12 +11,15 @@ import pytest
 import requests
 import tenacity
 import yaml
+from lightkube import ApiError, Client
+from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
+from lightkube.resources.core_v1 import ConfigMap, Service
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
-CHARM_NAME = METADATA["name"]
+APP_NAME = METADATA["name"]
 
 
 @pytest.mark.abort_on_fail
@@ -43,18 +46,18 @@ async def test_build_and_deploy(ops_test: OpsTest):
         timeout=90 * 10,
     )
 
-    await ops_test.model.deploy("jupyter-ui")
+    await ops_test.model.deploy("jupyter-ui", trust=True)
     await ops_test.model.add_relation("jupyter-ui", "istio-pilot")
 
     my_charm = await ops_test.build_charm(".")
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
     resources = {"oci-image": image_path}
-    await ops_test.model.deploy(my_charm, resources=resources)
+    await ops_test.model.deploy(my_charm, resources=resources, trust=True)
     await ops_test.model.wait_for_idle(
         status="active", raise_on_blocked=False, raise_on_error=False
     )
 
-    assert ops_test.model.applications[CHARM_NAME].units[0].workload_status == "active"
+    assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
 
 
 async def test_prometheus_integration(ops_test: OpsTest):
@@ -67,7 +70,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
     await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
     await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
-    await ops_test.model.add_relation(CHARM_NAME, prometheus_scrape)
+    await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
         f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
     )
@@ -83,7 +86,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
         with attempt:
             r = requests.get(
                 f"http://{prometheus_unit_ip}:9090/api/v1/query?"
-                f'query=up{{juju_application="{CHARM_NAME}"}}'
+                f'query=up{{juju_application="{APP_NAME}"}}'
             )
             response = json.loads(r.content.decode("utf-8"))
             response_status = response["status"]
@@ -92,7 +95,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
             assert len(response["data"]) > 0
             assert len(response["data"]["result"]) > 0
             response_metric = response["data"]["result"][0]["metric"]
-            assert response_metric["juju_application"] == CHARM_NAME
+            assert response_metric["juju_application"] == APP_NAME
             assert response_metric["juju_model"] == ops_test.model_name
 
     # Verify that Prometheus receives the same set of targets as specified.
@@ -161,3 +164,47 @@ retry_for_5_attempts = tenacity.Retrying(
     wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
     reraise=True,
 )
+
+
+@pytest.mark.abort_on_fail
+async def test_remove_with_resources_present(ops_test: OpsTest):
+    """Test remove with all resources deployed.
+
+    Verify that all deployed resources that need to be removed are removed.
+
+    """
+    # remove deployed charm and verify that it is removed
+    await ops_test.model.remove_application(app_name=APP_NAME, block_until_done=True)
+    assert APP_NAME not in ops_test.model.applications
+
+    # verify that all resources that were deployed are removed
+    lightkube_client = Client()
+
+    # verify all CRDs in namespace are removed
+    crd_list = lightkube_client.list(
+        CustomResourceDefinition,
+        labels=[("app.juju.is/created-by", "seldon-controller-manager")],
+        namespace=ops_test.model.name,
+    )
+    assert not list(crd_list)
+
+    # verify that ConfigMap is removed
+    # TO-DO: test all ConfigMaps with label app.juju.is/created-by=seldon-controller-manager
+    try:
+        _ = lightkube_client.get(
+            ConfigMap,
+            name="seldon-config",
+            namespace=ops_test.model.name,
+        )
+    except ApiError as error:
+        if error.status.code != 404:
+            # other error than Not Found
+            assert False
+
+    # verify that all related Services are removed
+    svc_list = lightkube_client.list(
+        Service,
+        labels=[("app.juju.is/created-by", "seldon-controller-manager")],
+        namespace=ops_test.model.name,
+    )
+    assert not list(svc_list)
