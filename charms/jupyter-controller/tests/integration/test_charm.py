@@ -183,17 +183,16 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     # verify all CRDs in namespace are removed
     crd_list = lightkube_client.list(
         CustomResourceDefinition,
-        labels=[("app.juju.is/created-by", "seldon-controller-manager")],
+        labels=[("app.juju.is/created-by", "jupyter-controller")],
         namespace=ops_test.model.name,
     )
     assert not list(crd_list)
 
-    # verify that ConfigMap is removed
-    # TO-DO: test all ConfigMaps with label app.juju.is/created-by=seldon-controller-manager
+    # verify that Service is removed
     try:
         _ = lightkube_client.get(
-            ConfigMap,
-            name="seldon-config",
+            Service,
+            name="jupyter-controller-operator",
             namespace=ops_test.model.name,
         )
     except ApiError as error:
@@ -201,10 +200,3 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
             # other error than Not Found
             assert False
 
-    # verify that all related Services are removed
-    svc_list = lightkube_client.list(
-        Service,
-        labels=[("app.juju.is/created-by", "seldon-controller-manager")],
-        namespace=ops_test.model.name,
-    )
-    assert not list(svc_list)
