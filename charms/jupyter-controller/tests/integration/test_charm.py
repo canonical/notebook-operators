@@ -13,7 +13,7 @@ import tenacity
 import yaml
 from lightkube import ApiError, Client
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
-from lightkube.resources.core_v1 import ConfigMap, Service
+from lightkube.resources.core_v1 import Service
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -173,6 +173,20 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     Verify that all deployed resources that need to be removed are removed.
 
     """
+
+    # verify that Service is removed
+    try:
+        lightkube_client = Client()
+        _ = lightkube_client.get(
+            Service,
+            name="jupyter-controller-operator",
+            namespace=ops_test.model.name,
+        )
+    except ApiError as error:
+        assert False
+
+    assert _
+
     # remove deployed charm and verify that it is removed
     await ops_test.model.remove_application(app_name=APP_NAME, block_until_done=True)
     assert APP_NAME not in ops_test.model.applications
@@ -199,4 +213,3 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
         if error.status.code != 404:
             # other error than Not Found
             assert False
-

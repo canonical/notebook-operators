@@ -147,6 +147,13 @@ class JupyterController(CharmBase):
                     "environment": env_vars,
                 }
             },
+            "checks": {
+                "jupyter-controller-get": {
+                    "override": "replace",
+                    "period": "30s",
+                    "http": {"url": f"http://localhost:{METRICS_PORT}{METRICS_PATH}"},
+                }
+            },
         }
 
         return Layer(layer_config)
