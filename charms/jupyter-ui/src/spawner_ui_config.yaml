@@ -180,5 +180,11 @@ spawnerFormDefaults:
     # value:
     #   - add-gcp-secret
     #   - default-editor
-    value: []
+    value:
+    # Added from https://github.com/kubeflow/kubeflow/pull/6160 to fix
+    # https://github.com/canonical/bundle-kubeflow/issues/423.  This was not yet in
+    # upstream and if they go with something different we should consider syncing with
+    # upstream.
+    # Auto-selects "Allow access to Kubeflow Pipelines" button in Notebook spawner UI
+    - access-ml-pipeline
     readOnly: false
