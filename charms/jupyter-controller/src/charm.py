@@ -119,7 +119,8 @@ class JupyterController(CharmBase):
     def crd_resource_handler(self, handler: KubernetesResourceHandler):
         self._crd_resource_handler = handler
 
-    def _get_env_vars(self):
+    @property
+    def service_environment(self):
         """Return environment variables based on model configuration."""
         config = self.model.config
         ret_env_vars = {
@@ -133,7 +134,7 @@ class JupyterController(CharmBase):
     @property
     def _jupyter_controller_layer(self) -> Layer:
         """Create and return Pebble framework layer."""
-        env_vars = self._get_env_vars()
+        env_vars = self.service_environment
 
         layer_config = {
             "summary": "jupyter-controller layer",

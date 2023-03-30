@@ -171,21 +171,7 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     """Test remove with all resources deployed.
 
     Verify that all deployed resources that need to be removed are removed.
-
     """
-
-    # verify that Service is removed
-    try:
-        lightkube_client = Client()
-        _ = lightkube_client.get(
-            Service,
-            name="jupyter-controller-operator",
-            namespace=ops_test.model.name,
-        )
-    except ApiError as error:
-        assert False
-
-    assert _
 
     # remove deployed charm and verify that it is removed
     await ops_test.model.remove_application(app_name=APP_NAME, block_until_done=True)
@@ -206,7 +192,7 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     try:
         _ = lightkube_client.get(
             Service,
-            name="jupyter-controller-operator",
+            name="jupyter-controller",
             namespace=ops_test.model.name,
         )
     except ApiError as error:

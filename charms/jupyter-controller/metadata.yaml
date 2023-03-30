@@ -13,9 +13,6 @@ resources:
     description: 'Backing OCI image'
     auto-fetch: true
     upstream-source: docker.io/kubeflownotebookswg/notebook-controller:v1.7.0
-#deployment:
-#  type: stateless
-#  service: omit
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
