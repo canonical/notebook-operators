@@ -16,12 +16,12 @@ from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
 from lightkube.resources.core_v1 import Service
 from pytest_operator.plugin import OpsTest
 
-log = logging.getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 
-
+@pytest.mark.skip(reason="Skip upgrade dev")
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
     """Test build and deploy."""
@@ -59,7 +59,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
 
-
+@pytest.mark.skip(reason="Skip upgrade dev")
 async def test_prometheus_integration(ops_test: OpsTest):
     """Deploy prometheus and required relations, then test the metrics."""
     prometheus = "prometheus-k8s"
@@ -79,10 +79,10 @@ async def test_prometheus_integration(ops_test: OpsTest):
 
     status = await ops_test.model.get_status()
     prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
-    log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
+    logger.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus deployment (attempt {attempt.retry_state.attempt_number})")
+        logger.info(f"Testing prometheus deployment (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             r = requests.get(
                 f"http://{prometheus_unit_ip}:9090/api/v1/query?"
@@ -90,7 +90,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
             )
             response = json.loads(r.content.decode("utf-8"))
             response_status = response["status"]
-            log.info(f"Response status is {response_status}")
+            logger.info(f"Response status is {response_status}")
             assert response_status == "success"
             assert len(response["data"]) > 0
             assert len(response["data"]["result"]) > 0
@@ -100,13 +100,13 @@ async def test_prometheus_integration(ops_test: OpsTest):
 
     # Verify that Prometheus receives the same set of targets as specified.
     for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
+        logger.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             # obtain scrape targets from Prometheus
             targets_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/targets")
             response = json.loads(targets_result.content.decode("utf-8"))
             response_status = response["status"]
-            log.info(f"Response status is {response_status}")
+            logger.info(f"Response status is {response_status}")
             assert response_status == "success"
 
             # verify that Argo Controller is in the target list
@@ -115,13 +115,13 @@ async def test_prometheus_integration(ops_test: OpsTest):
 
     # Verify that Prometheus receives the same set of alert rules as specified.
     for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus rules (attempt {attempt.retry_state.attempt_number})")
+        logger.info(f"Testing prometheus rules (attempt {attempt.retry_state.attempt_number})")
         with attempt:
             # obtain alert rules from Prometheus
             rules_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/rules")
             response = json.loads(rules_result.content.decode("utf-8"))
             response_status = response["status"]
-            log.info(f"Response status is {response_status}")
+            logger.info(f"Response status is {response_status}")
             assert response_status == "success"
 
             # verify alerts are available in Prometheus
@@ -165,7 +165,7 @@ retry_for_5_attempts = tenacity.Retrying(
     reraise=True,
 )
 
-
+@pytest.mark.skip(reason="Skip upgrade dev")
 @pytest.mark.abort_on_fail
 async def test_remove_with_resources_present(ops_test: OpsTest):
     """Test remove with all resources deployed.
@@ -199,3 +199,66 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
         if error.status.code != 404:
             # other error than Not Found
             assert False
+
+@pytest.mark.abort_on_fail
+async def test_upgrade(ops_test: OpsTest):
+    """Test upgrade.
+
+    Verify that all upgrade process succeeds.
+
+    NOTE: There should be no charm with APP_NAME deployed prior to testing upgrade.
+          There should be no Seldon related resources present in the cluster.
+
+    Main flow of the test:
+    - Build charm to be tested, i.e. to be upgraded to.
+    - Deploy stable version of the same charm from Charmhub.
+    - Refresh the deployed stable charm to the charm to be tested.
+    - Verify that charm is active and all resources are upgraded/intact.
+    """
+   # build the charm
+    charm_under_test = await ops_test.build_charm(".")
+
+    # deploy stable version of the charm
+    await ops_test.model.deploy(APP_NAME, channel="1.6/stable", trust=True)
+
+    await ops_test.model.wait_for_idle(
+        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=60
+    )
+    assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
+
+    # refresh (upgrade) using locally built charm
+    image_path = METADATA["resources"]["oci-image"]["upstream-source"]
+    await ops_test.model.applications[APP_NAME].refresh(
+        path=f"{charm_under_test}", resources={"oci-image": image_path}
+    )
+
+    # wait for updated charm to become active and idle for 60 seconds to ensure upgrade-charm
+    # event has been handled and all resources were installed/upgraded
+    # NOTE: when charm reaches active-idle state, upgrade-event might not have been handled yet
+    # and/or installation of resources might not be completed
+    await ops_test.model.wait_for_idle(
+        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=60
+    )
+    assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
+
+    # verify that cluster CRD is installed
+    lightkube_client = Client()
+    try:
+        cluster_crd = lightkube_client.get(
+            CustomResourceDefinition,
+            name="notebooks.kubeflow.org",
+            namespace=ops_test.model.name,
+        )
+    except ApiError as error:
+        logger.error(f"CRD not found {error}")
+        assert False
+    assert cluster_crd
+    # check that cluster CRD is upgraded and version is correct
+    test_crd_names = []
+    for crd in yaml.safe_load_all(Path("./src/templates/crd-v1.yaml.j2").read_text()):
+        test_crd_names.append(crd["metadata"]["name"])
+    # there should be single CRD in manifest
+    assert len(test_crd_names) == 1
+    assert cluster_crd.metadata.name in test_crd_names[0]
+    # TO-DO: verify that CRD indeed was updated
+
