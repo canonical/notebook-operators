@@ -1,8 +1,8 @@
-Charmed Jupyter
-===============
+# Charmed Jupyter UI
 
-This charm is part of the Charmed Jupyter Notebooks bundle.
-For instructions on how to deploy it, see https://jaas.ai/jupyter.
+[![Charmed Jupyter UI](https://charmhub.io/jupyter-ui/badge.svg)](https://charmhub.io/jupyter-ui)
 
-Upstream documentation can be found at https://jupyter.org/
+# Description
 
+Charmed Jupyter UI is an operator for Kubeflow Jupyter UI web application that provides users with web UI to access and manipulate Jupyter Notebooks in Charmed Kubeflow.
+This charm is part of the Charmed Notebooks Operators bundle which is an integral part of [Charmed Kubeflow](https://charmhub.io/kubeflow).
