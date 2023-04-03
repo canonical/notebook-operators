@@ -212,7 +212,6 @@ class JupyterController(CharmBase):
 
     def _on_upgrade(self, _):
         """Perform upgrade steps."""
-
         # force conflict resolution in K8S resources update
         self._on_event(_, force_conflicts=True)
 

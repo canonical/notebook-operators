@@ -12,8 +12,9 @@ import requests
 import tenacity
 import yaml
 from lightkube import ApiError, Client
+from lightkube.generic_resource import create_namespaced_resource
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
-from lightkube.resources.core_v1 import Service
+from lightkube.resources.core_v1 import Namespace, Service
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -166,6 +167,49 @@ retry_for_5_attempts = tenacity.Retrying(
 )
 
 
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
+    stop=tenacity.stop_after_attempt(30),
+    reraise=True,
+)
+def assert_available(client, resource_class, resource_name, namespace):
+    """Test for available status. Retries multiple times to allow deployment to be created."""
+    # NOTE: This test is re-using deployment created in test_build_and_deploy()
+
+    dep = client.get(resource_class, resource_name, namespace=namespace)
+    state = dep.get("status", {}).get("state")
+
+    resource_class_kind = resource_class.__name__
+    if state == "Available":
+        log.info(f"{resource_class_kind}/{resource_name} status == {state}")
+    else:
+        log.info(
+            f"{resource_class_kind}/{resource_name} status == {state} (waiting for 'Available')"
+        )
+
+    assert state == "Available", f"Waited too long for {resource_class_kind}/{resource_name}!"
+
+
+async def test_create_notebook(ops_test: OpsTest):
+    """Test notebook creation."""
+    lightkube_client = Client()
+    this_ns = lightkube_client.get(res=Namespace, name=ops_test.model.name)
+    lightkube_client.patch(res=Namespace, name=this_ns.metadata.name, obj=this_ns)
+
+    notebook_resource = create_namespaced_resource(
+        group="kubeflow.org",
+        version="v1",
+        kind="notebook",
+        plural="notebooks",
+        verbs=None,
+    )
+    with open("examples/sample-notebook.yaml") as f:
+        notebook = notebook_resource(yaml.safe_load(f.read()))
+        lightkube_client.create(notebook, namespace=ops_test.model.name)
+
+    assert_available(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
+
+
 @pytest.mark.abort_on_fail
 async def test_remove_with_resources_present(ops_test: OpsTest):
     """Test remove with all resources deployed.
@@ -193,6 +237,24 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
         _ = lightkube_client.get(
             Service,
             name="jupyter-controller",
+            namespace=ops_test.model.name,
+        )
+    except ApiError as error:
+        if error.status.code != 404:
+            # other error than Not Found
+            assert False
+
+    # verify notebook is deleted
+    notebook_resource = create_namespaced_resource(
+        group="kubeflow.org",
+        version="v1",
+        kind="notebook",
+        plural="notebooks",
+    )
+    try:
+        _ = lightkube_client.get(
+            notebook_resource,
+            name="sample-notebook",
             namespace=ops_test.model.name,
         )
     except ApiError as error:
