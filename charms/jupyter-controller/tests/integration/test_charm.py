@@ -167,29 +167,6 @@ retry_for_5_attempts = tenacity.Retrying(
 )
 
 
-@tenacity.retry(
-    wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
-    stop=tenacity.stop_after_attempt(30),
-    reraise=True,
-)
-def assert_available(client, resource_class, resource_name, namespace):
-    """Test for available status. Retries multiple times to allow deployment to be created."""
-    # NOTE: This test is re-using deployment created in test_build_and_deploy()
-
-    dep = client.get(resource_class, resource_name, namespace=namespace)
-    state = dep.get("status", {}).get("state")
-
-    resource_class_kind = resource_class.__name__
-    if state == "Available":
-        log.info(f"{resource_class_kind}/{resource_name} status == {state}")
-    else:
-        log.info(
-            f"{resource_class_kind}/{resource_name} status == {state} (waiting for 'Available')"
-        )
-
-    assert state == "Available", f"Waited too long for {resource_class_kind}/{resource_name}!"
-
-
 async def test_create_notebook(ops_test: OpsTest):
     """Test notebook creation."""
     lightkube_client = Client()
@@ -207,7 +184,15 @@ async def test_create_notebook(ops_test: OpsTest):
         notebook = notebook_resource(yaml.safe_load(f.read()))
         lightkube_client.create(notebook, namespace=ops_test.model.name)
 
-    assert_available(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
+    try:
+        notebook_ready = lightkube_client.get(
+            notebook_resource,
+            name="sample-notebook",
+            namespace=ops_test.model.name,
+        )
+    except ApiError:
+        assert False
+    assert notebook_ready
 
 
 @pytest.mark.abort_on_fail
