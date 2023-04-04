@@ -32,8 +32,8 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler")
     def test_not_leader(
         self,
-        _: MagicMock,  # k8s_resource_handler
-        __: MagicMock,  # crd_resource_handler
+        k8s_resource_handler: MagicMock,
+        crd_resource_handler: MagicMock,
         harness: Harness,
     ):
         """Test that charm waits if not leader."""
@@ -45,8 +45,8 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler")
     def test_no_relation(
         self,
-        _: MagicMock,  # k8s_resource_handler
-        __: MagicMock,  # crd_resource_handler
+        k8s_resource_handler: MagicMock,
+        crd_resource_handler: MagicMock,
         harness: Harness,
     ):
         """Test charm goes to active if no additional relations exist."""
@@ -132,8 +132,8 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler")
     def test_pebble_layer(
         self,
-        _: MagicMock,  # k8s_resource_handler
-        __: MagicMock,  # crd_resource_handler
+        k8s_resource_handler: MagicMock,
+        crd_resource_handler: MagicMock,
         harness: Harness,
     ):
         """Test creation of Pebble layer. Only test specific items."""

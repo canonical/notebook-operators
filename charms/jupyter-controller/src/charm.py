@@ -259,7 +259,7 @@ class JupyterController(CharmBase):
             )
         except ErrorWithStatus as err:
             self.model.unit.status = err.status
-            self.logger.error(f"Failed to handle {event} with error: {str(err)}")
+            self.logger.error(f"Failed to handle {event} with error: {err}")
             return
 
         self.model.unit.status = ActiveStatus()
