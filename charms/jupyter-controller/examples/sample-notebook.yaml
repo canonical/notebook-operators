@@ -11,7 +11,7 @@ spec:
     spec:
       containers:
       - name: notebook
-        image: kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0
+        image: charmedkubeflow/jupyter-pytorch-full-rock:v1.7.0-rc.1
         imagePullPolicy: IfNotPresent
         resources:
           requests:
