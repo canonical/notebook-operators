@@ -22,6 +22,8 @@ from ops.pebble import CheckStatus, Layer
 
 METRICS_PORT = "8080"
 METRICS_PATH = "/metrics"
+PROBE_PORT = "8081"
+PROBE_PATH = "/healthz"
 
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
@@ -135,8 +137,6 @@ class JupyterController(CharmBase):
     @property
     def _jupyter_controller_layer(self) -> Layer:
         """Create and return Pebble framework layer."""
-        env_vars = self.service_environment
-
         layer_config = {
             "summary": "jupyter-controller layer",
             "description": "Pebble config layer for jupyter-controller",
@@ -146,7 +146,7 @@ class JupyterController(CharmBase):
                     "summary": "Entrypoint of jupyter-controller image",
                     "command": self._exec_command,
                     "startup": "enabled",
-                    "environment": env_vars,
+                    "environment": self.service_environment,
                     "on-check-failure": {"jupyter-controller-up": "restart"},
                 }
             },
@@ -156,7 +156,7 @@ class JupyterController(CharmBase):
                     "period": "30s",
                     "timeout": "60s",
                     "threshold": 4,
-                    "http": {"url": f"http://localhost:{METRICS_PORT}{METRICS_PATH}"},
+                    "http": {"url": f"http://localhost:{PROBE_PORT}{PROBE_PATH}"},
                 }
             },
         }
@@ -166,7 +166,7 @@ class JupyterController(CharmBase):
     def _check_leader(self):
         """Check if this unit is a leader."""
         if not self.unit.is_leader():
-            self.logger.info("Not a leader, skipping setup")
+            self.logger.warning("Not a leader, skipping setup")
             raise ErrorWithStatus("Waiting for leadership", WaitingStatus)
 
     def _check_and_report_k8s_conflict(self, error):
@@ -178,7 +178,6 @@ class JupyterController(CharmBase):
 
     def _apply_k8s_resources(self, force_conflicts: bool = False) -> None:
         """Apply K8S resources.
-
         Args:
             force_conflicts (bool): *(optional)* Will "force" apply requests causing conflicting
                                     fields to change ownership to the field manager used in this
@@ -229,23 +228,33 @@ class JupyterController(CharmBase):
 
     def _on_upgrade(self, _):
         """Perform upgrade steps."""
-
         # force conflict resolution in K8S resources update
         self._on_event(_, force_conflicts=True)
 
     def _on_remove(self, _):
         """Remove all resources."""
+        delete_error = None
         self.unit.status = MaintenanceStatus("Removing K8S resources")
         k8s_resources_manifests = self.k8s_resource_handler.render_manifests()
         crd_resources_manifests = self.crd_resource_handler.render_manifests()
         try:
-            delete_many(self.crd_resource_handler.lightkube_client, crd_resources_manifests)
             delete_many(self.k8s_resource_handler.lightkube_client, k8s_resources_manifests)
         except ApiError as error:
             # do not log/report when resources were not found
             if error.status.code != 404:
+                self.logger.error(f"Failed to delete CRD resources, with error: {error}")
+                delete_error = error
+        try:
+            delete_many(self.crd_resource_handler.lightkube_client, crd_resources_manifests)
+        except ApiError as error:
+            # do not log/report when resources were not found
+            if error.status.code != 404:
                 self.logger.error(f"Failed to delete K8S resources, with error: {error}")
-                raise error
+                delete_error = error
+
+        if delete_error is not None:
+            raise delete_error
+
         self.unit.status = MaintenanceStatus("K8S resources removed")
 
     def _on_update_status(self, _):
@@ -271,7 +280,7 @@ class JupyterController(CharmBase):
             )
         except ErrorWithStatus as err:
             self.model.unit.status = err.status
-            self.logger.info(f"Failed to handle {event} with error: {str(err)}")
+            self.logger.error(f"Failed to handle {event} with error: {err}")
             return
 
         self.model.unit.status = ActiveStatus()
