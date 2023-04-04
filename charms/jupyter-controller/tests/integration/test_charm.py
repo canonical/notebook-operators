@@ -168,6 +168,28 @@ retry_for_5_attempts = tenacity.Retrying(
 )
 
 
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
+    stop=tenacity.stop_after_attempt(30),
+    reraise=True,
+)
+def assert_replicas(client, resource_class, resource_name, namespace):
+    """Test for replicas. Retries multiple times to allow for notebook to be created."""
+
+    dep = client.get(resource_class, resource_name, namespace=namespace)
+    replicas = dep.get("status", {}).get("readyReplicas")
+
+    resource_class_kind = resource_class.__name__
+    if replicas == 1:
+        log.info(f"{resource_class_kind}/{resource_name} readyReplicas == {replicas}")
+    else:
+        log.info(
+            f"{resource_class_kind}/{resource_name} readyReplicas == {replicas} (waiting for '1')"
+        )
+
+    assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
+
+
 async def test_create_notebook(ops_test: OpsTest):
     """Test notebook creation."""
     lightkube_client = Client()
@@ -194,6 +216,8 @@ async def test_create_notebook(ops_test: OpsTest):
     except ApiError:
         assert False
     assert notebook_ready
+
+    assert_replicas(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
 
 
 @pytest.mark.abort_on_fail
