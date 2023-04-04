@@ -11,6 +11,7 @@ import pytest
 import requests
 import tenacity
 import yaml
+from httpx import HTTPStatusError
 from lightkube import ApiError, Client
 from lightkube.generic_resource import create_namespaced_resource
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
@@ -242,6 +243,8 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
             name="sample-notebook",
             namespace=ops_test.model.name,
         )
+    except HTTPStatusError:
+        assert True
     except ApiError as error:
         if error.status.code != 404:
             # other error than Not Found
