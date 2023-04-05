@@ -1,0 +1,19 @@
+apiVersion: kubeflow.org/v1
+kind: Notebook
+metadata:
+  annotations:
+  labels:
+    access-ml-pipleine: "true"
+    app: sample-notebook
+  name: sample-notebook
+spec:
+  template:
+    spec:
+      containers:
+      - name: notebook
+        image: charmedkubeflow/jupyter-pytorch-full-rock:v1.7.0-rc.1
+        imagePullPolicy: IfNotPresent
+        resources:
+          requests:
+            cpu: 500m
+            memory: 1Gi
