@@ -154,7 +154,7 @@ class JupyterController(CharmBase):
                 "jupyter-controller-up": {
                     "override": "replace",
                     "period": "30s",
-                    "timeout": "60s",
+                    "timeout": "20s",
                     "threshold": 4,
                     "http": {"url": f"http://localhost:{PROBE_PORT}{PROBE_PATH}"},
                 }
@@ -208,6 +208,11 @@ class JupyterController(CharmBase):
             else:
                 raise GenericCharmRuntimeError("CRD resources creation failed") from error
         self.model.unit.status = MaintenanceStatus("K8S resources created")
+
+    def _check_container_connection(self):
+        """Check if connection can be made with container."""
+        if not self.container.can_connect():
+            raise ErrorWithStatus("Pod startup is not complete", MaintenanceStatus)
 
     def _check_status(self):
         """Check status of workload and set status accordingly."""
@@ -270,6 +275,7 @@ class JupyterController(CharmBase):
                                     resources.
         """
         try:
+            self._check_container_connection()
             self._check_leader()
             self._apply_k8s_resources(force_conflicts=force_conflicts)
             update_layer(
