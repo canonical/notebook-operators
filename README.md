@@ -1,16 +1,13 @@
-## Jupyter Notebook Operators
+# Charmed Jupyter Notebook Operators
 
-### Overview
-This bundle encompasses the Kubernetes Python operators (a.k.a. charms) for Jupyter
-(see [CharmHub](https://charmhub.io/?q=jupyter)).
-
-The Jupyter Notebook operators are Python scripts that wrap the latest released [Jupyter Notebook manifests][manifests],
-providing lifecycle management for each application, handling events (install, upgrade, integrate, remove).
-
-[manifests]: https://github.com/kubeflow/manifests/tree/master/apps/jupyter
+[![Charmed Jupyter](https://charmhub.io/jupyter/badge.svg)](https://charmhub.io/jupyter)
 
 
-## Install
+# Descriptions 
+
+This bundle contains Charmed Operators for Kubeflow Jupyter Notebook Controller and Kubeflow Jupyter UI web application (see [CharmHub](https://charmhub.io/?q=jupyter)).
+
+# Install
 
 This Jupyter bundle requires some other components of Kubeflow to be deployed,
 including istio and the kubeflow dashboard. It also currently requires some 
@@ -29,7 +26,7 @@ For more information, see https://juju.is/docs
 [integrate]: .github/workflows/integrate.yaml
 
 
-## Running Bundle Tests
+# Running Bundle Tests
 
 The following instructions assume K8S cluster is configured and Juju controller
 is bootstraped.
@@ -48,6 +45,6 @@ sudo apt install -y firefox-geckodriver
 
 Add `kubeflow` model and execute tests:
 ```bash
-juju add-mode kubeflow
+juju add-model kubeflow
 tox -e integration -- --model kubeflow
 ```
