@@ -176,8 +176,8 @@ retry_for_5_attempts = tenacity.Retrying(
 def assert_replicas(client, resource_class, resource_name, namespace):
     """Test for replicas. Retries multiple times to allow for notebook to be created."""
 
-    dep = client.get(resource_class, resource_name, namespace=namespace)
-    replicas = dep.get("status", {}).get("readyReplicas")
+    notebook = client.get(resource_class, resource_name, namespace=namespace)
+    replicas = notebook.get("status", {}).get("readyReplicas")
 
     resource_class_kind = resource_class.__name__
     if replicas == 1:
