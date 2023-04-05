@@ -136,6 +136,8 @@ class JupyterController(CharmBase):
     @property
     def _jupyter_controller_layer(self) -> Layer:
         """Create and return Pebble framework layer."""
+        env_vars = self.service_environment
+
         layer_config = {
             "summary": "jupyter-controller layer",
             "description": "Pebble config layer for jupyter-controller",
@@ -174,6 +176,7 @@ class JupyterController(CharmBase):
 
     def _apply_k8s_resources(self, force_conflicts: bool = False) -> None:
         """Apply K8S resources.
+
         Args:
             force_conflicts (bool): *(optional)* Will "force" apply requests causing conflicting
                                     fields to change ownership to the field manager used in this
