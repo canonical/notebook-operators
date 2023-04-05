@@ -136,8 +136,6 @@ class JupyterController(CharmBase):
     @property
     def _jupyter_controller_layer(self) -> Layer:
         """Create and return Pebble framework layer."""
-        env_vars = self.service_environment
-
         layer_config = {
             "summary": "jupyter-controller layer",
             "description": "Pebble config layer for jupyter-controller",
