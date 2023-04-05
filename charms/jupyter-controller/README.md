@@ -1,7 +1,8 @@
-Charmed Jupyter
-===============
+# Charmed Jupyter Controller
 
-This charm is part of the Charmed Jupyter Notebooks bundle.
-For instructions on how to deploy it, see https://jaas.ai/jupyter.
+[![Charmed Jupyter Controller](https://charmhub.io/jupyter-controller/badge.svg)](https://charmhub.io/jupyter-controller)
 
-Upstream documentation can be found at https://jupyter.org/
+# Description
+
+Charmed Jupyter Controller is an operator for Kubeflow Jupyter Notebook Controller that allows users to create Jupyter Notebooks.
+This charm is part of the Charmed Notebooks Operators bundle which is an integral part of [Charmed Kubeflow](https://charmhub.io/kubeflow).
