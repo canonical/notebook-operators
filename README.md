@@ -3,7 +3,7 @@
 [![Charmed Jupyter](https://charmhub.io/jupyter/badge.svg)](https://charmhub.io/jupyter)
 
 
-# Descriptions 
+# Description
 
 This bundle contains Charmed Operators for Kubeflow Jupyter Notebook Controller and Kubeflow Jupyter UI web application (see [CharmHub](https://charmhub.io/?q=jupyter)).
 
