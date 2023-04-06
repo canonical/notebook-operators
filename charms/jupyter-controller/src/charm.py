@@ -17,7 +17,7 @@ from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, MaintenanceStatus, ModelError, WaitingStatus
 from ops.pebble import CheckStatus, Layer
 
 METRICS_PORT = "8080"
@@ -218,12 +218,17 @@ class JupyterController(CharmBase):
     def _check_status(self):
         """Check status of workload and set status accordingly."""
         container = self.unit.get_container(self._container_name)
-        check = container.get_check("jupyter-controller-up")
+        try:
+            check = container.get_check("jupyter-controller-up")
+        except ModelError as error:
+            raise GenericCharmRuntimeError(
+                "Failed to run health check on workload container"
+            ) from error
         if check.status != CheckStatus.UP:
             self.logger.error(
                 f"Container {self._container_name} failed health check. It will be restarted."
             )
-            self.model.unit.status = MaintenanceStatus("Workload failed health check")
+            raise ErrorWithStatus("Workload failed health check", MaintenanceStatus)
         else:
             self.model.unit.status = ActiveStatus()
 

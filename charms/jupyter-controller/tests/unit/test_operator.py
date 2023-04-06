@@ -186,6 +186,8 @@ class TestCharm:
         harness.set_leader(True)
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
+
+        # test successful update status
         harness.charm.on.update_status.emit()
         _apply_k8s_resources.assert_called()
         _check_status.assert_called()
