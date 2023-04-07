@@ -164,8 +164,8 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler")
     def test_deploy_k8s_resources_success(
         self,
-        k8s_resource_handler: MagicMock,  # k8s_resource_handler
-        __: MagicMock,  # crd_resource_handler
+        k8s_resource_handler: MagicMock,
+        crd_resource_handler: MagicMock,
         harness: Harness,
     ):
         """Test if K8S resource handler is executed as expected."""
@@ -173,3 +173,21 @@ class TestCharm:
         harness.charm._apply_k8s_resources()
         k8s_resource_handler.apply.assert_called()
         assert isinstance(harness.charm.model.unit.status, MaintenanceStatus)
+
+    @patch("charm.JupyterController._apply_k8s_resources")
+    @patch("charm.JupyterController._check_status")
+    def test_update_status(
+        self,
+        _apply_k8s_resources: MagicMock,
+        _check_status: MagicMock,
+        harness: Harness,
+    ):
+        """Test update status handler."""
+        harness.set_leader(True)
+        harness.begin_with_initial_hooks()
+        harness.container_pebble_ready("jupyter-controller")
+
+        # test successful update status
+        harness.charm.on.update_status.emit()
+        _apply_k8s_resources.assert_called()
+        _check_status.assert_called()

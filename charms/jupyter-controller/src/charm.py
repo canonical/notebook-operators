@@ -17,8 +17,8 @@ from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
 from ops.charm import CharmBase
 from ops.main import main
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
-from ops.pebble import Layer
+from ops.model import ActiveStatus, MaintenanceStatus, ModelError, WaitingStatus
+from ops.pebble import CheckStatus, Layer
 
 METRICS_PORT = "8080"
 METRICS_PATH = "/metrics"
@@ -68,6 +68,7 @@ class JupyterController(CharmBase):
         self.framework.observe(self.on.install, self._on_install)
         self.framework.observe(self.on.upgrade_charm, self._on_upgrade)
         self.framework.observe(self.on.remove, self._on_remove)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
@@ -146,12 +147,15 @@ class JupyterController(CharmBase):
                     "command": self._exec_command,
                     "startup": "enabled",
                     "environment": self.service_environment,
+                    "on-check-failure": {"jupyter-controller-up": "restart"},
                 }
             },
             "checks": {
-                "jupyter-controller-get": {
+                "jupyter-controller-up": {
                     "override": "replace",
                     "period": "30s",
+                    "timeout": "20s",
+                    "threshold": 4,
                     "http": {"url": f"http://localhost:{PROBE_PORT}{PROBE_PATH}"},
                 }
             },
@@ -206,6 +210,28 @@ class JupyterController(CharmBase):
                 raise GenericCharmRuntimeError("CRD resources creation failed") from error
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
+    def _check_container_connection(self):
+        """Check if connection can be made with container."""
+        if not self.container.can_connect():
+            raise ErrorWithStatus("Pod startup is not complete", MaintenanceStatus)
+
+    def _check_status(self):
+        """Check status of workload and set status accordingly."""
+        container = self.unit.get_container(self._container_name)
+        try:
+            check = container.get_check("jupyter-controller-up")
+        except ModelError as error:
+            raise GenericCharmRuntimeError(
+                "Failed to run health check on workload container"
+            ) from error
+        if check.status != CheckStatus.UP:
+            self.logger.error(
+                f"Container {self._container_name} failed health check. It will be restarted."
+            )
+            raise ErrorWithStatus("Workload failed health check", MaintenanceStatus)
+        else:
+            self.model.unit.status = ActiveStatus()
+
     def _on_install(self, _):
         """Installation only tasks."""
         # deploy K8S resources to speed up deployment
@@ -242,6 +268,11 @@ class JupyterController(CharmBase):
 
         self.unit.status = MaintenanceStatus("K8S resources removed")
 
+    def _on_update_status(self, _):
+        """Update status actions."""
+        self._on_event(_)
+        self._check_status()
+
     def _on_event(self, event, force_conflicts: bool = False) -> None:
         """Perform all required actions for the Charm.
 
@@ -250,6 +281,7 @@ class JupyterController(CharmBase):
                                     resources.
         """
         try:
+            self._check_container_connection()
             self._check_leader()
             self._apply_k8s_resources(force_conflicts=force_conflicts)
             update_layer(
