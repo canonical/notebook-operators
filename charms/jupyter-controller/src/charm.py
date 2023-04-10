@@ -217,20 +217,22 @@ class JupyterController(CharmBase):
 
     def _check_status(self):
         """Check status of workload and set status accordingly."""
+        self._check_leader()
         container = self.unit.get_container(self._container_name)
-        try:
-            check = container.get_check("jupyter-controller-up")
-        except ModelError as error:
-            raise GenericCharmRuntimeError(
-                "Failed to run health check on workload container"
-            ) from error
-        if check.status != CheckStatus.UP:
-            self.logger.error(
-                f"Container {self._container_name} failed health check. It will be restarted."
-            )
-            raise ErrorWithStatus("Workload failed health check", MaintenanceStatus)
-        else:
-            self.model.unit.status = ActiveStatus()
+        if container:
+            try:
+                check = container.get_check("jupyter-controller-up")
+            except ModelError as error:
+                raise GenericCharmRuntimeError(
+                    "Failed to run health check on workload container"
+                ) from error
+            if check.status != CheckStatus.UP:
+                self.logger.error(
+                    f"Container {self._container_name} failed health check. It will be restarted."
+                )
+                raise ErrorWithStatus("Workload failed health check", MaintenanceStatus)
+            else:
+                self.model.unit.status = ActiveStatus()
 
     def _on_install(self, _):
         """Installation only tasks."""
@@ -271,7 +273,10 @@ class JupyterController(CharmBase):
     def _on_update_status(self, _):
         """Update status actions."""
         self._on_event(_)
-        self._check_status()
+        try:
+            self._check_status()
+        except ErrorWithStatus as err:
+            self.model.unit.status = err.status
 
     def _on_event(self, event, force_conflicts: bool = False) -> None:
         """Perform all required actions for the Charm.
