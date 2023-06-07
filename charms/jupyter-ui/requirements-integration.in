@@ -1,6 +1,6 @@
 aiohttp
 jinja2
-juju<3.1
+juju<3.3
 pytest-operator
 requests
 tenacity
