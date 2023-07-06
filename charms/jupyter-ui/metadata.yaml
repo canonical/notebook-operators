@@ -1,6 +1,7 @@
 name: jupyter-ui
 summary: Multi-user server for Jupyter notebooks
 description: Multi-user server for Jupyter notebooks
+docs: https://discourse.charmhub.io/t/10964
 website: https://charmhub.io/jupyter-ui
 source: https://github.com/canonical/notebook-operators
 issues: https://github.com/canonical/notebook-operators/issues
