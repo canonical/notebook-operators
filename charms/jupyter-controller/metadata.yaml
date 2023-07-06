@@ -4,6 +4,7 @@ description: Multi-user server for Jupyter notebooks
 website: https://charmhub.io/jupyter-controller
 source: https://github.com/canonical/notebook-operators
 issues: https://github.com/canonical/notebook-operators/issues
+docs: 
 containers:
   jupyter-controller:
     resource: oci-image
