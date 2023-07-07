@@ -19,3 +19,12 @@ options:
     type: boolean
     default: false
     description: Whether cookies should require HTTPS
+  jupyter-images:
+    type: string
+    default: |
+      - kubeflownotebookswg/jupyter-pytorch-full:v1.7.0
+      - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.7.0
+      - kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0
+      - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.7.0
+      - swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore:v1.6.1
+    description: list of image options for Jupyter Notebook
