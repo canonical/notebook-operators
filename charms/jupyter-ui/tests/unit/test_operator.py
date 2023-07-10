@@ -32,11 +32,11 @@ class TestCharm:
     def test_spawner_ui(self):
         """Test spawner UI.
 
-        spawner_ui_config.yaml contains a number of changes that were done for Charmed
-        Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml
+        spawner_ui_config.yaml.j2 contains a number of changes that were done for Charmed
+        Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        spawner_ui_config = yaml.safe_load(Path("./src/spawner_ui_config.yaml").read_text())
+        spawner_ui_config = yaml.safe_load(Path("./src/spawner_ui_config.yaml.j2").read_text())
 
         # test for default configurations
         # only single configuration value is currently set in the list of values
@@ -142,3 +142,28 @@ class TestCharm:
         harness.charm._deploy_k8s_resources()
         k8s_resource_handler.apply.assert_called()
         assert isinstance(harness.charm.model.unit.status, MaintenanceStatus)
+
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_notebook_selector_images_config(
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+    ):
+
+        expected_images = ["image1", "image2", "image3"]
+        expected_images_yaml = yaml.dump(expected_images)
+        harness.set_leader(True)
+        harness.add_oci_resource(
+            "oci-image",
+            {
+                "registrypath": "ci-test",
+                "username": "",
+                "password": "",
+            },
+        )
+        harness.set_model_name("kubeflow")
+        harness.begin_with_initial_hooks()
+        harness.update_config({"jupyter-images": expected_images_yaml})
+        actual_images = harness.charm._get_from_config("jupyter-images")
+        assert actual_images == expected_images
