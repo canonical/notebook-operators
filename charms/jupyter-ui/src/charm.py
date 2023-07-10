@@ -8,13 +8,13 @@
 import logging
 from pathlib import Path
 from typing import List
-from jinja2 import Environment, FileSystemLoader
 
 import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
+from jinja2 import Environment, FileSystemLoader
 from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
 from lightkube.models.core_v1 import ServicePort
@@ -27,8 +27,9 @@ from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, ge
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
 ]
-JUPYTER_IMAGES_CONFIG="jupyter-images"
-JWA_CONFIG_FILE="src/spawner_ui_config.yaml.j2"
+JUPYTER_IMAGES_CONFIG = "jupyter-images"
+JWA_CONFIG_FILE = "src/spawner_ui_config.yaml.j2"
+
 
 class CheckFailed(Exception):
     """Raise this exception if one of the checks in main fails."""
@@ -202,11 +203,11 @@ class JupyterUI(CharmBase):
         try:
             config = yaml.safe_load(self.model.config[config_key])
         except yaml.YAMLError as err:
-                self.logger.warning(f"{error_message}  Got error: {err}")
-                return []
+            self.logger.warning(f"{error_message}  Got error: {err}")
+            return []
         return config
-    
-    def _render_jwa_file_with_images_config(self,jupyter_images_config):
+
+    def _render_jwa_file_with_images_config(self, jupyter_images_config):
         """Renders the JWA configmap template with the user-set images in the juju config."""
         environment = Environment(loader=FileSystemLoader("."))
         template = environment.get_template(JWA_CONFIG_FILE)
@@ -216,23 +217,23 @@ class JupyterUI(CharmBase):
     def _upload_spawner_file_to_container(self, file_content):
         """Pushes the JWA spawner config file to the workload container."""
         self.container.push(
-                "/etc/config/spawner_ui_config.yaml",
-                file_content,
-                make_dirs=True,
-            )
-    
+            "/etc/config/spawner_ui_config.yaml",
+            file_content,
+            make_dirs=True,
+        )
+
     def _update_images_selector(self):
         """Updates the images options that can be selected in the dropdown list."""
         # TODO: include rstudio and vscode images
         # get config
         jupyter_images = self._get_config_as_yaml(JUPYTER_IMAGES_CONFIG)
-        self.logger.info(f"CONFIG HERE {jupyter_images}") # TODO: remove line - for debugging
-        # render the 
-        jwa_content = self._render_jwa_file_with_images_config(jupyter_images_config=jupyter_images)
-        self.logger.info(f"JWA CONTENT HERE\n {jwa_content}") # TODO: remove line - for debugging
+        # render the jwa file
+        jwa_content = self._render_jwa_file_with_images_config(
+            jupyter_images_config=jupyter_images
+        )
         # push file
         self._upload_spawner_file_to_container(jwa_content)
-    
+
     def _on_install(self, _):
         """Perform installation only actions."""
         try:
