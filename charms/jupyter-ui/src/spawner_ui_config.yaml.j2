@@ -29,10 +29,12 @@ spawnerFormDefaults:
     # The annotation `notebooks.kubeflow.org/http-rewrite-uri: /`
     # is applied to notebook in this group, configuring
     # the Istio rewrite for containers that host their web UI at `/`
-    value: kubeflownotebookswg/codeserver-python:v1.7.0
+    value: {{ vscode_images[0] }}
     # The list of available standard container Images
     options:
-    - kubeflownotebookswg/codeserver-python:v1.7.0
+    {% for image in vscode_images -%}
+    - {{ image }}
+    {% endfor %}
   imageGroupTwo:
     # The container Image for the user's Group Two Server
     # The annotation `notebooks.kubeflow.org/http-rewrite-uri: /`
@@ -41,10 +43,12 @@ spawnerFormDefaults:
     # The annotation `notebooks.kubeflow.org/http-headers-request-set`
     # is applied to notebook in this group, configuring Istio
     # to add the `X-RStudio-Root-Path` header to requests
-    value: kubeflownotebookswg/rstudio-tidyverse:v1.7.0
+    value: {{ rstudio_images[0] }}
     # The list of available standard container Images
     options:
-    - kubeflownotebookswg/rstudio-tidyverse:v1.7.0
+    {% for image in rstudio_images -%}
+    - {{ image }}
+    {% endfor %}
   # If true, hide registry and/or tag name in the image selection dropdown
   hideRegistry: true
   hideTag: false

@@ -28,6 +28,8 @@ K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
 ]
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
+VSCODE_IMAGES_CONFIG = "vscode-images"
+RSTUDIO_IMAGES_CONFIG = "rstudio-images"
 JWA_CONFIG_FILE = "src/spawner_ui_config.yaml.j2"
 
 
@@ -194,7 +196,7 @@ class JupyterUI(CharmBase):
             raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
-    def _get_config_as_yaml(self, config_key) -> List[str]:
+    def _get_from_config(self, config_key) -> List[str]:
         """Returns the yaml value of the config stored in config_key."""
         error_message = (
             f"Cannot parse user-defined images from config "
@@ -207,11 +209,17 @@ class JupyterUI(CharmBase):
             return []
         return config
 
-    def _render_jwa_file_with_images_config(self, jupyter_images_config):
+    def _render_jwa_file_with_images_config(
+        self, jupyter_images_config, vscode_images_config, rstudio_images_config
+    ):
         """Renders the JWA configmap template with the user-set images in the juju config."""
         environment = Environment(loader=FileSystemLoader("."))
         template = environment.get_template(JWA_CONFIG_FILE)
-        content = template.render(jupyter_images=jupyter_images_config)
+        content = template.render(
+            jupyter_images=jupyter_images_config,
+            vscode_images=vscode_images_config,
+            rstudio_images=rstudio_images_config,
+        )
         return content
 
     def _upload_spawner_file_to_container(self, file_content):
@@ -226,10 +234,14 @@ class JupyterUI(CharmBase):
         """Updates the images options that can be selected in the dropdown list."""
         # TODO: include rstudio and vscode images
         # get config
-        jupyter_images = self._get_config_as_yaml(JUPYTER_IMAGES_CONFIG)
+        jupyter_images = self._get_from_config(JUPYTER_IMAGES_CONFIG)
+        vscode_images = self._get_from_config(VSCODE_IMAGES_CONFIG)
+        rstusio_images = self._get_from_config(RSTUDIO_IMAGES_CONFIG)
         # render the jwa file
         jwa_content = self._render_jwa_file_with_images_config(
-            jupyter_images_config=jupyter_images
+            jupyter_images_config=jupyter_images,
+            vscode_images_config=vscode_images,
+            rstudio_images_config=rstusio_images,
         )
         # push file
         self._upload_spawner_file_to_container(jwa_content)
