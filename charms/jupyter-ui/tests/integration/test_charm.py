@@ -19,6 +19,8 @@ METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CONFIG = yaml.safe_load(Path("./config.yaml").read_text())
 APP_NAME = "jupyter-ui"
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
+VSCODE_IMAGES_CONFIG = "vscode-images"
+RSTUDIO_IMAGES_CONFIG = "rstudio-images"
 PORT = CONFIG["options"]["port"]["default"]
 
 
@@ -79,12 +81,21 @@ async def test_ui_is_accessible(ops_test: OpsTest):
 
 async def test_notebook_image_selector(ops_test: OpsTest):
     """
-    Verify that setting the juju config `jupyter-images` sets the notebook images selector list,
-    with the same value in the config.
+    Verify that setting the juju config for the 3 types of Notebook components
+    sets the notebook images selector list in the workload container,
+    with the same values in the configs.
     """
-    expected_images = ["image1", "image2", "image3"]
+    expected_jupyter_images = ["jimage1", "jimage2", "jimage3"]
+    expected_vscode_images = ["vimage1", "vimage2", "vimage3"]
+    expected_rstudio_images = ["rimage1", "rimage2", "rimage3"]
     await ops_test.model.applications[APP_NAME].set_config(
-        {JUPYTER_IMAGES_CONFIG: yaml.dump(expected_images)}
+        {JUPYTER_IMAGES_CONFIG: yaml.dump(expected_jupyter_images)}
+    )
+    await ops_test.model.applications[APP_NAME].set_config(
+        {VSCODE_IMAGES_CONFIG: yaml.dump(expected_vscode_images)}
+    )
+    await ops_test.model.applications[APP_NAME].set_config(
+        {RSTUDIO_IMAGES_CONFIG: yaml.dump(expected_rstudio_images)}
     )
     await ops_test.model.wait_for_idle(
         apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=30
@@ -92,4 +103,9 @@ async def test_notebook_image_selector(ops_test: OpsTest):
     jupyter_ui_url = await get_unit_address(ops_test)
     response = await fetch_response(f"http://{jupyter_ui_url}:{PORT}/api/config")
     response_json = json.loads(response[1])
-    assert response_json["config"]["image"]["options"] == expected_images
+    actual_jupyter_images = response_json["config"]["image"]["options"]
+    actual_vscode_images = response_json["config"]["imageGroupOne"]["options"]
+    actual_rstudio_images = response_json["config"]["imageGroupTwo"]["options"]
+    assert actual_jupyter_images == expected_jupyter_images
+    assert actual_vscode_images == expected_vscode_images
+    assert actual_rstudio_images == expected_rstudio_images
