@@ -6,8 +6,7 @@
 STATIC_IMAGE_LIST=(
 )
 # dynamic list
-# TO-DO uncomment for production
-#git checkout origin/track/1.7
+git checkout origin/track/1.7
 IMAGE_LIST=()
 IMAGE_LIST+=($(yq '.spawnerFormDefaults | .image | .options | values[]' charms/jupyter-ui/src/spawner_ui_config.yaml))
 IMAGE_LIST+=($(yq '.spawnerFormDefaults | .imageGroupOne | .options | values[]' charms/jupyter-ui/src/spawner_ui_config.yaml))
