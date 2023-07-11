@@ -222,7 +222,7 @@ class JupyterUI(CharmBase):
         )
         return content
 
-    def _upload_spawner_file_to_container(self, file_content):
+    def _upload_jwa_file_to_container(self, file_content):
         """Pushes the JWA spawner config file to the workload container."""
         self.container.push(
             "/etc/config/spawner_ui_config.yaml",
@@ -244,7 +244,7 @@ class JupyterUI(CharmBase):
             rstudio_images_config=rstusio_images,
         )
         # push file
-        self._upload_spawner_file_to_container(jwa_content)
+        self._upload_jwa_file_to_container(jwa_content)
 
     def _on_install(self, _):
         """Perform installation only actions."""
