@@ -37,34 +37,21 @@ def harness() -> Harness:
 
 class TestCharm:
     """Test class for JupyterUI."""
-
-    def render_spawner_ui_config(self, jupyter_images, vscode_images, rstudio_images):
-        """Renders the spawner config template with the config values."""
-        environment = Environment(loader=FileSystemLoader("."))
-        template = environment.get_template(JWA_CONFIG_FILE)
-        yaml_content = template.render(
-            jupyter_images=jupyter_images,
-            vscode_images=vscode_images,
-            rstudio_images=rstudio_images,
-        )
-        content = yaml.safe_load(yaml_content)
-        return content
-
-    def test_spawner_ui(self, harness):
+    
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_spawner_ui(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test spawner UI.
 
         spawner_ui_config.yaml.j2 contains a number of changes that were done for Charmed
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        # Load the default config for Notebook images lists
-        jupyter_images = yaml.safe_load(harness.model.config[JUPYTER_IMAGES_CONFIG])
-        vscode_images = yaml.safe_load(harness.model.config[VSCODE_IMAGES_CONFIG])
-        rstudio_images = yaml.safe_load(harness.model.config[RSTUDIO_IMAGES_CONFIG])
-
-        # Render the spawner config file with the default configs
-        spawner_ui_config = self.render_spawner_ui_config(
-            jupyter_images, vscode_images, rstudio_images
+        harness.set_leader(True)
+        harness.begin_with_initial_hooks()
+        
+        spawner_ui_config = yaml.safe_load(
+            harness.charm.container.pull("/etc/config/spawner_ui_config.yaml")
         )
 
         # test for default configurations
