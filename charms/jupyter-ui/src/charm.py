@@ -12,9 +12,9 @@ import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
-from charms.kubeflow_dashboard.v0.kubeflow_dashboard_sidebar import (
-    KubeflowDashboardSidebarRequirer,
-    SidebarItem,
+from charms.kubeflow_dashboard.v0.kubeflow_dashboard_links import (
+    DashboardLink,
+    KubeflowDashboardLinksRequirer,
 )
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from lightkube import ApiError
@@ -92,11 +92,13 @@ class JupyterUI(CharmBase):
         self.framework.observe(self.on.remove, self._on_remove)
 
         # add link to notebook in kubeflow-dashboard sidebar
-        self.kubeflow_dashboard_sidebar = KubeflowDashboardSidebarRequirer(
+        self.kubeflow_dashboard_sidebar = KubeflowDashboardLinksRequirer(
             charm=self,
-            relation_name="sidebar",
-            sidebar_items=[
-                SidebarItem(type="item", link="/jupyter/", text="Notebooks", icon="book")
+            relation_name="dashboard-links",
+            dashboard_links=[
+                DashboardLink(
+                    type="item", link="/jupyter/", text="Notebooks", icon="book", location="menu"
+                )
             ],
         )
 
