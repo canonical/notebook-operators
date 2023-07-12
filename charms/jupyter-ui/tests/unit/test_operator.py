@@ -9,17 +9,10 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from jinja2 import Environment, FileSystemLoader
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
-from charm import (
-    JUPYTER_IMAGES_CONFIG,
-    JWA_CONFIG_FILE,
-    RSTUDIO_IMAGES_CONFIG,
-    VSCODE_IMAGES_CONFIG,
-    JupyterUI,
-)
+from charm import JupyterUI
 
 logger = logging.getLogger(__name__)
 
@@ -37,7 +30,7 @@ def harness() -> Harness:
 
 class TestCharm:
     """Test class for JupyterUI."""
-    
+
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_spawner_ui(self, k8s_resource_handler: MagicMock, harness: Harness):
@@ -49,7 +42,7 @@ class TestCharm:
         """
         harness.set_leader(True)
         harness.begin_with_initial_hooks()
-        
+
         spawner_ui_config = yaml.safe_load(
             harness.charm.container.pull("/etc/config/spawner_ui_config.yaml")
         )
