@@ -232,7 +232,6 @@ class JupyterUI(CharmBase):
 
     def _update_images_selector(self):
         """Updates the images options that can be selected in the dropdown list."""
-        # TODO: include rstudio and vscode images
         # get config
         jupyter_images = self._get_from_config(JUPYTER_IMAGES_CONFIG)
         vscode_images = self._get_from_config(VSCODE_IMAGES_CONFIG)
