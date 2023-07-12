@@ -167,22 +167,32 @@ class TestCharm:
     ):
         """Test that updating the images config works as expected for:
         Jupyter images, VSCode images, and RStudio images ."""
+
+        # Arrange
         expected_images_yaml = yaml.dump(expected_images)
         harness.set_leader(True)
         harness.begin()
         harness.update_config({config_key: expected_images_yaml})
+
+        # Act
         actual_images = harness.charm._get_from_config(config_key)
+
+        # Assert
         assert actual_images == expected_images
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_render_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Tests the rendering of the jwa spawner file with the list of images."""
+
+        # Arrange
         jupyter_images = ["jupyterimage1", "jupyterimage2"]
         vscode_images = ["vscodeimage1", "vscodeimage2"]
         rstudio_images = ["rstudioimage1", "rstudioimage2"]
         harness.set_leader(True)
         harness.begin()
+
+        # Act
         actual_content_yaml = harness.charm._render_jwa_file_with_images_config(
             jupyter_images, vscode_images, rstudio_images
         )
@@ -190,6 +200,8 @@ class TestCharm:
         rendered_jupyter_images = actual_content["spawnerFormDefaults"]["image"]["options"]
         rendered_vscode_images = actual_content["spawnerFormDefaults"]["imageGroupOne"]["options"]
         rendered_rstudio_images = actual_content["spawnerFormDefaults"]["imageGroupTwo"]["options"]
+
+        # Assert
         assert rendered_jupyter_images == jupyter_images
         assert rendered_vscode_images == vscode_images
         assert rendered_rstudio_images == rstudio_images
@@ -198,14 +210,20 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_upload_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Tests uploading the jwa config file to the container with the right contents."""
+
+        # Arrange
         harness.set_leader(True)
         harness.begin()
         test_config = {"config": "test"}
         test_config_yaml = yaml.dump(test_config)
         harness.charm._upload_jwa_file_to_container(test_config_yaml)
+
+        # Act
         actual_config = yaml.safe_load(
             harness.charm.container.pull("/etc/config/spawner_ui_config.yaml")
         )
+
+        # Assert
         assert actual_config == test_config
 
     @pytest.mark.parametrize(
@@ -218,10 +236,16 @@ class TestCharm:
         self, k8s_resource_handler: MagicMock, harness: Harness, config_key
     ):
         """Tests that a warning is logged when a Notebook images config contains an invalid YAML."""
+
+        # Arrange
         invalid_yaml = "[ invalid yaml"
         harness.update_config({config_key: invalid_yaml})
         harness.set_leader(True)
         harness.begin()
         harness.charm.logger = MagicMock()
+
+        # Act
         harness.charm._get_from_config(config_key)
+
+        # Assert
         harness.charm.logger.warning.assert_called_once()
