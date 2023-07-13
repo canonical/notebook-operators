@@ -10,7 +10,6 @@ from pathlib import Path
 
 import aiohttp
 import pytest
-import pytest_asyncio
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -105,41 +104,3 @@ async def test_notebook_image_selector(ops_test: OpsTest, config_key, expected_i
     response_json = json.loads(response[1])
     actual_images = response_json["config"][yaml_key]["options"]
     assert actual_images == expected_images
-
-    
-@pytest_asyncio.fixture
-async def deploy_kubeflow_dashboard(ops_test: OpsTest):
-    """Deploys kubeflow-dashboard and kubeflow-profiles, cleaning them up after the usage."""
-    kubeflow_profiles = "kubeflow-profiles"
-    await ops_test.model.deploy(kubeflow_profiles, channel="edge", trust=True)
-
-    kubeflow_dashboard = "kubeflow-dashboard"
-    # Requires latest/edge until https://github.com/canonical/kubeflow-dashboard-operator/pull/134
-    # is merged into latest/stable
-    ops_test.model.deploy(kubeflow_dashboard, channel="edge", trust=True)
-
-    await ops_test.model.relate(kubeflow_dashboard, kubeflow_profiles)
-
-    await ops_test.model.wait_for_idle(
-        apps=[kubeflow_dashboard, kubeflow_profiles], status="active", timeout=60 * 5
-    )
-
-    yield kubeflow_dashboard
-
-    # We should remove things, but removal was flaky during initial testing and `block_until_done`
-    # does not block successfully.  Try this again once dashboard and profile use chisme
-    # KRH.delete to see it they work better
-    # ops_test.model.remove_application(kubeflow_dashboard, block_until_done=True)
-    # ops_test.model.remove_application(kubeflow_profiles, block_until_done=True)
-
-
-async def test_dashboard_link_relation(ops_test: OpsTest, deploy_kubeflow_dashboard: str):
-    """Test that we can successfully relate to the Kubeflow Dashboard.
-
-    Note: This test only asserts that we establish a relation and both Dashboard or this charm
-    successfully go back to Active, it does not actually confirm the links are added to the
-    dashboard.  This functionality is tested for in the kubeflow-dashboard repo.
-    """
-    kubeflow_dashboard_charm_name = deploy_kubeflow_dashboard
-    await ops_test.model.relate(APP_NAME, kubeflow_dashboard_charm_name)
-    await ops_test.model.wait_for_idle(status="active", timeout=60 * 5)
