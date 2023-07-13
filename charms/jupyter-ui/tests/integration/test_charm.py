@@ -75,7 +75,7 @@ async def test_ui_is_accessible(ops_test: OpsTest):
 async def deploy_kubeflow_dashboard(ops_test: OpsTest):
     """Deploys kubeflow-dashboard and kubeflow-profiles, cleaning them up after the usage."""
     kubeflow_profiles = "kubeflow-profiles"
-    await ops_test.model.deploy(kubeflow_profiles, channel="stable", trust=True)
+    await ops_test.model.deploy(kubeflow_profiles, channel="edge", trust=True)
 
     kubeflow_dashboard = "kubeflow-dashboard"
     # Requires latest/edge until https://github.com/canonical/kubeflow-dashboard-operator/pull/134
