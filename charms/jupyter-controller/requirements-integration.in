@@ -1,4 +1,6 @@
-juju<3.1
+# FIXME: This is a workaround for https://github.com/juju/python-libjuju/issues/913
+# please pin to a released python-libjuju ASAP.
+juju @ git+https://github.com/DnPlas/python-libjuju@dnplas-pyyaml-6
 pytest-operator
 tenacity
 websockets
