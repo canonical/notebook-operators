@@ -1,8 +1,10 @@
-juju<3.1
+# Pinning to <3.0 due to compatibility with the 2.9 controller version and 3.0 not being maintained anymore
+juju<3.0
 lightkube
 pytest-operator
 pytest
-pyyaml
+# Pinning to >6.0 to ensure build is successful in track/1.7 (Issue https://github.com/juju/python-libjuju/issues/913)
+pyyaml>6.0
 selenium-wire
 selenium
 tenacity

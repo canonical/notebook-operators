@@ -1,2 +1,4 @@
 ops
 oci-image
+# Pinning to >6.0 to ensure build is successful in track/1.7 (Issue https://github.com/juju/python-libjuju/issues/913)
+pyyaml>6.0
