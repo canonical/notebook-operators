@@ -78,6 +78,7 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
+        """Test relation presetn scenario."""
         harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
