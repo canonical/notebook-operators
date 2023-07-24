@@ -2,6 +2,7 @@ ops
 oci-image
 charmed-kubeflow-chisme
 lightkube-models==1.25.4.4
-pyyaml
-serialized-data-interface<0.4
+# Pinning to >6.0 to ensure build is successful in track/1.7 (Issue https://github.com/juju/python-libjuju/issues/913)
+pyyaml>6.0
+serialized-data-interface
 # Unittest will fail without pinning
