@@ -1,4 +1,5 @@
+charmed-kubeflow-chisme
 coverage
+ops
 pytest
 pytest-mock
--r requirements.txt

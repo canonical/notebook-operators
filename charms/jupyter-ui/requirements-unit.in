@@ -1,3 +1,5 @@
+charmed-kubeflow-chisme
 coverage
+ops
 pytest
--r requirements.txt
+serialized-data-interface

@@ -1,4 +1,4 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 #
 
@@ -57,7 +57,7 @@ async def fetch_response(url):
 
 
 async def get_unit_address(ops_test: OpsTest):
-    """Returns the unit address of jupyter-ui application."""
+    """Return the unit address of jupyter-ui application."""
     status = await ops_test.model.get_status()
     jupyter_ui_units = status["applications"]["jupyter-ui"]["units"]
     jupyter_ui_url = jupyter_ui_units["jupyter-ui/0"]["address"]
@@ -88,7 +88,8 @@ async def test_ui_is_accessible(ops_test: OpsTest):
     ],
 )
 async def test_notebook_image_selector(ops_test: OpsTest, config_key, expected_images, yaml_key):
-    """
+    """Test notebook image selector.
+
     Verify that setting the juju config for the 3 types of Notebook components
     sets the notebook images selector list in the workload container,
     with the same values in the configs.
