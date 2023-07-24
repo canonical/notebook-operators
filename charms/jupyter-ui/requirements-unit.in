@@ -1,3 +1,5 @@
+charmed-kubeflow-chisme
 coverage
 pytest
--r requirements.txt
+pyyaml
+serialized-data-interface<0.4
