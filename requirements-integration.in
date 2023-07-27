@@ -5,6 +5,6 @@ pytest
 pytest-operator
 pyyaml
 requests
-selenium-wire
 selenium
+selenium-wire
 tenacity
