@@ -1,7 +1,7 @@
-ops
-oci-image
 charmed-kubeflow-chisme
-lightkube-models==1.25.4.4
+lightkube
+ops
 pyyaml
-serialized-data-interface==0.3.6
-# Unittest will fail without pinning
+# jupyter-ui's current implementation is not compatible
+# with SDI>0.3.
+serialized-data-interface<0.4
