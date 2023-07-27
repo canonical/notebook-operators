@@ -13,7 +13,7 @@ options:
     description: URL prefix for HTTP requests
   backend-mode:
     type: string
-    default: development
+    default: production
     description: Which mode out of `development` or `production` the backend server should use
   secure-cookies:
     type: boolean
