@@ -22,6 +22,9 @@ JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
 RSTUDIO_IMAGES_CONFIG = "rstudio-images"
 PORT = CONFIG["options"]["port"]["default"]
+HEADERS = {
+    "kubeflow-userid": "",
+}
 
 
 @pytest.mark.abort_on_fail
@@ -45,12 +48,12 @@ async def test_build_and_deploy(ops_test: OpsTest):
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
 
 
-async def fetch_response(url):
+async def fetch_response(url, headers=None):
     """Fetch provided URL and return pair - status and text (int, string)."""
     result_status = 0
     result_text = ""
     async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
+        async with session.get(url, headers=headers) as response:
             result_status = response.status
             result_text = await response.text()
     return result_status, str(result_text)
@@ -64,6 +67,7 @@ async def get_unit_address(ops_test: OpsTest):
     return jupyter_ui_url
 
 
+@pytest.mark.abort_on_fail
 async def test_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible."""
     # NOTE: This test is re-using deployment created in test_build_and_deploy()
@@ -71,7 +75,7 @@ async def test_ui_is_accessible(ops_test: OpsTest):
     jupyter_ui_url = await get_unit_address(ops_test)
 
     # obtain status and response text from Jupyter UI URL
-    result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{PORT}")
+    result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{PORT}", HEADERS)
 
     # verify that UI is accessible (NOTE: this also tests Pebble checks)
     assert result_status == 200
@@ -101,7 +105,7 @@ async def test_notebook_image_selector(ops_test: OpsTest, config_key, expected_i
         apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=30
     )
     jupyter_ui_url = await get_unit_address(ops_test)
-    response = await fetch_response(f"http://{jupyter_ui_url}:{PORT}/api/config")
+    response = await fetch_response(f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS)
     response_json = json.loads(response[1])
     actual_images = response_json["config"][yaml_key]["options"]
     assert actual_images == expected_images
