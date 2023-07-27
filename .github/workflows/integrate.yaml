@@ -47,11 +47,9 @@ jobs:
           provider: microk8s
           channel: 1.24/stable
           charmcraft-channel: latest/candidate
-        # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
-        #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
-        #       the "metrics-endpoint-relation-changed" hook.
-          bootstrap-options: --agent-version="2.9.34"
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
+          juju-channel: 2.9/stable
+
     - run: tox -e ${{ matrix.charm }}-integration
 
   lint:
@@ -78,11 +76,8 @@ jobs:
           provider: microk8s
           channel: 1.24/stable
           charmcraft-channel: latest/candidate
-        # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
-        #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
-        #       the "metrics-endpoint-relation-changed" hook.
-          bootstrap-options: --agent-version="2.9.34"
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
+          juju-channel: 2.9/stable
 
     - name: Run test
       run: |

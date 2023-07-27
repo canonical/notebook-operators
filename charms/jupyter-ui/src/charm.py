@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-# Copyright 2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
-#
 
 """A Juju Charm for Jupyter UI."""
 
@@ -189,9 +188,12 @@ class JupyterUI(CharmBase):
                 raise ErrorWithStatus("Failed to replan", BlockedStatus)
 
     def _upload_logos_files_to_container(self):
-        """Parses the logos-configmap.yaml file,
+        """Upload logos files to container.
+
+        Parses the logos-configmap.yaml file,
         splits it into files as expected by the workload,
-        and pushes the files to the container"""
+        and pushes the files to the container.
+        """
         for file_name, file_content in yaml.safe_load(
             Path("src/logos-configmap.yaml").read_text()
         )["data"].items():
@@ -212,7 +214,7 @@ class JupyterUI(CharmBase):
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
     def _get_from_config(self, config_key) -> List[str]:
-        """Returns the yaml value of the config stored in config_key."""
+        """Return the yaml value of the config stored in config_key."""
         error_message = (
             f"Cannot parse user-defined images from config "
             f"`{config_key}` - ignoring this input."
@@ -227,7 +229,7 @@ class JupyterUI(CharmBase):
     def _render_jwa_file_with_images_config(
         self, jupyter_images_config, vscode_images_config, rstudio_images_config
     ):
-        """Renders the JWA configmap template with the user-set images in the juju config."""
+        """Render the JWA configmap template with the user-set images in the juju config."""
         environment = Environment(loader=FileSystemLoader("."))
         template = environment.get_template(JWA_CONFIG_FILE)
         content = template.render(
@@ -246,7 +248,7 @@ class JupyterUI(CharmBase):
         )
 
     def _update_images_selector(self):
-        """Updates the images options that can be selected in the dropdown list."""
+        """Update the images options that can be selected in the dropdown list."""
         # get config
         jupyter_images = self._get_from_config(JUPYTER_IMAGES_CONFIG)
         vscode_images = self._get_from_config(VSCODE_IMAGES_CONFIG)

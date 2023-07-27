@@ -1,4 +1,4 @@
-# Copyright 2022 Canonical Ltd.
+# Copyright 2023 Canonical Ltd.
 # See LICENSE file for licensing details.
 #
 
@@ -87,6 +87,7 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
+        """Test charm with relation."""
         harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
@@ -165,9 +166,11 @@ class TestCharm:
     def test_notebook_selector_images_config(
         self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_images
     ):
-        """Test that updating the images config works as expected for:
-        Jupyter images, VSCode images, and RStudio images ."""
+        """Test that updating the images config works as expected.
 
+        The following should be tested:
+        Jupyter images, VSCode images, and RStudio images.
+        """
         # Arrange
         expected_images_yaml = yaml.dump(expected_images)
         harness.set_leader(True)
@@ -184,7 +187,6 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_render_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Tests the rendering of the jwa spawner file with the list of images."""
-
         # Arrange
         jupyter_images = ["jupyterimage1", "jupyterimage2"]
         vscode_images = ["vscodeimage1", "vscodeimage2"]
@@ -210,7 +212,6 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_upload_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Tests uploading the jwa config file to the container with the right contents."""
-
         # Arrange
         harness.set_leader(True)
         harness.begin()
@@ -236,7 +237,6 @@ class TestCharm:
         self, k8s_resource_handler: MagicMock, harness: Harness, config_key
     ):
         """Tests that a warning is logged when a Notebook images config contains an invalid YAML."""
-
         # Arrange
         invalid_yaml = "[ invalid yaml"
         harness.update_config({config_key: invalid_yaml})
