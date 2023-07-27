@@ -1,7 +1,6 @@
 charmed-kubeflow-chisme
 lightkube
-ops
-pyyaml
+ops<2
 # jupyter-ui's current implementation is not compatible
 # with SDI>0.3.
 serialized-data-interface<0.4
