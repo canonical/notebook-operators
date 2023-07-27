@@ -209,6 +209,4 @@ wcwidth==0.2.6
 websocket-client==1.6.1
     # via kubernetes
 websockets==7.0
-    # via
-    #   -r ./requirements-integration.in
-    #   juju
+    # via juju

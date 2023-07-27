@@ -11,9 +11,7 @@ certifi==2023.7.22
     #   httpcore
     #   httpx
 charmed-kubeflow-chisme==0.0.11
-    # via
-    #   -r ./requirements-unit.in
-    #   -r ./requirements.in
+    # via -r ./requirements.in
 coverage==7.2.7
     # via -r ./requirements-unit.in
 deepdiff==6.2.1
@@ -41,9 +39,7 @@ lightkube==0.14.0
     #   -r ./requirements.in
     #   charmed-kubeflow-chisme
 lightkube-models==1.27.1.4
-    # via
-    #   -r ./requirements.in
-    #   lightkube
+    # via lightkube
 markupsafe==2.1.3
     # via jinja2
 ops==2.4.1

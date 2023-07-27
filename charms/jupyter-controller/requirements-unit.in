@@ -13,7 +13,6 @@
 #     add clarity to the dependency list.
 #   * Pinning a version of a python package/lib shared with requirements.in
 #     must not introduce any incompatibilities.
-charmed-kubeflow-chisme
 coverage
 ops
 pytest

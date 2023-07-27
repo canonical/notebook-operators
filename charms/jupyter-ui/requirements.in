@@ -1,7 +1,6 @@
-ops
-oci-image
 charmed-kubeflow-chisme
-lightkube-models
+lightkube
+ops
 pyyaml
 # jupyter-ui's current implementation is not compatible
 # with SDI>0.3.

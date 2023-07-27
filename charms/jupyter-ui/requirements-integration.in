@@ -3,3 +3,4 @@ aiohttp
 juju<3.0
 pytest
 pytest-operator
+pyyaml
