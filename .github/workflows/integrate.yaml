@@ -47,6 +47,7 @@ jobs:
           provider: microk8s
           channel: 1.24/stable
           charmcraft-channel: latest/candidate
+          juju-channel: 2.9/stable
         # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
         #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
         #       the "metrics-endpoint-relation-changed" hook.
@@ -78,6 +79,7 @@ jobs:
           provider: microk8s
           channel: 1.24/stable
           charmcraft-channel: latest/candidate
+          juju-channel: 2.9/stable
         # TODO: Unpin this when this bug is resolved: https://bugs.launchpad.net/juju/+bug/1992833.
         #       In particular, these tests failed deploying the prometheus-k8s charm where it gets an error in
         #       the "metrics-endpoint-relation-changed" hook.
