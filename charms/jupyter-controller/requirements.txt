@@ -36,6 +36,8 @@ lightkube-models==1.27.1.4
     # via lightkube
 markupsafe==2.1.3
     # via jinja2
+oci-image==1.0.0
+    # via -r ./requirements.in
 ops==2.4.1
     # via
     #   -r ./requirements.in
