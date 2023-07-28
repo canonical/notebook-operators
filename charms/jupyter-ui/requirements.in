@@ -1,5 +1,6 @@
 charmed-kubeflow-chisme
 lightkube
+# pin to <2 due to track/2.31 depends on <2
 ops<2
 # jupyter-ui's current implementation is not compatible
 # with SDI>0.3.
