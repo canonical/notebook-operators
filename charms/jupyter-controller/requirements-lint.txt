@@ -28,11 +28,11 @@ mypy-extensions==1.0.0
     # via black
 packaging==23.1
     # via black
-pathspec==0.11.1
+pathspec==0.11.2
     # via black
 pep8-naming==0.13.3
     # via -r requirements-lint.in
-platformdirs==3.9.1
+platformdirs==3.10.0
     # via black
 pycodestyle==2.10.0
     # via flake8

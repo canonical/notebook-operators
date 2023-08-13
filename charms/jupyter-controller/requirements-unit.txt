@@ -6,13 +6,18 @@
 #
 anyio==3.7.1
     # via httpcore
+attrs==23.1.0
+    # via jsonschema
 certifi==2023.7.22
     # via
     #   httpcore
     #   httpx
-charmed-kubeflow-chisme==0.0.11
+    #   requests
+charmed-kubeflow-chisme==0.2.0
     # via -r requirements.in
-coverage==7.2.7
+charset-normalizer==3.2.0
+    # via requests
+coverage==7.3.0
     # via -r requirements-unit.in
 deepdiff==6.2.1
     # via charmed-kubeflow-chisme
@@ -30,10 +35,15 @@ idna==3.4
     # via
     #   anyio
     #   httpx
+    #   requests
+importlib-resources==6.0.1
+    # via jsonschema
 iniconfig==2.0.0
     # via pytest
 jinja2==3.1.2
     # via charmed-kubeflow-chisme
+jsonschema==4.17.3
+    # via serialized-data-interface
 lightkube==0.14.0
     # via
     #   -r requirements.in
@@ -42,17 +52,22 @@ lightkube-models==1.27.1.4
     # via lightkube
 markupsafe==2.1.3
     # via jinja2
-ops==2.4.1
+ops==2.5.0
     # via
     #   -r requirements-unit.in
     #   -r requirements.in
     #   charmed-kubeflow-chisme
+    #   serialized-data-interface
 ordered-set==4.1.0
     # via deepdiff
 packaging==23.1
     # via pytest
+pkgutil-resolve-name==1.3.10
+    # via jsonschema
 pluggy==1.2.0
     # via pytest
+pyrsistent==0.19.3
+    # via jsonschema
 pytest==7.4.0
     # via
     #   -r requirements-unit.in
@@ -64,10 +79,15 @@ pyyaml==6.0.1
     #   -r requirements-unit.in
     #   lightkube
     #   ops
+    #   serialized-data-interface
+requests==2.31.0
+    # via serialized-data-interface
 ruamel-yaml==0.17.32
     # via charmed-kubeflow-chisme
 ruamel-yaml-clib==0.2.7
     # via ruamel-yaml
+serialized-data-interface==0.7.0
+    # via charmed-kubeflow-chisme
 sniffio==1.3.0
     # via
     #   anyio
@@ -77,5 +97,9 @@ tenacity==8.2.2
     # via charmed-kubeflow-chisme
 tomli==2.0.1
     # via pytest
+urllib3==2.0.4
+    # via requests
 websocket-client==1.6.1
     # via ops
+zipp==3.16.2
+    # via importlib-resources
