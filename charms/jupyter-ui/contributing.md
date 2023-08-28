@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the processes and practices recommended for contributing enhancements to jupyter_ui.
+This document outlines the processes and practices recommended for contributing enhancements to jupyter_controller.
 
 ## Talk to us First
 
@@ -23,7 +23,7 @@ Familiarising yourself with the [Charmed Operator Framework](https://juju.is/doc
 
 ## Build Charm
 
-To build jupyter_ui run:
+To build jupyter_controller run:
 
 ```shell
 charmcraft pack
@@ -56,7 +56,7 @@ juju add-model dev
 # Enable DEBUG logging
 juju model-config logging-config="<root>=INFO;unit=DEBUG"
 # Deploy the charm
-juju deploy ./jupyter_ui_ubuntu-20.04-amd64.charm \
+juju deploy ./jupyter_controller_ubuntu-20.04-amd64.charm \
   --resource oci-image=$(yq '.resources."oci-image"."upstream-source"' metadata.yaml)
 ```
 
