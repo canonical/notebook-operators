@@ -1,0 +1,10 @@
+name: "Update all Contributing Files"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  update-contributing:
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/contributing_update_all.yaml@main
+    with:
+      branch: 'main'
