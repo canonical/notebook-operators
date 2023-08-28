@@ -1,6 +1,8 @@
 name: "Update all Contributing Files"
 
 on:
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday at midnight UTC
   workflow_dispatch:
 
 jobs:
