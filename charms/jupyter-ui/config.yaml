@@ -22,6 +22,7 @@ options:
   jupyter-images:
     type: string
     default: |
+      - kubeflownotebookswg/jupyter-scipy:v1.7.0
       - kubeflownotebookswg/jupyter-pytorch-full:v1.7.0
       - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.7.0
       - kubeflownotebookswg/jupyter-tensorflow-full:v1.7.0
