@@ -1,4 +1,4 @@
-charm: "jupyter_controller"
+charm: "jupyter_ui"
 tox_example_dev_env: "lint"
 os_base: "ubuntu-20.04"
 deploy_opts: |-
