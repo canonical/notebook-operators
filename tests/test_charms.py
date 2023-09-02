@@ -279,8 +279,28 @@ async def test_prometheus_grafana_integration(ops_test):
     scrape_config = {"scrape_interval": "30s"}
 
     # Deploy and relate prometheus
-    await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
-    await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
+    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
+    await ops_test.juju(
+        "deploy",
+        prometheus,
+        "--channel",
+        "latest/edge",
+        "--revision",
+        "137",
+        "--trust",
+        check=True,
+    )
+    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/690 is closed
+    await ops_test.juju(
+        "deploy",
+        grafana,
+        "--channel",
+        "latest/edge",
+        "--revision",
+        "89",
+        "--trust",
+        check=True,
+    )
     await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
 
     await ops_test.model.add_relation(CONTROLLER_APP_NAME, prometheus_scrape)

@@ -69,7 +69,17 @@ async def test_prometheus_integration(ops_test: OpsTest):
     scrape_config = {"scrape_interval": "30s"}
 
     # Deploy and relate prometheus
-    await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
+    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
+    await ops_test.juju(
+        "deploy",
+        prometheus,
+        "--channel",
+        "latest/edge",
+        "--revision",
+        "137",
+        "--trust",
+        check=True,
+    )
     await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
     await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
