@@ -4,9 +4,21 @@ on:
   schedule:
     - cron: '0 0 * * 0' # Every Sunday at midnight UTC
   workflow_dispatch:
+  push:
 
 jobs:
   update-contributing:
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/contributing_update_all.yaml@main
-    with:
-      branch: 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create a PR for local changes
+        uses: peter-evans/create-pull-request@v5
+        id: cpr
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "IGNORE THIS - TEST"
+          committer: "Github Actions <github-actions@github.com>"
+          author: "Github Actions <github-actions@github.com>"
+          title: "IGNORE THIS - TEST"
+          body: "IGNORE THIS - TEST"
+          branch: "ignore-this-branch-it-is-for-testing-only"
+          delete-branch: true
