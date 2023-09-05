@@ -12,12 +12,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-      - name: Create a random file
-        run: |
-          # Generate a random filename
-          random_filename=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 10 | head -n 1)
-          # Create an empty file with the random filename
-          touch $random_filename
+      - name: Create blah.txt
+        run: echo "This is some content" > blah.txt
+        shell: bash
+        working-directory: ${{ github.workspace }}
       - name: Create a PR for local changes
         uses: peter-evans/create-pull-request@v5
         id: cpr
