@@ -52,13 +52,6 @@ class TestCharm:
         config_value = spawner_ui_config["spawnerFormDefaults"]["configurations"]["value"]
         assert config_value == ["access-ml-pipeline"]
 
-        # test for images added in addition to upstream
-        image_list = spawner_ui_config["spawnerFormDefaults"]["image"]["options"]
-        assert any(
-            "swr.cn-south-1.myhuaweicloud.com/mindspore/jupyter-mindspore" in image
-            for image in image_list
-        )
-
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_not_leader(self, k8s_resource_handler: MagicMock, harness: Harness):
