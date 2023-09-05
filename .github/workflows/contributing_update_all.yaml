@@ -10,19 +10,6 @@ jobs:
   update-contributing:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Create blah.txt
-        run: echo "This is some content" > blah.txt
-        shell: bash
-        working-directory: ${{ github.workspace }}
-      - name: Create a PR for local changes
-        uses: peter-evans/create-pull-request@v5
+      - name: Call downstream job
+        uses: ColmBhandal/test-charm/test-pr-action@main
         id: cpr
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "IGNORE THIS - TEST"
-          title: "IGNORE THIS - TEST"
-          body: "IGNORE THIS - TEST"
-          branch: "ignore-this-branch-it-is-for-testing-only"
-          delete-branch: true
