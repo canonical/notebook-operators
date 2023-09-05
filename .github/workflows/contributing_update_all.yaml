@@ -20,9 +20,8 @@ jobs:
         uses: peter-evans/create-pull-request@v5
         id: cpr
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "IGNORE THIS - TEST"
-          committer: "Github Actions <github-actions@github.com>"
-          author: "Github Actions <github-actions@github.com>"
           title: "IGNORE THIS - TEST"
           body: "IGNORE THIS - TEST"
           branch: "ignore-this-branch-it-is-for-testing-only"
