@@ -87,7 +87,7 @@ jobs:
         tar xf geckodriver-v0.28.0-linux64.tar.gz
         sudo mv geckodriver /usr/local/bin
         juju add-model kubeflow
-        tox -e integration -- --model kubeflow
+        sg snap_microk8s -c "tox -e integration -- --model kubeflow"
 
     - run: kubectl get all -A
       if: failure()
