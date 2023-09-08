@@ -45,10 +45,10 @@ jobs:
       uses: charmed-kubernetes/actions-operator@main
       with:
           provider: microk8s
-          channel: 1.24/stable
+          channel: 1.25-strict/stable
           charmcraft-channel: latest/candidate
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
-          juju-channel: 2.9/stable
+          juju-channel: 3.1/stable
 
     - run: tox -e ${{ matrix.charm }}-integration
 
@@ -74,10 +74,10 @@ jobs:
       uses: charmed-kubernetes/actions-operator@main
       with:
           provider: microk8s
-          channel: 1.24/stable
+          channel: 1.25-strict/stable
           charmcraft-channel: latest/candidate
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
-          juju-channel: 2.9/stable
+          juju-channel: 3.1/stable
 
     - name: Run test
       run: |
@@ -87,7 +87,7 @@ jobs:
         tar xf geckodriver-v0.28.0-linux64.tar.gz
         sudo mv geckodriver /usr/local/bin
         juju add-model kubeflow
-        sg microk8s -c "tox -e integration -- --model kubeflow"
+        sg snap_microk8s -c "tox -e integration -- --model kubeflow"
 
     - run: kubectl get all -A
       if: failure()
