@@ -77,3 +77,62 @@ subjects:
 - kind: ServiceAccount
   name: {{ app_name }}
   namespace: {{ namespace }}
+---
+# Source: manifests/apps/jupyter/jupyter-web-app/upstream/base/cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: jupyter-web-app
+    kustomize.component: jupyter-web-app
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-admin: "true"
+  name: jupyter-web-app-kubeflow-notebook-ui-admin
+rules: []
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: jupyter-web-app
+    kustomize.component: jupyter-web-app
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-edit: "true"
+  name: jupyter-web-app-kubeflow-notebook-ui-edit
+rules:
+- apiGroups:
+  - kubeflow.org
+  resources:
+  - notebooks
+  - notebooks/finalizers
+  - poddefaults
+  verbs:
+  - get
+  - list
+  - create
+  - delete
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app: jupyter-web-app
+    kustomize.component: jupyter-web-app
+    rbac.authorization.kubeflow.org/aggregate-to-kubeflow-view: "true"
+  name: jupyter-web-app-kubeflow-notebook-ui-view
+rules:
+- apiGroups:
+  - kubeflow.org
+  resources:
+  - notebooks
+  - notebooks/finalizers
+  - poddefaults
+  verbs:
+  - get
+  - list
+- apiGroups:
+  - storage.k8s.io
+  resources:
+  - storageclasses
+  verbs:
+  - get
+  - list
+  - watch
