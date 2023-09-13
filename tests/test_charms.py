@@ -280,8 +280,8 @@ async def test_prometheus_grafana_integration(ops_test):
     scrape_config = {"scrape_interval": "30s"}
 
     # Deploy and relate prometheus
-    await ops_test.model.deploy(prometheus, channel="latest/edge", trust=True)
-    await ops_test.model.deploy(grafana, channel="latest/edge", trust=True)
+    await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
+    await ops_test.model.deploy(grafana, channel="latest/stable", trust=True)
     await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
 
     await ops_test.model.add_relation(CONTROLLER_APP_NAME, prometheus_scrape)
