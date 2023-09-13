@@ -71,7 +71,8 @@ metadata:
   labels:
     rbac.authorization.kubeflow.org/aggregate-to-kubeflow-admin: "true"
   name: notebook-controller-kubeflow-notebooks-admin
-rules: []
+# Commenting out rules: [] due to https://github.com/gtsystem/lightkube/issues/32
+# rules: []
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
