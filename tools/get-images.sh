@@ -4,8 +4,8 @@
 #
 # dynamic list
 IMAGE_LIST=()
-IMAGE_LIST+=($(find $REPO -type f -name metadata.yaml -exec yq '.resources | to_entries | .[] | .value | ."upstream-source"' {} \;))
-IMAGE_LIST+=($(yq '.spawnerFormDefaults | .image | .options | .[]' charms/jupyter-ui/src/spawner_ui_config.yaml))
-IMAGE_LIST+=($(yq '.spawnerFormDefaults | .imageGroupOne | .options | .[]' charms/jupyter-ui/src/spawner_ui_config.yaml))
-IMAGE_LIST+=($(yq '.spawnerFormDefaults | .imageGroupTwo | .options | .[]' charms/jupyter-ui/src/spawner_ui_config.yaml))
+IMAGE_LIST+=($(find . -type f -name metadata.yaml -exec yq '.resources | to_entries | .[] | .value | ."upstream-source"' {} \;))
+IMAGE_LIST+=($(yq '.options | .jupyter-images | .default' charms/jupyter-ui/config.yaml | yq '.[]'))
+IMAGE_LIST+=($(yq '.options | .rstudio-images | .default' charms/jupyter-ui/config.yaml | yq '.[]'))
+IMAGE_LIST+=($(yq '.options | .vscode-images | .default' charms/jupyter-ui/config.yaml | yq '.[]'))
 printf "%s\n" "${IMAGE_LIST[@]}"
