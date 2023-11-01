@@ -22,11 +22,11 @@ options:
   jupyter-images:
     type: string
     default: |
-      - charmedkubeflow/jupyter-scipy:v1.7.0_20.04_1
-      - charmedkubeflow/jupyter-pytorch-full:v1.7.0_20.04_1
-      - charmedkubeflow/jupyter-pytorch-cuda-full:v1.7.0_20.04_1
-      - charmedkubeflow/jupyter-tensorflow-full:v1.7.0_20.04_1
-      - charmedkubeflow/jupyter-tensorflow-cuda-full:v1.7.0_20.04_1
+      - charmedkubeflow/jupyter-scipy:v1.7.0-20.04-1_ad4e002
+      - charmedkubeflow/jupyter-pytorch-full:v1.7.0-20.04-1_ad4e002
+      - charmedkubeflow/jupyter-pytorch-cuda-full:v1.7.0-20.04-1_ad4e002
+      - charmedkubeflow/jupyter-tensorflow-full:v1.7.0-20.04-1_ad4e002
+      - charmedkubeflow/jupyter-tensorflow-cuda-full:v1.7.0-20.04-1_ad4e002
     description: list of image options for Jupyter Notebook
   rstudio-images:
     type: string
