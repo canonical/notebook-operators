@@ -13,7 +13,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: docker.io/kubeflownotebookswg/notebook-controller:v1.8.0-rc.0
+    upstream-source: docker.io/kubeflownotebookswg/notebook-controller:v1.8.0
 provides:
   metrics-endpoint:
     interface: prometheus_scrape

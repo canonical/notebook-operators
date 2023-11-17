@@ -19,22 +19,25 @@ options:
     type: boolean
     default: false
     description: Whether cookies should require HTTPS
+  # Note: *-images options here are intentionally not in alphabetical order
+  #       in order to match the same order as in the spawner_ui_config.yaml
+  #       (typos have been made in past when the orders did not match)
   jupyter-images:
     type: string
     default: |
-      - kubeflownotebookswg/jupyter-scipy:v1.8.0-rc.0
-      - kubeflownotebookswg/jupyter-pytorch-full:v1.8.0-rc.0
-      - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.8.0-rc.0
-      - kubeflownotebookswg/jupyter-tensorflow-full:v1.8.0-rc.0
-      - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.8.0-rc.0
+      - kubeflownotebookswg/jupyter-scipy:v1.8.0
+      - kubeflownotebookswg/jupyter-pytorch-full:v1.8.0
+      - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.8.0
+      - kubeflownotebookswg/jupyter-tensorflow-full:v1.8.0
+      - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.8.0
     description: list of image options for Jupyter Notebook
-  rstudio-images:
-    type: string
-    default: |
-      - kubeflownotebookswg/codeserver-python:v1.8.0-rc.0
-    description: list of image options for RStudio
   vscode-images:
     type: string
     default: |
-      - kubeflownotebookswg/rstudio-tidyverse:v1.8.0-rc.0
+      - kubeflownotebookswg/codeserver-python:v1.8.0
     description: list of image options for VSCode
+  rstudio-images:
+    type: string
+    default: |
+      - kubeflownotebookswg/rstudio-tidyverse:v1.8.0
+    description: list of image options for RStudio
