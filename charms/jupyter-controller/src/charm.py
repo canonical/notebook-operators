@@ -127,7 +127,7 @@ class JupyterController(CharmBase):
         """Return environment variables based on model configuration."""
         config = self.model.config
         ret_env_vars = {
-            "USE_ISTIO": "true",
+            "USE_ISTIO": config["use-istio"],
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
             "ENABLE_CULLING": config["enable-culling"],
         }
