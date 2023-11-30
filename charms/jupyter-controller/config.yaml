@@ -6,4 +6,4 @@ options:
   use-istio:
     type: boolean
     default: true
-    description: Manually enable Istio integration, instead of via relations
+    description: When set to false Istio's virtual services will not be created for notebooks 
