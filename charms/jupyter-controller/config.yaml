@@ -5,5 +5,5 @@ options:
     description: Enables culling of idle Jupyter pods
   use-istio:
     type: boolean
-    default: false
-    description: Manually enable Istio integration, instead of via relations
+    default: true
+    description: Should be set to true for kubeflow users. When set to false Istio's virtual services will not be created for notebooks 

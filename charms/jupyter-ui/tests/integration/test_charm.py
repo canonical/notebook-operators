@@ -102,7 +102,7 @@ async def test_notebook_image_selector(ops_test: OpsTest, config_key, expected_i
         {config_key: yaml.dump(expected_images)}
     )
     await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=30
+        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=120
     )
     jupyter_ui_url = await get_unit_address(ops_test)
     response = await fetch_response(f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS)
