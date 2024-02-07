@@ -28,6 +28,7 @@ def harness() -> Harness:
 class TestCharm:
     """Test class for JupyterController."""
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
     @patch("charm.JupyterController.crd_resource_handler")
     def test_not_leader(
@@ -41,6 +42,7 @@ class TestCharm:
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
     @patch("charm.JupyterController.crd_resource_handler")
     def test_no_relation(
@@ -63,6 +65,7 @@ class TestCharm:
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.model.unit.status == ActiveStatus("")
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     def test_prometheus_data_set(self, harness: Harness, mocker):
         """Test Prometheus data setting."""
         harness.set_leader(True)
@@ -128,6 +131,7 @@ class TestCharm:
         for rule in rules:
             assert rule["alert"] in test_alerts
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
     @patch("charm.JupyterController.crd_resource_handler")
     def test_pebble_layer(
@@ -160,6 +164,7 @@ class TestCharm:
         assert 3 == len(test_env)
         assert "kubeflow/kubeflow-gateway" == test_env["ISTIO_GATEWAY"]
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
     @patch("charm.JupyterController.crd_resource_handler")
     def test_deploy_k8s_resources_success(
@@ -174,6 +179,7 @@ class TestCharm:
         k8s_resource_handler.apply.assert_called()
         assert isinstance(harness.charm.model.unit.status, MaintenanceStatus)
 
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController._apply_k8s_resources")
     @patch("charm.JupyterController._check_status")
     def test_update_status(
