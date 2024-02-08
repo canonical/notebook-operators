@@ -116,7 +116,6 @@ async def test_prometheus_integration(ops_test: OpsTest):
             # 1 means available, 0 means unavailable
             assert response["data"]["result"][0]["value"][1] == "1"
 
-
     # Verify that Prometheus receives the same set of targets as specified.
     for attempt in retry_for_5_attempts:
         log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
