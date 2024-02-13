@@ -4,49 +4,49 @@
 #
 #    pip-compile requirements.in
 #
-anyio==3.7.1
-    # via httpcore
-attrs==23.1.0
+anyio==4.2.0
+    # via httpx
+attrs==23.2.0
     # via jsonschema
-certifi==2023.7.22
+certifi==2024.2.2
     # via
     #   httpcore
     #   httpx
     #   requests
-charmed-kubeflow-chisme==0.2.0
+charmed-kubeflow-chisme==0.2.1
     # via -r requirements.in
-charset-normalizer==3.2.0
+charset-normalizer==3.3.2
     # via requests
 deepdiff==6.2.1
     # via charmed-kubeflow-chisme
-exceptiongroup==1.1.2
+exceptiongroup==1.2.0
     # via anyio
 h11==0.14.0
     # via httpcore
-httpcore==0.17.3
+httpcore==1.0.2
     # via httpx
-httpx==0.24.1
+httpx==0.26.0
     # via lightkube
-idna==3.4
+idna==3.6
     # via
     #   anyio
     #   httpx
     #   requests
-importlib-resources==6.0.1
+importlib-resources==6.1.1
     # via jsonschema
-jinja2==3.1.2
+jinja2==3.1.3
     # via charmed-kubeflow-chisme
 jsonschema==4.17.3
     # via serialized-data-interface
-lightkube==0.14.0
+lightkube==0.15.1
     # via
     #   -r requirements.in
     #   charmed-kubeflow-chisme
-lightkube-models==1.27.1.4
+lightkube-models==1.29.0.7
     # via lightkube
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via jinja2
-ops==2.5.0
+ops==2.10.0
     # via
     #   -r requirements.in
     #   charmed-kubeflow-chisme
@@ -55,7 +55,7 @@ ordered-set==4.1.0
     # via deepdiff
 pkgutil-resolve-name==1.3.10
     # via jsonschema
-pyrsistent==0.19.3
+pyrsistent==0.20.0
     # via jsonschema
 pyyaml==6.0.1
     # via
@@ -64,22 +64,23 @@ pyyaml==6.0.1
     #   serialized-data-interface
 requests==2.31.0
     # via serialized-data-interface
-ruamel-yaml==0.17.32
+ruamel-yaml==0.18.6
     # via charmed-kubeflow-chisme
-ruamel-yaml-clib==0.2.7
+ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 serialized-data-interface==0.7.0
     # via charmed-kubeflow-chisme
 sniffio==1.3.0
     # via
     #   anyio
-    #   httpcore
     #   httpx
-tenacity==8.2.2
+tenacity==8.2.3
     # via charmed-kubeflow-chisme
-urllib3==2.0.4
+typing-extensions==4.9.0
+    # via anyio
+urllib3==2.2.0
     # via requests
-websocket-client==1.6.1
+websocket-client==1.7.0
     # via ops
-zipp==3.16.2
+zipp==3.17.0
     # via importlib-resources

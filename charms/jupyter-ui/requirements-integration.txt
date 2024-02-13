@@ -4,53 +4,51 @@
 #
 #    pip-compile requirements-integration.in
 #
-aiohttp==3.8.5
+aiohttp==3.9.3
     # via -r requirements-integration.in
 aiosignal==1.3.1
     # via aiohttp
-asttokens==2.4.0
+asttokens==2.4.1
     # via stack-data
 async-timeout==4.0.3
     # via aiohttp
-attrs==23.1.0
+attrs==23.2.0
     # via aiohttp
 backcall==0.2.0
     # via ipython
-bcrypt==4.0.1
+bcrypt==4.1.2
     # via paramiko
-cachetools==5.3.1
+cachetools==5.3.2
     # via google-auth
-certifi==2023.7.22
+certifi==2024.2.2
     # via
     #   kubernetes
     #   requests
-cffi==1.15.1
+cffi==1.16.0
     # via
     #   cryptography
     #   pynacl
-charset-normalizer==3.2.0
-    # via
-    #   aiohttp
-    #   requests
-cryptography==41.0.3
+charset-normalizer==3.3.2
+    # via requests
+cryptography==42.0.2
     # via paramiko
 decorator==5.1.1
     # via
     #   ipdb
     #   ipython
-exceptiongroup==1.1.3
+exceptiongroup==1.2.0
     # via pytest
-executing==1.2.0
+executing==2.0.1
     # via stack-data
-frozenlist==1.4.0
+frozenlist==1.4.1
     # via
     #   aiohttp
     #   aiosignal
-google-auth==2.22.0
+google-auth==2.27.0
     # via kubernetes
-hvac==1.2.0
+hvac==2.1.0
     # via juju
-idna==3.4
+idna==3.6
     # via
     #   requests
     #   yarl
@@ -58,25 +56,25 @@ iniconfig==2.0.0
     # via pytest
 ipdb==0.13.13
     # via pytest-operator
-ipython==8.12.2
+ipython==8.12.3
     # via ipdb
-jedi==0.19.0
+jedi==0.19.1
     # via ipython
-jinja2==3.1.2
+jinja2==3.1.3
     # via pytest-operator
-juju==3.2.2
+juju==3.3.0.0
     # via
     #   -r requirements-integration.in
     #   pytest-operator
-kubernetes==27.2.0
+kubernetes==29.0.0
     # via juju
-macaroonbakery==1.3.1
+macaroonbakery==1.3.4
     # via juju
-markupsafe==2.1.3
+markupsafe==2.1.5
     # via jinja2
 matplotlib-inline==0.1.6
     # via ipython
-multidict==6.0.4
+multidict==6.0.5
     # via
     #   aiohttp
     #   yarl
@@ -86,27 +84,27 @@ oauthlib==3.2.2
     # via
     #   kubernetes
     #   requests-oauthlib
-packaging==23.1
+packaging==23.2
     # via pytest
 paramiko==2.12.0
     # via juju
 parso==0.8.3
     # via jedi
-pexpect==4.8.0
+pexpect==4.9.0
     # via ipython
 pickleshare==0.7.5
     # via ipython
-pluggy==1.3.0
+pluggy==1.4.0
     # via pytest
-prompt-toolkit==3.0.39
+prompt-toolkit==3.0.43
     # via ipython
-protobuf==3.20.3
+protobuf==4.25.2
     # via macaroonbakery
 ptyprocess==0.7.0
     # via pexpect
 pure-eval==0.2.2
     # via stack-data
-pyasn1==0.5.0
+pyasn1==0.5.1
     # via
     #   juju
     #   pyasn1-modules
@@ -115,10 +113,8 @@ pyasn1-modules==0.3.0
     # via google-auth
 pycparser==2.21
     # via cffi
-pygments==2.16.1
+pygments==2.17.2
     # via ipython
-pyhcl==0.4.5
-    # via hvac
 pymacaroons==0.13.0
     # via macaroonbakery
 pynacl==1.5.0
@@ -130,18 +126,18 @@ pyrfc3339==1.1
     # via
     #   juju
     #   macaroonbakery
-pytest==7.4.2
+pytest==8.0.0
     # via
     #   -r requirements-integration.in
     #   pytest-asyncio
     #   pytest-operator
 pytest-asyncio==0.21.1
     # via pytest-operator
-pytest-operator==0.29.0
+pytest-operator==0.32.0
     # via -r requirements-integration.in
 python-dateutil==2.8.2
     # via kubernetes
-pytz==2023.3.post1
+pytz==2024.1
     # via pyrfc3339
 pyyaml==6.0.1
     # via
@@ -162,13 +158,12 @@ rsa==4.9
 six==1.16.0
     # via
     #   asttokens
-    #   google-auth
     #   kubernetes
     #   macaroonbakery
     #   paramiko
     #   pymacaroons
     #   python-dateutil
-stack-data==0.6.2
+stack-data==0.6.3
     # via ipython
 tomli==2.0.1
     # via
@@ -176,26 +171,25 @@ tomli==2.0.1
     #   pytest
 toposort==1.10
     # via juju
-traitlets==5.9.0
+traitlets==5.14.1
     # via
     #   ipython
     #   matplotlib-inline
-typing-extensions==4.7.1
+typing-extensions==4.9.0
     # via
     #   ipython
     #   typing-inspect
 typing-inspect==0.9.0
     # via juju
-urllib3==1.26.16
+urllib3==2.2.0
     # via
-    #   google-auth
     #   kubernetes
     #   requests
-wcwidth==0.2.6
+wcwidth==0.2.13
     # via prompt-toolkit
-websocket-client==1.6.2
+websocket-client==1.7.0
     # via kubernetes
 websockets==8.1
     # via juju
-yarl==1.9.2
+yarl==1.9.4
     # via aiohttp
