@@ -110,6 +110,12 @@ async def test_prometheus_integration(ops_test: OpsTest):
             assert response_metric["juju_application"] == APP_NAME
             assert response_metric["juju_model"] == ops_test.model_name
 
+            # Assert the unit is available by checking the query result
+            # The data is presented as a list [1707357912.349, '1'], where the
+            # first value is a timestamp and the second value is the state of the unit
+            # 1 means available, 0 means unavailable
+            assert response["data"]["result"][0]["value"][1] == "1"
+
     # Verify that Prometheus receives the same set of targets as specified.
     for attempt in retry_for_5_attempts:
         log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")

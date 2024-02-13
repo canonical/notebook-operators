@@ -12,9 +12,11 @@ from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
 from charmed_kubeflow_chisme.pebble import update_layer
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from lightkube import ApiError
 from lightkube.generic_resource import load_in_cluster_generic_resources
+from lightkube.models.core_v1 import ServicePort
 from ops.charm import CharmBase
 from ops.main import main
 from ops.model import ActiveStatus, MaintenanceStatus, ModelError, WaitingStatus
@@ -58,17 +60,12 @@ class JupyterController(CharmBase):
         self._k8s_resource_handler = None
         self._crd_resource_handler = None
 
-        # setup events to be handled by main event handler
-        self.framework.observe(self.on.config_changed, self._on_event)
-        self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
-        for rel in self.model.relations.keys():
-            self.framework.observe(self.on[rel].relation_changed, self._on_event)
-
-        # setup events to be handled by specific event handlers
-        self.framework.observe(self.on.install, self._on_install)
-        self.framework.observe(self.on.upgrade_charm, self._on_upgrade)
-        self.framework.observe(self.on.remove, self._on_remove)
-        self.framework.observe(self.on.update_status, self._on_update_status)
+        metrics_port = ServicePort(int(METRICS_PORT), name="metrics-port")
+        self.service_patcher = KubernetesServicePatch(
+            self,
+            [metrics_port],
+            service_name=f"{self.model.app.name}",
+        )
 
         self.prometheus_provider = MetricsEndpointProvider(
             charm=self,
@@ -82,6 +79,18 @@ class JupyterController(CharmBase):
         )
 
         self.dashboard_provider = GrafanaDashboardProvider(self)
+
+        # setup events to be handled by main event handler
+        self.framework.observe(self.on.config_changed, self._on_event)
+        self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
+        for rel in self.model.relations.keys():
+            self.framework.observe(self.on[rel].relation_changed, self._on_event)
+
+        # setup events to be handled by specific event handlers
+        self.framework.observe(self.on.install, self._on_install)
+        self.framework.observe(self.on.upgrade_charm, self._on_upgrade)
+        self.framework.observe(self.on.remove, self._on_remove)
+        self.framework.observe(self.on.update_status, self._on_update_status)
 
     @property
     def container(self):
