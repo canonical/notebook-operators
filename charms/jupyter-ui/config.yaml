@@ -31,10 +31,10 @@ options:
   rstudio-images:
     type: string
     default: |
-      - kubeflownotebookswg/codeserver-python:v1.7.0
+      - kubeflownotebookswg/rstudio-tidyverse:v1.7.0
     description: list of image options for RStudio
   vscode-images:
     type: string
     default: |
-      - kubeflownotebookswg/rstudio-tidyverse:v1.7.0
+      - kubeflownotebookswg/codeserver-python:v1.7.0
     description: list of image options for VSCode
