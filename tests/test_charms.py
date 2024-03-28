@@ -28,7 +28,8 @@ UI_METADATA = yaml.safe_load(Path(f"{UI_PATH}/metadata.yaml").read_text())
 CONTROLLER_APP_NAME = CONTROLLER_METADATA["name"]
 UI_APP_NAME = UI_METADATA["name"]
 
-
+ISTIO_VERSION = "1.16/stable"
+KUBEFLOW_VERSION = "1.7/stable"
 INGRESSGATEWAY_NAME = "istio-ingressgateway"
 PROFILE_NAME = "kubeflow-user"
 
@@ -65,8 +66,6 @@ def dummy_resources_for_testing(lightkube_client):
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_testing):
-    # FIXME: once tracks for all kubeflow components are released, we should point to
-    # those instead of latest/edge
     # Build jupyter-controller and jupyter-ui
     controller_charm = await ops_test.build_charm(CONTROLLER_PATH)
     ui_charm = await ops_test.build_charm(UI_PATH)
@@ -78,14 +77,14 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
     # Deploy istio-operators first
     await ops_test.model.deploy(
         "istio-pilot",
-        channel="latest/edge",
+        channel=ISTIO_VERSION,
         config={"default-gateway": "test-gateway"},
         trust=True,
     )
     await ops_test.model.deploy(
         "istio-gateway",
         application_name=INGRESSGATEWAY_NAME,
-        channel="latest/edge",
+        channel=ISTIO_VERSION,
         trust=True,
         config={"kind": "ingress"},
     )
@@ -106,9 +105,9 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(controller_charm, resources={"oci-image": controller_image_path})
-    await ops_test.model.deploy("admission-webhook", channel="latest/edge", trust=True)
-    await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge", trust=True)
-    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", trust=True)
+    await ops_test.model.deploy("admission-webhook", channel=KUBEFLOW_VERSION, trust=True)
+    await ops_test.model.deploy("kubeflow-profiles", channel=KUBEFLOW_VERSION, trust=True)
+    await ops_test.model.deploy("kubeflow-dashboard", channel=KUBEFLOW_VERSION, trust=True)
     await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
 
     # Wait for everything to deploy
