@@ -75,7 +75,7 @@ async def test_prometheus_integration(ops_test: OpsTest):
         "--trust",
         check=True,
     )
-    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
+    await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
     await ops_test.model.add_relation(CHARM_NAME, prometheus_scrape)
     await ops_test.model.add_relation(
