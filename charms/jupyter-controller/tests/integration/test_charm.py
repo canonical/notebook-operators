@@ -15,6 +15,7 @@ from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
 
+ISTIO_VERSION = "1.16/stable"
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CHARM_NAME = METADATA["name"]
 
@@ -24,14 +25,14 @@ async def test_build_and_deploy(ops_test: OpsTest):
     """Test build and deploy."""
     await ops_test.model.deploy(
         "istio-pilot",
-        channel="latest/edge",
+        channel=ISTIO_VERSION,
         config={"default-gateway": "test-gateway"},
         trust=True,
     )
     await ops_test.model.deploy(
         "istio-gateway",
         application_name="istio-ingressgateway",
-        channel="latest/edge",
+        channel=ISTIO_VERSION,
         config={"kind": "ingress"},
         trust=True,
     )
@@ -64,7 +65,16 @@ async def test_prometheus_integration(ops_test: OpsTest):
     scrape_config = {"scrape_interval": "30s"}
 
     # Deploy and relate prometheus
-    await ops_test.model.deploy(prometheus, channel="latest/stable", trust=True)
+    await ops_test.juju(
+        "deploy",
+        prometheus,
+        "--channel",
+        "latest/edge",
+        "--revision",
+        "137",
+        "--trust",
+        check=True,
+    )
     await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
 
     await ops_test.model.add_relation(CHARM_NAME, prometheus_scrape)
