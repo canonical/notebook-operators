@@ -68,15 +68,11 @@ async def test_prometheus_integration(ops_test: OpsTest):
     prometheus_scrape = "prometheus-scrape-config-k8s"
     scrape_config = {"scrape_interval": "30s"}
 
-    # Deploy and relate prometheus
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
     await ops_test.juju(
         "deploy",
         prometheus,
         "--channel",
         "latest/edge",
-        "--revision",
-        "137",
         "--trust",
         check=True,
     )
