@@ -41,3 +41,74 @@ options:
     default: |
       - kubeflownotebookswg/rstudio-tidyverse:v1.8.0
     description: list of image options for RStudio
+  gpu-number-default:
+    type: int
+    default: 0
+    description: |
+      The number of GPUs that are selected by default in the New Notebook UI when creating a Notebook.
+  gpu-vendors:
+    type: string
+    default: '[{"limitsKey": "nvidia.com/gpu", "uiName": "NVIDIA"}, {"limitsKey": "amd.com/gpu", "uiName": "AMD"}]'
+    description: |
+        The GPU vendors that are selectable by users in the New Notebook UI when creating a Notebook.
+        Input is in JSON/YAML in the format defined by Kubeflow in:
+        https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+        Each item in the list should have keys:
+        - limitsKey: the key that corresponds to the GPU vendor
+        - uiName: the name to be shown in the UI
+  gpu-vendors-default:
+    type: string
+    default: ""
+    description: |
+      The GPU vendor that is selected by default in the New Notebook UI when creating a Notebook.
+      This must be one of the limitsKey values from the gpu-vendors config.  Leave as an empty
+      string to select no GPU vendor by default
+  affinity-options:
+    type: string
+    default: "[]"
+    description: |
+        The Affinity configurations that are selectable by users in the New Notebook UI when creating a Notebook.
+        Input is in JSON/YAML in the format defined by Kubeflow in:
+        https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+        Each item in the list should have keys:
+        - configKey: an arbitrary key for the configuration
+        - displayName: the name to be shown in the UI
+        - affinity: the affinity configuration, as defined by Kubernetes: https://kubernetes.io/docs/concepts/scheduling-eviction/assign-pod-node/
+  affinity-options-default:
+    type: string
+    default: ""
+    description: |
+      The Affinity options that is selected by default in the New Notebook UI when creating a Notebook.
+      This must be one of the configKey values from the affinity-options config.  Leave as an empty
+      string to select no GPU vendor by default
+  tolerations-options:
+    type: string
+    default: "[]"
+    description: |
+      The Toleration configurations that are selectable by users in the New Notebook UI when creating a Notebook.
+      Input is in JSON/YAML in the format defined by Kubeflow in:
+      https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+      Each item in the list should have keys:
+      - groupKey: an arbitrary key for the configuration
+      - displayName: the name to be shown in the UI
+      - tolerations: a list of Kubernetes tolerations, as defined in: https://kubernetes.io/docs/concepts/scheduling-eviction/taint-and-toleration/
+  tolerations-options-default:
+    type: string
+    default: ""
+    description: |
+      The Tolerations configuration that is selected by default in the New Notebook UI when creating a Notebook.
+      This must be one of the groupKey values from the tolerations-options config.  Leave as an empty
+      string to select no tolerations configuration by default
+  default-poddefaults:
+    type: string
+    # The default value allows users to access kfp from their Notebooks automatically
+    # Added from https://github.com/kubeflow/kubeflow/pull/6160 to fix
+    # https://github.com/canonical/bundle-kubeflow/issues/423.  This was not yet in
+    # upstream and if they go with something different we should consider syncing with
+    # upstream.
+    default: '["access-ml-pipeline"]'
+    description: |
+      The PodDefaults that are selected by default in the New Notebook UI when creating a new Notebook. 
+      Inputs is a JSON/YAML list of the names of the PodDefaults.
+      The New Notebook UI will always show all PodDefaults available to the user - this only defines
+      which PodDefaults are selected by default.

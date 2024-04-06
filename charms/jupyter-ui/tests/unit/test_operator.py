@@ -5,16 +5,98 @@
 """Unit tests for JupyterUI Charm."""
 
 import logging
+from contextlib import nullcontext as does_not_raise
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from lightkube.models.core_v1 import (
+    Affinity,
+    NodeAffinity,
+    NodeSelector,
+    NodeSelectorRequirement,
+    NodeSelectorTerm,
+    Toleration,
+)
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import JupyterUI
+from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
+
+# Sample inputs for render_jwa_file tests
+JUPYTER_IMAGES_CONFIG = ["jupyterimage1", "jupyterimage2"]
+VSCODE_IMAGES_CONFIG = ["vscodeimage1", "vscodeimage2"]
+RSTUDIO_IMAGES_CONFIG = ["rstudioimage1", "rstudioimage2"]
+AFFINITY_OPTIONS_CONFIG = [
+    {
+        "configKey": "test-affinity-config-1",
+        "displayName": "Test Affinity Config-1",
+        "affinity": Affinity(
+            nodeAffinity=NodeAffinity(
+                requiredDuringSchedulingIgnoredDuringExecution=NodeSelector(
+                    [
+                        NodeSelectorTerm(
+                            matchExpressions=[
+                                NodeSelectorRequirement(
+                                    key="lifecycle", operator="In", values=["kubeflow-notebook-1"]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        ).to_dict(),
+    },
+    {
+        "configKey": "test-affinity-config-2",
+        "displayName": "Test Affinity Config-2",
+        "affinity": Affinity(
+            nodeAffinity=NodeAffinity(
+                requiredDuringSchedulingIgnoredDuringExecution=NodeSelector(
+                    [
+                        NodeSelectorTerm(
+                            matchExpressions=[
+                                NodeSelectorRequirement(
+                                    key="lifecycle", operator="In", values=["kubeflow-notebook-2"]
+                                )
+                            ]
+                        )
+                    ]
+                )
+            )
+        ).to_dict(),
+    },
+]
+GPU_VENDORS_CONFIG = [
+    {"limitsKey": "nvidia", "uiName": "NVIDIA"},
+]
+TOLERATIONS_OPTIONS_CONFIG = [
+    {
+        "groupKey": "test-tolerations-group-1",
+        "displayName": "Test Tolerations Group 1",
+        "tolerations": [
+            Toleration(
+                effect="NoSchedule", key="dedicated", operator="Equal", value="big-machine"
+            ).to_dict()
+        ],
+    },
+    {
+        "groupKey": "test-tolerations-group-2",
+        "displayName": "Test Tolerations Group 2",
+        "tolerations": [
+            Toleration(
+                effect="NoSchedule", key="dedicated", operator="Equal", value="big-machine"
+            ).to_dict()
+        ],
+    },
+]
+DEFAULT_PODDEFAULTS_CONFIG = [
+    "poddefault1",
+    "poddefault2",
+]
 
 
 @pytest.fixture(scope="function")
@@ -51,6 +133,68 @@ class TestCharm:
         # only single configuration value is currently set in the list of values
         config_value = spawner_ui_config["spawnerFormDefaults"]["configurations"]["value"]
         assert config_value == ["access-ml-pipeline"]
+
+    @pytest.mark.parametrize(
+        "num_gpus, context_raised",
+        [
+            (0, does_not_raise()),
+            (1, does_not_raise()),
+            (2, does_not_raise()),
+            (4, does_not_raise()),
+            (8, does_not_raise()),
+        ],
+    )
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_spawner_ui_has_correct_num_gpu(
+        self, k8s_resource_handler: MagicMock, harness: Harness, num_gpus: int, context_raised
+    ):
+        """Test spawner UI.
+
+        spawner_ui_config.yaml.j2 contains a number of changes that were done for Charmed
+        Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
+        should be reviewed and changes to this tests should be made, if required.
+        """
+        harness.set_leader(True)
+        harness.update_config({"gpu-number-default": num_gpus})
+        harness.begin_with_initial_hooks()
+
+        spawner_ui_config = yaml.safe_load(
+            harness.charm.container.pull("/etc/config/spawner_ui_config.yaml")
+        )
+
+        # test for default configurations
+        # only single configuration value is currently set in the list of values
+        config_value = spawner_ui_config["spawnerFormDefaults"]["gpus"]["value"]["num"]
+        if num_gpus == 0:
+            assert config_value == "none"
+        else:
+            assert config_value == num_gpus
+
+    @pytest.mark.parametrize(
+        "num_gpus, context_raised",
+        [
+            # Invalid number
+            (3, pytest.raises(ConfigValidationError)),
+            # Nonsense input
+            ("adsda", pytest.raises(RuntimeError)),
+        ],
+    )
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_spawner_ui_for_incorrect_gpu_number(
+        self, k8s_resource_handler: MagicMock, harness: Harness, num_gpus: int, context_raised
+    ):
+        """Test spawner UI.
+
+        spawner_ui_config.yaml.j2 contains a number of changes that were done for Charmed
+        Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
+        should be reviewed and changes to this tests should be made, if required.
+        """
+        harness.set_leader(True)
+        with context_raised:
+            harness.update_config({"gpu-number-default": num_gpus})
+            harness.begin_with_initial_hooks()
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
@@ -147,59 +291,227 @@ class TestCharm:
         assert isinstance(harness.charm.model.unit.status, MaintenanceStatus)
 
     @pytest.mark.parametrize(
-        "config_key,expected_images",
+        "config_key,expected_images_yaml",
         [
-            ("jupyter-images", ["jupyterimage1", "jupyterimage2"]),
-            ("vscode-images", ["vscodeimage1", "vscodeimage2"]),
-            ("rstudio-images", ["rstudioimage1", "rstudioimage2"]),
+            ("jupyter-images", yaml.dump(["jupyterimage1", "jupyterimage2"])),
+            ("vscode-images", yaml.dump(["vscodeimage1", "vscodeimage2"])),
+            ("rstudio-images", yaml.dump(["rstudioimage1", "rstudioimage2"])),
+            ("jupyter-images", yaml.dump([])),
+            # Assert that we handle an empty string as if its an empty list
+            ("jupyter-images", ""),
+            # poddefaults inputs function like an image selector, so test them here too
+            ("default-poddefaults", yaml.dump(DEFAULT_PODDEFAULTS_CONFIG)),
+            ("default-poddefaults", ""),
         ],
     )
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
-    def test_notebook_selector_images_config(
-        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_images
+    def test_notebook_selector_config(
+        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_images_yaml
     ):
-        """Test that updating the images config works as expected.
+        """Test that updating the images config and poddefaults works as expected.
 
         The following should be tested:
         Jupyter images, VSCode images, and RStudio images.
         """
         # Arrange
-        expected_images_yaml = yaml.dump(expected_images)
+        expected_images = yaml.safe_load(expected_images_yaml)
+        # Recast an empty input as an empty list to match the expected output
+        if expected_images is None:
+            expected_images = []
         harness.set_leader(True)
         harness.begin()
         harness.update_config({config_key: expected_images_yaml})
 
         # Act
-        actual_images = harness.charm._get_from_config(config_key)
+        parsed_config = harness.charm._get_from_config(config_key)
 
         # Assert
-        assert actual_images == expected_images
+        assert parsed_config.options == expected_images
+        if expected_images:
+            assert parsed_config.default == expected_images[0]
+        else:
+            assert parsed_config.default == ""
 
+    @pytest.mark.parametrize(
+        "config_key,default_value,config_as_yaml",
+        [
+            ("affinity-options", "test-affinity-config-1", yaml.dump(AFFINITY_OPTIONS_CONFIG)),
+            ("gpu-vendors", "nvidia", yaml.dump(GPU_VENDORS_CONFIG)),
+            (
+                "tolerations-options",
+                "test-tolerations-group-1",
+                yaml.dump(TOLERATIONS_OPTIONS_CONFIG),
+            ),
+        ],
+    )
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
-    def test_render_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
+    def test_notebook_configurations(
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        config_key,
+        default_value,
+        config_as_yaml,
+    ):
+        """Test that updating the notebook configuration settings works as expected."""
+        # Arrange
+        expected_config = yaml.safe_load(config_as_yaml)
+        # Recast an empty input as an empty list to match the expected output
+        if expected_config is None:
+            expected_config = []
+        harness.set_leader(True)
+        harness.begin()
+        harness.update_config({config_key: config_as_yaml})
+        harness.update_config({config_key + "-default": default_value})
+
+        # Act
+        parsed_config = harness.charm._get_from_config(config_key)
+
+        # Assert
+        assert parsed_config.options == expected_config
+        assert parsed_config.default == default_value
+
+    @pytest.mark.parametrize(
+        "render_jwa_file_with_images_config_args",
+        [
+            # All options empty
+            (
+                dict(
+                    jupyter_images_config=OptionsWithDefault(),
+                    vscode_images_config=OptionsWithDefault(),
+                    rstudio_images_config=OptionsWithDefault(),
+                    gpu_number_default=0,
+                    gpu_vendors_config=OptionsWithDefault(),
+                    affinity_options_config=OptionsWithDefault(),
+                    tolerations_options_config=OptionsWithDefault(),
+                    default_poddefaults_config=OptionsWithDefault(),
+                )
+            ),
+            # All options with valid input
+            (
+                dict(
+                    jupyter_images_config=OptionsWithDefault(
+                        default="", options=["jupyterimage1", "jupyterimage2"]
+                    ),
+                    vscode_images_config=OptionsWithDefault(
+                        default="", options=["vscodeimage1", "vscodeimage2"]
+                    ),
+                    rstudio_images_config=OptionsWithDefault(
+                        default="", options=["rstudioimage1", "rstudioimage2"]
+                    ),
+                    gpu_number_default=1,
+                    gpu_vendors_config=OptionsWithDefault(default="", options=GPU_VENDORS_CONFIG),
+                    affinity_options_config=OptionsWithDefault(
+                        default="", options=AFFINITY_OPTIONS_CONFIG
+                    ),
+                    tolerations_options_config=OptionsWithDefault(
+                        default="", options=TOLERATIONS_OPTIONS_CONFIG
+                    ),
+                    default_poddefaults_config=OptionsWithDefault(
+                        default="", options=DEFAULT_PODDEFAULTS_CONFIG
+                    ),
+                )
+            ),
+        ],
+    )
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_render_jwa_file(
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        render_jwa_file_with_images_config_args,
+    ):
         """Tests the rendering of the jwa spawner file with the list of images."""
         # Arrange
-        jupyter_images = ["jupyterimage1", "jupyterimage2"]
-        vscode_images = ["vscodeimage1", "vscodeimage2"]
-        rstudio_images = ["rstudioimage1", "rstudioimage2"]
+        render_args = render_jwa_file_with_images_config_args
+
+        # Build the expected results, converting empty values to None to match the output of the
+        # function
+        expected = {
+            k: (
+                OptionsWithDefault(
+                    default=(config.default if config.default else None),
+                    options=(config.options if config.options else None),
+                )
+                if k != "gpu_number_default"
+                else config
+            )
+            for k, config in render_args.items()
+        }
+
         harness.set_leader(True)
         harness.begin()
 
         # Act
-        actual_content_yaml = harness.charm._render_jwa_file_with_images_config(
-            jupyter_images, vscode_images, rstudio_images
-        )
+        actual_content_yaml = harness.charm._render_jwa_file_with_images_config(**render_args)
         actual_content = yaml.safe_load(actual_content_yaml)
-        rendered_jupyter_images = actual_content["spawnerFormDefaults"]["image"]["options"]
-        rendered_vscode_images = actual_content["spawnerFormDefaults"]["imageGroupOne"]["options"]
-        rendered_rstudio_images = actual_content["spawnerFormDefaults"]["imageGroupTwo"]["options"]
 
         # Assert
-        assert rendered_jupyter_images == jupyter_images
-        assert rendered_vscode_images == vscode_images
-        assert rendered_rstudio_images == rstudio_images
+        assert (
+            actual_content["spawnerFormDefaults"]["image"]["value"]
+            == expected["jupyter_images_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["image"]["options"]
+            == expected["jupyter_images_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["imageGroupOne"]["value"]
+            == expected["vscode_images_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["imageGroupOne"]["options"]
+            == expected["vscode_images_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["imageGroupTwo"]["value"]
+            == expected["rstudio_images_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["imageGroupTwo"]["options"]
+            == expected["rstudio_images_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["gpus"]["value"]["vendor"]
+            == expected["gpu_vendors_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["gpus"]["value"]["num"]
+            == expected["gpu_number_default"]
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["gpus"]["value"]["vendors"]
+            == expected["gpu_vendors_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["affinityConfig"]["value"]
+            == expected["affinity_options_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["affinityConfig"]["options"]
+            == expected["affinity_options_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["tolerationGroup"]["value"]
+            == expected["tolerations_options_config"].default
+        )
+        assert (
+            actual_content["spawnerFormDefaults"]["tolerationGroup"]["options"]
+            == expected["tolerations_options_config"].options
+        )
+
+        assert (
+            actual_content["spawnerFormDefaults"]["configurations"]["value"]
+            == expected["default_poddefaults_config"].options
+        )
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
