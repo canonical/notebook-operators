@@ -155,7 +155,7 @@ class JupyterUI(CharmBase):
             "description": "Pebble config layer for jupyter-ui",
             "services": {
                 self._container_name: {
-                    "override": "replace",
+                    "override": "merge",
                     "summary": "Entrypoint of jupyter-ui image",
                     "command": self._exec_command,
                     "startup": "enabled",
