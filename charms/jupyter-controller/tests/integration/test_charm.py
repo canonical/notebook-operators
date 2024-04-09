@@ -68,15 +68,11 @@ async def test_prometheus_integration(ops_test: OpsTest):
     prometheus_scrape = "prometheus-scrape-config-k8s"
     scrape_config = {"scrape_interval": "30s"}
 
-    # Deploy and relate prometheus
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
     await ops_test.juju(
         "deploy",
         prometheus,
         "--channel",
         "latest/edge",
-        "--revision",
-        "137",
         "--trust",
         check=True,
     )
@@ -176,9 +172,9 @@ async def test_prometheus_integration(ops_test: OpsTest):
                 assert rule["name"] in test_alerts
 
 
-# Helper to retry calling a function over 30 seconds or 5 attempts
+# Helper to retry calling a function over 30 seconds for 10 attempts
 retry_for_5_attempts = tenacity.Retrying(
-    stop=(tenacity.stop_after_attempt(5) | tenacity.stop_after_delay(30)),
+    stop=(tenacity.stop_after_attempt(10) | tenacity.stop_after_delay(30)),
     wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
     reraise=True,
 )
