@@ -80,7 +80,7 @@ options:
     description: |
       The Affinity options that is selected by default in the New Notebook UI when creating a Notebook.
       This must be one of the configKey values from the affinity-options config.  Leave as an empty
-      string to select no GPU vendor by default
+      string to select no affinity by default
   tolerations-options:
     type: string
     default: "[]"
