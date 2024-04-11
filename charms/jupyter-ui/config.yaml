@@ -54,7 +54,7 @@ options:
         Input is in JSON/YAML in the format defined by Kubeflow in:
         https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
         Each item in the list should have keys:
-        - limitsKey: the key that corresponds to the GPU vendor
+        - limitsKey: the key that corresponds to the GPU vendor resource in Kubernetes
         - uiName: the name to be shown in the UI
   gpu-vendors-default:
     type: string
