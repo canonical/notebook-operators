@@ -248,21 +248,21 @@ class JupyterUI(CharmBase):
         invalid input.
         """
         if key in IMAGE_CONFIGS:
-            return self._get_image_config(key)
+            return self._get_list_config(key)
         elif key in DEFAULT_WITH_OPTIONS_CONFIGS:
             return self._get_options_with_default_from_config(key)
         elif key == DEFAULT_PODDEFAULTS_CONFIG:
             # parsed the same as image configs
-            return self._get_image_config(key)
+            return self._get_list_config(key)
         elif key == GPU_NUMBER_CONFIG:
             return parse_gpu_num(self.model.config[key])
         else:
             return self.model.config[key]
 
-    def _get_image_config(self, key) -> OptionsWithDefault:
-        """Parse and return an image config entry, which should render to a list.
+    def _get_list_config(self, key) -> OptionsWithDefault:
+        """Parse and return a config entry which should render to a list, like the image lists.
 
-        Returns a ConfigWithDefaults with:
+        Returns a OptionsWithDefault with:
             .options: the content of the config
             .default: the first element of the list
         """
