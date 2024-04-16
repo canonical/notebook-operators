@@ -307,14 +307,14 @@ class JupyterUI(CharmBase):
         """
         default_key = f"{key}-default"
         try:
-            gpu_vendor_default = self.model.config[default_key]
-            gpu_vendors = self.model.config[key]
-            gpu_vendors = yaml.safe_load(gpu_vendors)
+            default = self.model.config[default_key]
+            options = self.model.config[key]
+            options = yaml.safe_load(options)
             # Convert anything empty to an empty list
-            if not gpu_vendors:
-                gpu_vendors = []
-            validate_named_options_with_default(gpu_vendor_default, gpu_vendors, name=key)
-            return OptionsWithDefault(default=gpu_vendor_default, options=gpu_vendors)
+            if not options:
+                options = []
+            validate_named_options_with_default(default, options, name=key)
+            return OptionsWithDefault(default=default, options=options)
         except (YAMLError, ConfigValidationError) as e:
             self.logger.warning(f"Failed to parse {key} config:\n{e}")
             return OptionsWithDefault()
