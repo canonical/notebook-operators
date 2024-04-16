@@ -291,7 +291,7 @@ class TestCharm:
         assert isinstance(harness.charm.model.unit.status, MaintenanceStatus)
 
     @pytest.mark.parametrize(
-        "config_key,expected_images_yaml",
+        "config_key,expected_config_yaml",
         [
             ("jupyter-images", yaml.dump(["jupyterimage1", "jupyterimage2"])),
             ("vscode-images", yaml.dump(["vscodeimage1", "vscodeimage2"])),
@@ -307,7 +307,7 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_notebook_selector_config(
-        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_images_yaml
+        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_config_yaml
     ):
         """Test that updating the images config and poddefaults works as expected.
 
@@ -315,21 +315,21 @@ class TestCharm:
         Jupyter images, VSCode images, and RStudio images.
         """
         # Arrange
-        expected_images = yaml.safe_load(expected_images_yaml)
+        expected_config = yaml.safe_load(expected_config_yaml)
         # Recast an empty input as an empty list to match the expected output
-        if expected_images is None:
-            expected_images = []
+        if expected_config is None:
+            expected_config = []
         harness.set_leader(True)
         harness.begin()
-        harness.update_config({config_key: expected_images_yaml})
+        harness.update_config({config_key: expected_config_yaml})
 
         # Act
         parsed_config = harness.charm._get_from_config(config_key)
 
         # Assert
-        assert parsed_config.options == expected_images
-        if expected_images:
-            assert parsed_config.default == expected_images[0]
+        assert parsed_config.options == expected_config
+        if expected_config:
+            assert parsed_config.default == expected_config[0]
         else:
             assert parsed_config.default == ""
 
