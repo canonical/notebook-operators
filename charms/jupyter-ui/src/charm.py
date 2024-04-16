@@ -319,8 +319,8 @@ class JupyterUI(CharmBase):
             self.logger.warning(f"Failed to parse {key} config:\n{e}")
             return OptionsWithDefault()
 
-    def _render_jwa_file_with_images_config(
-        self,
+    @staticmethod
+    def _render_jwa_spawner_inputs(
         jupyter_images_config: OptionsWithDefault,
         vscode_images_config: OptionsWithDefault,
         rstudio_images_config: OptionsWithDefault,
@@ -373,7 +373,7 @@ class JupyterUI(CharmBase):
         tolerations_options_config = self._get_from_config(TOLERATIONS_OPTIONS_CONFIG)
         default_poddefaults = self._get_from_config(DEFAULT_PODDEFAULTS_CONFIG)
         # render the jwa file
-        jwa_content = self._render_jwa_file_with_images_config(
+        jwa_content = self._render_jwa_spawner_inputs(
             jupyter_images_config=jupyter_images_config,
             vscode_images_config=vscode_images_config,
             rstudio_images_config=rstusio_images_config,

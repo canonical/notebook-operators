@@ -446,7 +446,7 @@ class TestCharm:
         harness.begin()
 
         # Act
-        actual_content_yaml = harness.charm._render_jwa_file_with_images_config(**render_args)
+        actual_content_yaml = harness.charm._render_jwa_spawner_inputs(**render_args)
         actual_content = yaml.safe_load(actual_content_yaml)
 
         # Assert
