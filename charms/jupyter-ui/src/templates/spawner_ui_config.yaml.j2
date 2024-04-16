@@ -302,9 +302,9 @@ spawnerFormDefaults:
     # the list of PodDefault names that are selected by default
     # (take care to ensure these PodDefaults exist in Profile Namespaces)
     value:
-    {% if default_poddefaults | length > 0 %}
+    {%- if default_poddefaults | length > 0 %}
     {{ default_poddefaults | to_yaml | indent(4) }}
-    {% endif %}
+    {%- endif %}
 
   ################################################################
   # Environment
