@@ -30,10 +30,10 @@ UI_APP_NAME = UI_METADATA["name"]
 PROFILE_NAME = "kubeflow-user"
 
 ADMISSION_WEBHOOK = "admission-webhook"
-ADMISSION_WEBHOOK_CHANNEL = "1.8/stable"
+ADMISSION_WEBHOOK_CHANNEL = "latest/edge"
 ADMISSION_WEBHOOK_TRUST = True
 
-ISTIO_OPERATORS_CHANNEL = "1.17/stable"
+ISTIO_OPERATORS_CHANNEL = "latest/edge"
 ISTIO_PILOT = "istio-pilot"
 ISTIO_PILOT_TRUST = True
 ISTIO_PILOT_CONFIG = {"default-gateway": "kubeflow-gateway"}
@@ -43,21 +43,21 @@ ISTIO_GATEWAY_TRUST = True
 ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
 
 KUBEFLOW_DASHBOARD = "kubeflow-dashboard"
-KUBEFLOW_DASHBOARD_CHANNEL = "1.8/stable"
+KUBEFLOW_DASHBOARD_CHANNEL = "latest/edge"
 KUBEFLOW_DASHBOARD_TRUST = True
 
 KUBEFLOW_PROFILES = "kubeflow-profiles"
-KUBEFLOW_PROFILES_CHANNEL = "1.8/stable"
+KUBEFLOW_PROFILES_CHANNEL = "latest/edge"
 KUBEFLOW_PROFILES_TRUST = True
 
 PROMETHEUS_K8S = "prometheus-k8s"
-PROMETHEUS_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_K8S_CHANNEL = "latest/stable"
 PROMETHEUS_K8S_TRUST = True
 GRAFANA_K8S = "grafana-k8s"
-GRAFANA_K8S_CHANNEL = "1.0/stable"
+GRAFANA_K8S_CHANNEL = "latest/stable"
 GRAFANA_K8S_TRUST = True
 PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
-PROMETHEUS_SCRAPE_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_SCRAPE_K8S_CHANNEL = "latest/stable"
 PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 
 
