@@ -333,7 +333,7 @@ class JupyterUI(CharmBase):
         """Render the JWA configmap template with the user-set images in the juju config."""
         environment = Environment(loader=FileSystemLoader("."))
         # Add a filter to render yaml with proper formatting
-        environment.filters["to_yaml"] = to_yaml
+        environment.filters["to_yaml"] = _to_yaml
         template = environment.get_template(JWA_CONFIG_FILE)
         content = template.render(
             jupyter_images=jupyter_images_config.options,
@@ -472,7 +472,7 @@ class JupyterUI(CharmBase):
         self.model.unit.status = ActiveStatus()
 
 
-def to_yaml(data: str) -> str:
+def _to_yaml(data: str) -> str:
     """Jinja filter to convert data to formatted yaml.
 
     This is used in the jinja template to format the yaml in the template.
