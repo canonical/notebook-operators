@@ -533,18 +533,23 @@ class TestCharm:
         assert actual_config == test_config
 
     @pytest.mark.parametrize(
-        "config_key",
-        ["jupyter-images", "vscode-images", "rstudio-images"],
+        "config_key, yaml_string",
+        (
+            ("jupyter-images", "{ not valid yaml"),
+            ("vscode-images", "{ not valid yaml"),
+            ("rstudio-images", "{ not valid yaml"),
+            ("jupyter-images", "A string"),
+            ("jupyter-images", "{}"),
+        ),
     )
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_failure_get_config(
-        self, k8s_resource_handler: MagicMock, harness: Harness, config_key
+        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, yaml_string
     ):
-        """Tests that a warning is logged when a Notebook images config contains an invalid YAML."""
+        """Tests that a warning is logged when a Notebook images config contains invalid input."""
         # Arrange
-        invalid_yaml = "[ invalid yaml"
-        harness.update_config({config_key: invalid_yaml})
+        harness.update_config({config_key: yaml_string})
         harness.set_leader(True)
         harness.begin()
         harness.charm.logger = MagicMock()

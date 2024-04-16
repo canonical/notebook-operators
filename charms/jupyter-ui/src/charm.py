@@ -269,13 +269,24 @@ class JupyterUI(CharmBase):
         error_message = f"Cannot parse list input from config '{key}` - ignoring this input."
         try:
             options = yaml.safe_load(self.model.config[key])
-            # Convert anything empty to an empty list
-            if not options:
+
+            # Empty yaml string, which resolves to None, should be treated as an empty list
+            if options is None:
                 options = []
+
+            # Check that we receive a list or tuple.  This filters out types that can be indexed but
+            # are not valid for this config (like strings or dicts).
+            if not isinstance(options, (tuple, list)):
+                self.logger.warning(
+                    f"{error_message}  Input must be a list or empty string. Got: {options}"
+                )
+                return OptionsWithDefault()
+
             if len(options) > 0:
                 default = options[0]
             else:
                 default = ""
+
             return OptionsWithDefault(default=default, options=options)
         except yaml.YAMLError as err:
             self.logger.warning(f"{error_message}  Got error: {err}")
