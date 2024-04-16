@@ -160,8 +160,8 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
                     f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS
                 )
                 response_json = json.loads(response[1])
-                actual_images = dpath.get(response_json, yaml_path)
-                assert actual_images == expected_images
+                actual_config = dpath.get(response_json, yaml_path)
+                assert actual_config == expected_images
             except AssertionError as e:
                 logger.info("Failed assertion that config is updated - will retry")
                 raise e
