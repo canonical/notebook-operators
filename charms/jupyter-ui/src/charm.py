@@ -301,7 +301,7 @@ class JupyterUI(CharmBase):
         This function handles any config parsing or validation errors, logging details and returning
         and empty result in case of errors.
 
-        Returns a ConfigWithDefaults with:
+        Returns a OptionsWithDefault with:
             .options: the content of this config
             .default: the option selected by f'{key}-default'
         """
