@@ -278,7 +278,7 @@ class JupyterUI(CharmBase):
             # are not valid for this config (like strings or dicts).
             if not isinstance(options, (tuple, list)):
                 self.logger.warning(
-                    f"{error_message}  Input must be a list or empty string. Got: {options}"
+                    f"{error_message}  Input must be a list or empty string. Got: '{options}'"
                 )
                 return OptionsWithDefault()
 
