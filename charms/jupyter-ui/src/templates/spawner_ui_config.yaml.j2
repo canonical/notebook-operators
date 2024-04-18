@@ -38,13 +38,13 @@ spawnerFormDefaults:
   ################################################################
   image:
     # the default container image
-    value: {{ jupyter_images[0] }}
+    value: {{ jupyter_images_default }}
 
     # the list of available container images in the dropdown
     options:
-    {% for image in jupyter_images -%}
-    - {{ image }}
-    {% endfor %}
+    {%- if jupyter_images | length > 0 %}
+    {{ jupyter_images | to_yaml | indent(4) }}
+    {%- endif %}
 
   ################################################################
   # VSCode-like Container Images (Group 1)
@@ -59,13 +59,13 @@ spawnerFormDefaults:
   ################################################################
   imageGroupOne:
     # the default container image
-    value: {{ vscode_images[0] }}
+    value: {{ vscode_images_default }}
 
     # the list of available container images in the dropdown
     options:
-    {% for image in vscode_images -%}
-    - {{ image }}
-    {% endfor %}
+    {%- if vscode_images | length > 0 %}
+    {{ vscode_images | to_yaml | indent(4) }}
+    {%- endif %}
 
   ################################################################
   # RStudio-like Container Images (Group 2)
@@ -82,14 +82,13 @@ spawnerFormDefaults:
   ################################################################
   imageGroupTwo:
     # the default container image
-    value: {{ rstudio_images[0] }}
+    value: {{ rstudio_images_default }}
 
     # the list of available container images in the dropdown
     options:
-    {% for image in rstudio_images -%}
-    - {{ image }}
-    {% endfor %}
-
+    {%- if rstudio_images | length > 0 %}
+    {{ rstudio_images | to_yaml | indent(4) }}
+    {%- endif %}
 
   ################################################################
   # CPU Resources
@@ -128,20 +127,19 @@ spawnerFormDefaults:
     value:
       # the `limitKey` of the default vendor
       # (to have no default, set as "")
-      vendor: ""
+      vendor: {{ gpu_vendors_default }}
 
       # the list of available vendors in the dropdown
       #  `limitsKey` - what will be set as the actual limit
       #  `uiName` - what will be displayed in the dropdown UI
       vendors:
-      - limitsKey: "nvidia.com/gpu"
-        uiName: "NVIDIA"
-      - limitsKey: "amd.com/gpu"
-        uiName: "AMD"
+      {%- if gpu_vendors | length > 0 %}
+      {{ gpu_vendors | to_yaml | indent(6) }}
+      {%- endif %}
 
       # the default value of the limit
       # (possible values: "none", "1", "2", "4", "8")
-      num: "none"
+      num: {{ gpu_number_default }}
 
   ################################################################
   # Workspace Volumes
@@ -202,10 +200,14 @@ spawnerFormDefaults:
     # the `configKey` of the default affinity config
     # (to have no default, set as "")
     # (if `readOnly`, the default `value` will be the only accessible option)
-    value: ""
+    value: {{ affinity_options_default }}
 
     # the list of available affinity configs in the dropdown
-    options: []
+    options:
+    {%- if affinity_options | length > 0 %}
+    {{ affinity_options | to_yaml | indent(4) }}
+    {%- endif %}
+
     #options:
     #  - configKey: "dedicated_node_per_notebook"
     #    displayName: "Dedicated Node Per Notebook"
@@ -241,10 +243,14 @@ spawnerFormDefaults:
     # the `groupKey` of the default toleration group
     # (to have no default, set as "")
     # (if `readOnly`, the default `value` will be the only accessible option)
-    value: ""
+    value: {{ tolerations_options_default }}
 
     # the list of available toleration groups in the dropdown
-    options: []
+    options:
+    {%- if tolerations_options | length > 0 %}
+    {{ tolerations_options | to_yaml | indent(4) }}
+    {%- endif %}
+
     #options:
     #  - groupKey: "group_1"
     #    displayName: "4 CPU 8Gb Mem at ~$X.XXX USD per day"
@@ -296,12 +302,9 @@ spawnerFormDefaults:
     # the list of PodDefault names that are selected by default
     # (take care to ensure these PodDefaults exist in Profile Namespaces)
     value:
-    # Added from https://github.com/kubeflow/kubeflow/pull/6160 to fix
-    # https://github.com/canonical/bundle-kubeflow/issues/423.  This was not yet in
-    # upstream and if they go with something different we should consider syncing with
-    # upstream.
-    # Auto-selects "Allow access to Kubeflow Pipelines" button in Notebook spawner UI
-    - access-ml-pipeline
+    {%- if default_poddefaults | length > 0 %}
+    {{ default_poddefaults | to_yaml | indent(4) }}
+    {%- endif %}
 
   ################################################################
   # Environment

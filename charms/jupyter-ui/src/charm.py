@@ -6,7 +6,7 @@
 
 import logging
 from pathlib import Path
-from typing import List
+from typing import Union
 
 import yaml
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
@@ -26,6 +26,14 @@ from ops.main import main
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import ChangeError, Layer
 from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
+from yaml import YAMLError
+
+from config_validators import (
+    ConfigValidationError,
+    OptionsWithDefault,
+    parse_gpu_num,
+    validate_named_options_with_default,
+)
 
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
@@ -33,7 +41,26 @@ K8S_RESOURCE_FILES = [
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
 RSTUDIO_IMAGES_CONFIG = "rstudio-images"
-JWA_CONFIG_FILE = "src/spawner_ui_config.yaml.j2"
+GPU_NUMBER_CONFIG = "gpu-number-default"
+GPU_VENDORS_CONFIG = "gpu-vendors"
+GPU_VENDORS_CONFIG_DEFAULT = f"{GPU_VENDORS_CONFIG}-default"
+AFFINITY_OPTIONS_CONFIG = "affinity-options"
+AFFINITY_OPTIONS_CONFIG_DEFAULT = f"{AFFINITY_OPTIONS_CONFIG}-default"
+TOLERATIONS_OPTIONS_CONFIG = "tolerations-options"
+TOLERATIONS_OPTIONS_CONFIG_DEFAULT = f"{TOLERATIONS_OPTIONS_CONFIG}-default"
+DEFAULT_PODDEFAULTS_CONFIG = "default-poddefaults"
+JWA_CONFIG_FILE = "src/templates/spawner_ui_config.yaml.j2"
+
+IMAGE_CONFIGS = [
+    JUPYTER_IMAGES_CONFIG,
+    VSCODE_IMAGES_CONFIG,
+    RSTUDIO_IMAGES_CONFIG,
+]
+DEFAULT_WITH_OPTIONS_CONFIGS = [
+    GPU_VENDORS_CONFIG,
+    TOLERATIONS_OPTIONS_CONFIG,
+    AFFINITY_OPTIONS_CONFIG,
+]
 
 
 class CheckFailed(Exception):
@@ -213,29 +240,116 @@ class JupyterUI(CharmBase):
             raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
-    def _get_from_config(self, config_key) -> List[str]:
-        """Return the yaml value of the config stored in config_key."""
-        error_message = (
-            f"Cannot parse user-defined images from config "
-            f"`{config_key}` - ignoring this input."
-        )
+    def _get_from_config(self, key) -> Union[OptionsWithDefault, str]:
+        """Load, validate, render, and return the config value stored in self.model.config[key].
+
+        Different keys are parsed and validated differently.  Errors parsing a config result in
+        null values being returned and errors being logged - this should not raise an exception on
+        invalid input.
+        """
+        if key in IMAGE_CONFIGS:
+            return self._get_list_config(key)
+        elif key in DEFAULT_WITH_OPTIONS_CONFIGS:
+            return self._get_options_with_default_from_config(key)
+        elif key == DEFAULT_PODDEFAULTS_CONFIG:
+            # parsed the same as image configs
+            return self._get_list_config(key)
+        elif key == GPU_NUMBER_CONFIG:
+            return parse_gpu_num(self.model.config[key])
+        else:
+            return self.model.config[key]
+
+    def _get_list_config(self, key) -> OptionsWithDefault:
+        """Parse and return a config entry which should render to a list, like the image lists.
+
+        Returns a OptionsWithDefault with:
+            .options: the content of the config
+            .default: the first element of the list
+        """
+        error_message = f"Cannot parse list input from config '{key}` - ignoring this input."
         try:
-            config = yaml.safe_load(self.model.config[config_key])
+            options = yaml.safe_load(self.model.config[key])
+
+            # Empty yaml string, which resolves to None, should be treated as an empty list
+            if options is None:
+                options = []
+
+            # Check that we receive a list or tuple.  This filters out types that can be indexed but
+            # are not valid for this config (like strings or dicts).
+            if not isinstance(options, (tuple, list)):
+                self.logger.warning(
+                    f"{error_message}  Input must be a list or empty string. Got: '{options}'"
+                )
+                return OptionsWithDefault()
+
+            if len(options) > 0:
+                default = options[0]
+            else:
+                default = ""
+
+            return OptionsWithDefault(default=default, options=options)
         except yaml.YAMLError as err:
             self.logger.warning(f"{error_message}  Got error: {err}")
-            return []
-        return config
+            return OptionsWithDefault()
 
-    def _render_jwa_file_with_images_config(
-        self, jupyter_images_config, vscode_images_config, rstudio_images_config
+    def _get_options_with_default_from_config(self, key) -> OptionsWithDefault:
+        """Return the input config for a config specified by a list of options and their default.
+
+        This is for options like the affinity, gpu, or tolerations options which consist of a list
+        of options dicts and a separate config specifying their default value.
+
+        This function handles any config parsing or validation errors, logging details and returning
+        and empty result in case of errors.
+
+        Returns a OptionsWithDefault with:
+            .options: the content of this config
+            .default: the option selected by f'{key}-default'
+        """
+        default_key = f"{key}-default"
+        try:
+            default = self.model.config[default_key]
+            options = self.model.config[key]
+            options = yaml.safe_load(options)
+            # Convert anything empty to an empty list
+            if not options:
+                options = []
+            validate_named_options_with_default(default, options, name=key)
+            return OptionsWithDefault(default=default, options=options)
+        except (YAMLError, ConfigValidationError) as e:
+            self.logger.warning(f"Failed to parse {key} config:\n{e}")
+            return OptionsWithDefault()
+
+    @staticmethod
+    def _render_jwa_spawner_inputs(
+        jupyter_images_config: OptionsWithDefault,
+        vscode_images_config: OptionsWithDefault,
+        rstudio_images_config: OptionsWithDefault,
+        gpu_number_default: str,
+        gpu_vendors_config: OptionsWithDefault,
+        affinity_options_config: OptionsWithDefault,
+        tolerations_options_config: OptionsWithDefault,
+        default_poddefaults_config: OptionsWithDefault,
     ):
         """Render the JWA configmap template with the user-set images in the juju config."""
         environment = Environment(loader=FileSystemLoader("."))
+        # Add a filter to render yaml with proper formatting
+        environment.filters["to_yaml"] = _to_yaml
         template = environment.get_template(JWA_CONFIG_FILE)
         content = template.render(
-            jupyter_images=jupyter_images_config,
-            vscode_images=vscode_images_config,
-            rstudio_images=rstudio_images_config,
+            jupyter_images=jupyter_images_config.options,
+            jupyter_images_default=jupyter_images_config.default,
+            vscode_images=vscode_images_config.options,
+            vscode_images_default=vscode_images_config.default,
+            rstudio_images=rstudio_images_config.options,
+            rstudio_images_default=rstudio_images_config.default,
+            gpu_number_default=gpu_number_default,
+            gpu_vendors=gpu_vendors_config.options,
+            gpu_vendors_default=gpu_vendors_config.default,
+            affinity_options=affinity_options_config.options,
+            affinity_options_default=affinity_options_config.default,
+            tolerations_options=tolerations_options_config.options,
+            tolerations_options_default=tolerations_options_config.default,
+            default_poddefaults=default_poddefaults_config.options,
         )
         return content
 
@@ -247,17 +361,27 @@ class JupyterUI(CharmBase):
             make_dirs=True,
         )
 
-    def _update_images_selector(self):
+    def _update_spawner_ui_config(self):
         """Update the images options that can be selected in the dropdown list."""
         # get config
-        jupyter_images = self._get_from_config(JUPYTER_IMAGES_CONFIG)
-        vscode_images = self._get_from_config(VSCODE_IMAGES_CONFIG)
-        rstusio_images = self._get_from_config(RSTUDIO_IMAGES_CONFIG)
+        jupyter_images_config = self._get_from_config(JUPYTER_IMAGES_CONFIG)
+        vscode_images_config = self._get_from_config(VSCODE_IMAGES_CONFIG)
+        rstusio_images_config = self._get_from_config(RSTUDIO_IMAGES_CONFIG)
+        gpu_number_default = self._get_from_config(GPU_NUMBER_CONFIG)
+        gpu_vendors_config = self._get_from_config(GPU_VENDORS_CONFIG)
+        affinity_options_config = self._get_from_config(AFFINITY_OPTIONS_CONFIG)
+        tolerations_options_config = self._get_from_config(TOLERATIONS_OPTIONS_CONFIG)
+        default_poddefaults = self._get_from_config(DEFAULT_PODDEFAULTS_CONFIG)
         # render the jwa file
-        jwa_content = self._render_jwa_file_with_images_config(
-            jupyter_images_config=jupyter_images,
-            vscode_images_config=vscode_images,
-            rstudio_images_config=rstusio_images,
+        jwa_content = self._render_jwa_spawner_inputs(
+            jupyter_images_config=jupyter_images_config,
+            vscode_images_config=vscode_images_config,
+            rstudio_images_config=rstusio_images_config,
+            gpu_number_default=gpu_number_default,
+            gpu_vendors_config=gpu_vendors_config,
+            affinity_options_config=affinity_options_config,
+            tolerations_options_config=tolerations_options_config,
+            default_poddefaults_config=default_poddefaults,
         )
         # push file
         self._upload_jwa_file_to_container(jwa_content)
@@ -338,7 +462,7 @@ class JupyterUI(CharmBase):
             self._deploy_k8s_resources()
             if self._is_container_ready():
                 self._update_layer()
-                self._update_images_selector()
+                self._update_spawner_ui_config()
                 interfaces = self._get_interfaces()
                 self._configure_mesh(interfaces)
         except CheckFailed as err:
@@ -348,8 +472,13 @@ class JupyterUI(CharmBase):
         self.model.unit.status = ActiveStatus()
 
 
-#
-# Start main
-#
+def _to_yaml(data: str) -> str:
+    """Jinja filter to convert data to formatted yaml.
+
+    This is used in the jinja template to format the yaml in the template.
+    """
+    return yaml.safe_dump(data)
+
+
 if __name__ == "__main__":
     main(JupyterUI)
