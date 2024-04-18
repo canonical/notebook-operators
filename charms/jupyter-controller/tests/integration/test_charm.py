@@ -23,6 +23,7 @@ log = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 JUPYTER_UI = "jupyter-ui"
+JUPYTER_UI_CHANNEL = "1.8/stable"
 JUPYTER_UI_TRUST = True
 
 ISTIO_OPERATORS_CHANNEL = "1.17/stable"
@@ -72,7 +73,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
         timeout=300,
     )
     # Deploy jupyter-ui and relate to istio
-    await ops_test.model.deploy(JUPYTER_UI, trust=JUPYTER_UI_TRUST)
+    await ops_test.model.deploy(JUPYTER_UI, channel=JUPYTER_UI_CHANNEL, trust=JUPYTER_UI_TRUST)
     await ops_test.model.add_relation(JUPYTER_UI, ISTIO_PILOT)
     await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
 
