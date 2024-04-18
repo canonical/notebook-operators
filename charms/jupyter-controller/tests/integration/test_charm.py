@@ -22,9 +22,8 @@ log = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
-UI_PATH = Path("charms/jupyter-ui")
-UI_METADATA = yaml.safe_load(Path(f"{UI_PATH}/metadata.yaml").read_text())
-UI_APP_NAME = UI_METADATA["name"]
+JUPYTER_UI = "jupyter-ui"
+JUPYTER_UI_TRUST = True
 
 ISTIO_OPERATORS_CHANNEL = "1.17/stable"
 ISTIO_PILOT = "istio-pilot"
@@ -46,9 +45,6 @@ PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
     """Test build and deploy."""
-    ui_charm = await ops_test.build_charm(UI_PATH)
-    ui_image_path = UI_METADATA["resources"]["oci-image"]["upstream-source"]
-
     # Deploy istio-operators first
     await ops_test.model.deploy(
         entity_url=ISTIO_PILOT,
@@ -76,11 +72,9 @@ async def test_build_and_deploy(ops_test: OpsTest):
         timeout=300,
     )
     # Deploy jupyter-ui and relate to istio
-    await ops_test.model.deploy(
-        ui_charm, resources={"oci-image": ui_image_path}, application_name=UI_APP_NAME, trust=True
-    )
-    await ops_test.model.add_relation(UI_APP_NAME, ISTIO_PILOT)
-    await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 15)
+    await ops_test.model.deploy(JUPYTER_UI, trust=JUPYTER_UI_TRUST)
+    await ops_test.model.add_relation(JUPYTER_UI, ISTIO_PILOT)
+    await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
 
     my_charm = await ops_test.build_charm(".")
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
