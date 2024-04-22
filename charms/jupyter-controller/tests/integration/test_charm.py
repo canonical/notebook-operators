@@ -75,7 +75,6 @@ async def test_build_and_deploy(ops_test: OpsTest):
     # Deploy jupyter-ui and relate to istio
     await ops_test.model.deploy(JUPYTER_UI, channel=JUPYTER_UI_CHANNEL, trust=JUPYTER_UI_TRUST)
     await ops_test.model.add_relation(JUPYTER_UI, ISTIO_PILOT)
-    await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
 
     my_charm = await ops_test.build_charm(".")
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
