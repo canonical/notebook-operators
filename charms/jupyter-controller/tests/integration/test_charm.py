@@ -22,34 +22,59 @@ log = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
+JUPYTER_UI = "jupyter-ui"
+JUPYTER_UI_CHANNEL = "1.8/stable"
+JUPYTER_UI_TRUST = True
+
+ISTIO_OPERATORS_CHANNEL = "1.17/stable"
+ISTIO_PILOT = "istio-pilot"
+ISTIO_PILOT_TRUST = True
+ISTIO_PILOT_CONFIG = {"default-gateway": "kubeflow-gateway"}
+ISTIO_GATEWAY = "istio-gateway"
+ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
+ISTIO_GATEWAY_TRUST = True
+ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
+
+PROMETHEUS_K8S = "prometheus-k8s"
+PROMETHEUS_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_K8S_TRUST = True
+PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
+PROMETHEUS_SCRAPE_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
     """Test build and deploy."""
+    # Deploy istio-operators first
     await ops_test.model.deploy(
-        "istio-pilot",
-        channel="latest/edge",
-        config={"default-gateway": "test-gateway"},
-        trust=True,
+        entity_url=ISTIO_PILOT,
+        channel=ISTIO_OPERATORS_CHANNEL,
+        config=ISTIO_PILOT_CONFIG,
+        trust=ISTIO_PILOT_TRUST,
     )
     await ops_test.model.deploy(
-        "istio-gateway",
-        application_name="istio-ingressgateway",
-        channel="latest/edge",
-        config={"kind": "ingress"},
-        trust=True,
-    )
-    await ops_test.model.add_relation("istio-pilot", "istio-ingressgateway")
-    await ops_test.model.wait_for_idle(
-        ["istio-pilot", "istio-ingressgateway"],
-        raise_on_blocked=False,
-        status="active",
-        timeout=90 * 10,
+        entity_url=ISTIO_GATEWAY,
+        application_name=ISTIO_GATEWAY_APP_NAME,
+        channel=ISTIO_OPERATORS_CHANNEL,
+        config=ISTIO_GATEWAY_CONFIG,
+        trust=ISTIO_GATEWAY_TRUST,
     )
 
-    await ops_test.model.deploy("jupyter-ui", trust=True)
-    await ops_test.model.add_relation("jupyter-ui", "istio-pilot")
+    await ops_test.model.add_relation(
+        ISTIO_PILOT,
+        ISTIO_GATEWAY_APP_NAME,
+    )
+
+    await ops_test.model.wait_for_idle(
+        status="active",
+        raise_on_blocked=False,
+        raise_on_error=True,
+        timeout=300,
+    )
+    # Deploy jupyter-ui and relate to istio
+    await ops_test.model.deploy(JUPYTER_UI, channel=JUPYTER_UI_CHANNEL, trust=JUPYTER_UI_TRUST)
+    await ops_test.model.add_relation(JUPYTER_UI, ISTIO_PILOT)
 
     my_charm = await ops_test.build_charm(".")
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
@@ -64,29 +89,28 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
 async def test_prometheus_integration(ops_test: OpsTest):
     """Deploy prometheus and required relations, then test the metrics."""
-    prometheus = "prometheus-k8s"
-    prometheus_scrape = "prometheus-scrape-config-k8s"
-    scrape_config = {"scrape_interval": "30s"}
-
-    await ops_test.juju(
-        "deploy",
-        prometheus,
-        "--channel",
-        "latest/edge",
-        "--trust",
-        check=True,
+    await ops_test.model.deploy(
+        PROMETHEUS_K8S,
+        channel=PROMETHEUS_K8S_CHANNEL,
+        trust=PROMETHEUS_K8S_TRUST,
     )
-    await ops_test.model.deploy(prometheus_scrape, channel="latest/stable", config=scrape_config)
+    await ops_test.model.deploy(
+        PROMETHEUS_SCRAPE_K8S,
+        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
+        config=PROMETHEUS_SCRAPE_CONFIG,
+    )
 
-    await ops_test.model.add_relation(APP_NAME, prometheus_scrape)
+    await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE_K8S)
     await ops_test.model.add_relation(
-        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
+        f"{PROMETHEUS_K8S}:metrics-endpoint",
+        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
-
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
+        "address"
+    ]
     log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
