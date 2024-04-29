@@ -3,7 +3,7 @@
 #
 
 """Unit tests for JupyterUI Charm."""
-
+import copy
 import logging
 from contextlib import nullcontext as does_not_raise
 from unittest.mock import MagicMock, patch
@@ -393,21 +393,23 @@ class TestCharm:
             (
                 dict(
                     jupyter_images_config=OptionsWithDefault(
-                        default="", options=["jupyterimage1", "jupyterimage2"]
+                        default="jupyterimage1", options=["jupyterimage1", "jupyterimage2"]
                     ),
                     vscode_images_config=OptionsWithDefault(
-                        default="", options=["vscodeimage1", "vscodeimage2"]
+                        default="vscodeimage1", options=["vscodeimage1", "vscodeimage2"]
                     ),
                     rstudio_images_config=OptionsWithDefault(
-                        default="", options=["rstudioimage1", "rstudioimage2"]
+                        default="rstudioimage1", options=["rstudioimage1", "rstudioimage2"]
                     ),
                     gpu_number_default=1,
-                    gpu_vendors_config=OptionsWithDefault(default="", options=GPU_VENDORS_CONFIG),
+                    gpu_vendors_config=OptionsWithDefault(
+                        default="nvidia", options=GPU_VENDORS_CONFIG
+                    ),
                     affinity_options_config=OptionsWithDefault(
-                        default="", options=AFFINITY_OPTIONS_CONFIG
+                        default="test-affinity-config-1", options=AFFINITY_OPTIONS_CONFIG
                     ),
                     tolerations_options_config=OptionsWithDefault(
-                        default="", options=TOLERATIONS_OPTIONS_CONFIG
+                        default="test-tolerations-group-1", options=TOLERATIONS_OPTIONS_CONFIG
                     ),
                     default_poddefaults_config=OptionsWithDefault(
                         default="", options=DEFAULT_PODDEFAULTS_CONFIG
@@ -428,19 +430,8 @@ class TestCharm:
         # Arrange
         render_args = render_jwa_file_with_images_config_args
 
-        # Build the expected results, converting empty values to None to match the output of the
-        # function
-        expected = {
-            k: (
-                OptionsWithDefault(
-                    default=(config.default if config.default else None),
-                    options=(config.options if config.options else None),
-                )
-                if k != "gpu_number_default"
-                else config
-            )
-            for k, config in render_args.items()
-        }
+        # Build the expected results
+        expected = copy.deepcopy(render_args)
 
         harness.set_leader(True)
         harness.begin()

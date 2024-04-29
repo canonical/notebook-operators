@@ -38,12 +38,18 @@ spawnerFormDefaults:
   ################################################################
   image:
     # the default container image
+    {%- if jupyter_images_default %}
     value: {{ jupyter_images_default }}
+    {%- else %}
+    value: ""
+    {%- endif %}
 
     # the list of available container images in the dropdown
-    options:
     {%- if jupyter_images | length > 0 %}
+    options:
     {{ jupyter_images | to_yaml | indent(4) }}
+    {%- else %}
+    options: []
     {%- endif %}
 
   ################################################################
@@ -59,12 +65,18 @@ spawnerFormDefaults:
   ################################################################
   imageGroupOne:
     # the default container image
+    {%- if vscode_images_default %}
     value: {{ vscode_images_default }}
+    {%- else %}
+    value: ""
+    {%- endif %}
 
     # the list of available container images in the dropdown
-    options:
     {%- if vscode_images | length > 0 %}
+    options:
     {{ vscode_images | to_yaml | indent(4) }}
+    {%- else %}
+    options: []
     {%- endif %}
 
   ################################################################
@@ -82,12 +94,18 @@ spawnerFormDefaults:
   ################################################################
   imageGroupTwo:
     # the default container image
+    {%- if rstudio_images_default %}
     value: {{ rstudio_images_default }}
+    {%- else %}
+    value: ""
+    {%- endif %}
 
     # the list of available container images in the dropdown
-    options:
     {%- if rstudio_images | length > 0 %}
+    options:
     {{ rstudio_images | to_yaml | indent(4) }}
+    {%- else %}
+    options: []
     {%- endif %}
 
   ################################################################
@@ -127,14 +145,20 @@ spawnerFormDefaults:
     value:
       # the `limitKey` of the default vendor
       # (to have no default, set as "")
+      {%- if gpu_vendors_default %}
       vendor: {{ gpu_vendors_default }}
+      {%- else %}
+      vendor: ""
+      {%- endif %}
 
       # the list of available vendors in the dropdown
       #  `limitsKey` - what will be set as the actual limit
       #  `uiName` - what will be displayed in the dropdown UI
-      vendors:
       {%- if gpu_vendors | length > 0 %}
+      vendors:
       {{ gpu_vendors | to_yaml | indent(6) }}
+      {%- else %}
+      vendors: []
       {%- endif %}
 
       # the default value of the limit
@@ -200,12 +224,18 @@ spawnerFormDefaults:
     # the `configKey` of the default affinity config
     # (to have no default, set as "")
     # (if `readOnly`, the default `value` will be the only accessible option)
+    {%- if affinity_options_default %}
     value: {{ affinity_options_default }}
+    {%- else %}
+    value: ""
+    {%- endif %}
 
     # the list of available affinity configs in the dropdown
-    options:
     {%- if affinity_options | length > 0 %}
+    options:
     {{ affinity_options | to_yaml | indent(4) }}
+    {%- else %}
+    options: []
     {%- endif %}
 
     #options:
@@ -243,12 +273,18 @@ spawnerFormDefaults:
     # the `groupKey` of the default toleration group
     # (to have no default, set as "")
     # (if `readOnly`, the default `value` will be the only accessible option)
+    {%- if tolerations_options_default %}
     value: {{ tolerations_options_default }}
+    {%- else %}
+    value: ""
+    {%- endif %}
 
     # the list of available toleration groups in the dropdown
-    options:
     {%- if tolerations_options | length > 0 %}
+    options:
     {{ tolerations_options | to_yaml | indent(4) }}
+    {%- else %}
+    options: []
     {%- endif %}
 
     #options:
@@ -301,9 +337,11 @@ spawnerFormDefaults:
 
     # the list of PodDefault names that are selected by default
     # (take care to ensure these PodDefaults exist in Profile Namespaces)
-    value:
     {%- if default_poddefaults | length > 0 %}
+    value:
     {{ default_poddefaults | to_yaml | indent(4) }}
+    {%- else %}
+    value: []
     {%- endif %}
 
   ################################################################
