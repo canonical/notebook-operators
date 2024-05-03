@@ -65,7 +65,7 @@ jobs:
         key: craft-shared-cache-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
         restore-keys: craft-shared-cache
 
-    # DEBUG: remove this
+    # DEBUG: remove this after testing
     - name: emit charmcraft cache directory contents
       run: |
         find $CRAFT_SHARED_CACHE | wc -l
@@ -73,7 +73,7 @@ jobs:
 
     - run: tox -e ${{ matrix.charm }}-integration
 
-    # DEBUG: remove this
+    # DEBUG: remove this after testing
     - name: emit charmcraft cache directory contents
       run: |
         find $CRAFT_SHARED_CACHE | wc -l
@@ -123,7 +123,7 @@ jobs:
         key: craft-shared-cache-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
         restore-keys: craft-shared-cache
 
-    # DEBUG: remove this
+    # DEBUG: remove this after testing
     - name: emit charmcraft cache directory contents
       run: |
         find $CRAFT_SHARED_CACHE | wc -l
@@ -139,7 +139,7 @@ jobs:
         juju add-model kubeflow
         sg snap_microk8s -c "tox -e integration -- --model kubeflow"
 
-    # DEBUG: remove this
+    # DEBUG: remove this after testing
     - name: emit charmcraft cache directory contents
       run: |
         find $CRAFT_SHARED_CACHE | wc -l
