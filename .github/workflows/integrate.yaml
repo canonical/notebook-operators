@@ -38,6 +38,8 @@ jobs:
     strategy:
       matrix:
         charm: [controller, ui]
+    env:
+      CRAFT_SHARED_CACHE: /home/runner/.cache/shared_charmcraft_cache
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -50,7 +52,33 @@ jobs:
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.1/stable
 
+    - name: Setup Charmcraft's cache
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CRAFT_SHARED_CACHE }}
+        # Cache keys must be unique - there is no overwrite mechanic.  Add IDs to avoid this (is there a better set of IDs?)
+        # partial ref: https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+        # To match the most recent previous cache, use restore-keys with the craft-shared-cache prefix.  This will hit the
+        # "first" match, which will be from the most recent run.  
+        # ref: https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
+        key: craft-shared-cache-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: craft-shared-cache
+
+    # DEBUG: remove this
+    - name: emit charmcraft cache directory contents
+      run: |
+        find $CRAFT_SHARED_CACHE | wc -l
+        find $CRAFT_SHARED_CACHE/wheels | wc -l
+
     - run: tox -e ${{ matrix.charm }}-integration
+
+    # DEBUG: remove this
+    - name: emit charmcraft cache directory contents
+      run: |
+        find $CRAFT_SHARED_CACHE | wc -l
+        find $CRAFT_SHARED_CACHE/wheels | wc -l
+  
 
   lint:
     name: Lint Code
@@ -67,6 +95,8 @@ jobs:
   bundle-integration:
     name: Bundle Integration
     runs-on: ubuntu-20.04
+    env:
+      CRAFT_SHARED_CACHE: /home/runner/.cache/shared_charmcraft_cache
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -79,6 +109,26 @@ jobs:
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.1/stable
 
+
+    - name: Setup Charmcraft's cache
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: ${{ env.CRAFT_SHARED_CACHE }}
+        # Cache keys must be unique - there is no overwrite mechanic.  Add IDs to avoid this (is there a better set of IDs?)
+        # partial ref: https://github.com/actions/cache/blob/main/tips-and-workarounds.md#update-a-cache
+        # To match the most recent previous cache, use restore-keys with the craft-shared-cache prefix.  This will hit the
+        # "first" match, which will be from the most recent run.  
+        # ref: https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#matching-a-cache-key
+        key: craft-shared-cache-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-${{ strategy.job-index }}
+        restore-keys: craft-shared-cache
+
+    # DEBUG: remove this
+    - name: emit charmcraft cache directory contents
+      run: |
+        find $CRAFT_SHARED_CACHE | wc -l
+        find $CRAFT_SHARED_CACHE/wheels | wc -l
+
     - name: Run test
       run: |
         sudo apt install tar wget
@@ -88,6 +138,12 @@ jobs:
         sudo mv geckodriver /usr/local/bin
         juju add-model kubeflow
         sg snap_microk8s -c "tox -e integration -- --model kubeflow"
+
+    # DEBUG: remove this
+    - name: emit charmcraft cache directory contents
+      run: |
+        find $CRAFT_SHARED_CACHE | wc -l
+        find $CRAFT_SHARED_CACHE/wheels | wc -l
 
     - run: kubectl get all -A
       if: failure()
