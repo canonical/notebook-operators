@@ -39,7 +39,7 @@ jobs:
       matrix:
         charm: [controller, ui]
     env:
-      CRAFT_SHARED_CACHE: /home/runner/.cache/shared_charmcraft_cache
+      CRAFT_SHARED_CACHE: /home/runner/snap/charmcraft/common/cache/charmcraft/
     steps:
     - name: Check out code
       uses: actions/checkout@v3
@@ -96,7 +96,7 @@ jobs:
     name: Bundle Integration
     runs-on: ubuntu-20.04
     env:
-      CRAFT_SHARED_CACHE: /home/runner/.cache/shared_charmcraft_cache
+      CRAFT_SHARED_CACHE: /home/runner/snap/charmcraft/common/cache/charmcraft/
     steps:
     - name: Check out code
       uses: actions/checkout@v3
