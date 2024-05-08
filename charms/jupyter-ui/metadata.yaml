@@ -12,7 +12,7 @@ resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    upstream-source: docker.io/kubeflownotebookswg/jupyter-web-app:v1.8.0
+    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.8-2605035
 requires:
   ingress:
     interface: ingress
