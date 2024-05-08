@@ -9,7 +9,9 @@ import logging
 from pathlib import Path
 
 import aiohttp
+import dpath
 import pytest
+import tenacity
 import yaml
 from pytest_operator.plugin import OpsTest
 
@@ -25,6 +27,38 @@ PORT = CONFIG["options"]["port"]["default"]
 HEADERS = {
     "kubeflow-userid": "",
 }
+
+AFFINITY_OPTIONS = [
+    {
+        "configKey": "test-affinity-config-1",
+        "displayName": "Test Affinity Config-1",
+        "affinity": dict(
+            nodeAffinity=dict(
+                requiredDuringSchedulingIgnoredDuringExecution=[
+                    dict(
+                        matchExpressions=[
+                            dict(key="lifecycle", operator="In", values=["kubeflow-notebook-1"])
+                        ]
+                    )
+                ]
+            )
+        ),
+    },
+]
+
+TOLERATIONS_OPTIONS = [
+    {
+        "groupKey": "test-tolerations-group-1",
+        "displayName": "Test Tolerations Group 1",
+        "tolerations": [
+            dict(effect="NoSchedule", key="dedicated", operator="Equal", value="big-machine")
+        ],
+    },
+]
+DEFAULT_PODDEFAULTS = [
+    "poddefault1",
+    "poddefault2",
+]
 
 
 @pytest.mark.abort_on_fail
@@ -84,28 +118,57 @@ async def test_ui_is_accessible(ops_test: OpsTest):
 
 
 @pytest.mark.parametrize(
-    "config_key,expected_images,yaml_key",
+    "config_key,config_value,yaml_path",
     [
-        ("jupyter-images", ["jupyterimage1", "jupyterimage2"], "image"),
-        ("vscode-images", ["vscodeimage1", "vscodeimage2"], "imageGroupOne"),
-        ("rstudio-images", ["rstudioimage1", "rstudioimage2"], "imageGroupTwo"),
+        ("jupyter-images", ["jupyterimage1", "jupyterimagse2"], "config/image/options"),
+        ("vscode-images", ["vscodeimage1", "vscodeimagse2"], "config/imageGroupOne/options"),
+        ("rstudio-images", ["rstudioimage1", "rstudioismage2"], "config/imageGroupTwo/options"),
+        ("affinity-options", AFFINITY_OPTIONS, "config/affinityConfig/options"),
+        ("gpu-vendors", [{"limitsKey": "gpu1", "uiName": "GPsU 1"}], "config/gpus/value/vendors"),
+        ("tolerations-options", TOLERATIONS_OPTIONS, "config/tolerationGroup/options"),
+        ("default-poddefaults", DEFAULT_PODDEFAULTS, "config/configurations/value"),
     ],
 )
-async def test_notebook_image_selector(ops_test: OpsTest, config_key, expected_images, yaml_key):
-    """Test notebook image selector.
+async def test_notebook_configuration(ops_test: OpsTest, config_key, config_value, yaml_path):
+    """Test updating notebook configuration settings.
 
-    Verify that setting the juju config for the 3 types of Notebook components
-    sets the notebook images selector list in the workload container,
-    with the same values in the configs.
+    Verify that setting the juju config for the default notebook configuration settings sets the
+    values in the Jupyter UI web form.
+
+    Args:
+        config_key: The key in the charm config to set
+        config_value: The value to set the config key to
+        yaml_path: The path in the spawner_ui_config.yaml file that this config will be rendered to,
+                   written as a "/" separated string (e.g. "config/image/options").  See dpath.get()
+                   at https://github.com/dpath-maintainers/dpath-python?tab=readme-ov-file#searching
+                   for more information on the path syntax.
     """
-    await ops_test.model.applications[APP_NAME].set_config(
-        {config_key: yaml.dump(expected_images)}
-    )
-    await ops_test.model.wait_for_idle(
-        apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=30
-    )
+    await ops_test.model.applications[APP_NAME].set_config({config_key: yaml.dump(config_value)})
+    expected_images = config_value
+
+    # To avoid waiting for a long idle_period between each of this series of tests, we do not use
+    # wait_for_idle.  Instead we push the config and then try for 120 seconds to assert the config
+    # is updated.  This ends up being faster than waiting for idle_period between each test.
+
     jupyter_ui_url = await get_unit_address(ops_test)
-    response = await fetch_response(f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS)
-    response_json = json.loads(response[1])
-    actual_images = response_json["config"][yaml_key]["options"]
-    assert actual_images == expected_images
+    logger.info("Polling the Jupyter UI API to check the configuration")
+    for attempt in RETRY_120_SECONDS:
+        logger.info("Testing whether the config has been updated")
+        with attempt:
+            try:
+                response = await fetch_response(
+                    f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS
+                )
+                response_json = json.loads(response[1])
+                actual_config = dpath.get(response_json, yaml_path)
+                assert actual_config == expected_images
+            except AssertionError as e:
+                logger.info("Failed assertion that config is updated - will retry")
+                raise e
+
+
+RETRY_120_SECONDS = tenacity.Retrying(
+    stop=tenacity.stop_after_delay(120),
+    wait=tenacity.wait_fixed(2),
+    reraise=True,
+)

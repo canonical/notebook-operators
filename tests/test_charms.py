@@ -27,10 +27,38 @@ CONTROLLER_METADATA = yaml.safe_load(Path(f"{CONTROLLER_PATH}/metadata.yaml").re
 UI_METADATA = yaml.safe_load(Path(f"{UI_PATH}/metadata.yaml").read_text())
 CONTROLLER_APP_NAME = CONTROLLER_METADATA["name"]
 UI_APP_NAME = UI_METADATA["name"]
-
-
-INGRESSGATEWAY_NAME = "istio-ingressgateway"
 PROFILE_NAME = "kubeflow-user"
+
+ADMISSION_WEBHOOK = "admission-webhook"
+ADMISSION_WEBHOOK_CHANNEL = "1.8/stable"
+ADMISSION_WEBHOOK_TRUST = True
+
+ISTIO_OPERATORS_CHANNEL = "1.17/stable"
+ISTIO_PILOT = "istio-pilot"
+ISTIO_PILOT_TRUST = True
+ISTIO_PILOT_CONFIG = {"default-gateway": "kubeflow-gateway"}
+ISTIO_GATEWAY = "istio-gateway"
+ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
+ISTIO_GATEWAY_TRUST = True
+ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
+
+KUBEFLOW_DASHBOARD = "kubeflow-dashboard"
+KUBEFLOW_DASHBOARD_CHANNEL = "1.8/stable"
+KUBEFLOW_DASHBOARD_TRUST = True
+
+KUBEFLOW_PROFILES = "kubeflow-profiles"
+KUBEFLOW_PROFILES_CHANNEL = "1.8/stable"
+KUBEFLOW_PROFILES_TRUST = True
+
+PROMETHEUS_K8S = "prometheus-k8s"
+PROMETHEUS_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_K8S_TRUST = True
+GRAFANA_K8S = "grafana-k8s"
+GRAFANA_K8S_CHANNEL = "1.0/stable"
+GRAFANA_K8S_TRUST = True
+PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
+PROMETHEUS_SCRAPE_K8S_CHANNEL = "1.0/stable"
+PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
 
 
 @pytest.fixture(scope="module")
@@ -77,42 +105,52 @@ async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_
 
     # Deploy istio-operators first
     await ops_test.model.deploy(
-        "istio-pilot",
-        channel="latest/edge",
-        config={"default-gateway": "test-gateway"},
-        trust=True,
+        entity_url=ISTIO_PILOT,
+        channel=ISTIO_OPERATORS_CHANNEL,
+        config=ISTIO_PILOT_CONFIG,
+        trust=ISTIO_PILOT_TRUST,
     )
     await ops_test.model.deploy(
-        "istio-gateway",
-        application_name=INGRESSGATEWAY_NAME,
-        channel="latest/edge",
-        trust=True,
-        config={"kind": "ingress"},
-    )
-    await ops_test.model.add_relation("istio-pilot", INGRESSGATEWAY_NAME)
-    await ops_test.model.wait_for_idle(
-        ["istio-pilot", INGRESSGATEWAY_NAME],
-        raise_on_blocked=False,
-        status="active",
-        timeout=90 * 10,
+        entity_url=ISTIO_GATEWAY,
+        application_name=ISTIO_GATEWAY_APP_NAME,
+        channel=ISTIO_OPERATORS_CHANNEL,
+        config=ISTIO_GATEWAY_CONFIG,
+        trust=ISTIO_GATEWAY_TRUST,
     )
 
+    await ops_test.model.add_relation(
+        ISTIO_PILOT,
+        ISTIO_GATEWAY_APP_NAME,
+    )
+
+    await ops_test.model.wait_for_idle(
+        status="active",
+        raise_on_blocked=False,
+        raise_on_error=True,
+        timeout=300,
+    )
     # Deploy jupyter-ui and relate to istio
     await ops_test.model.deploy(
         ui_charm, resources={"oci-image": ui_image_path}, application_name=UI_APP_NAME, trust=True
     )
-    await ops_test.model.add_relation(UI_APP_NAME, "istio-pilot")
+    await ops_test.model.add_relation(UI_APP_NAME, ISTIO_PILOT)
     await ops_test.model.wait_for_idle(apps=[UI_APP_NAME], status="active", timeout=60 * 15)
 
     # Deploy jupyter-controller, admission-webhook, kubeflow-profiles and kubeflow-dashboard
     await ops_test.model.deploy(
         controller_charm, resources={"oci-image": controller_image_path}, trust=True
     )
-    await ops_test.model.deploy("admission-webhook", channel="latest/edge", trust=True)
-    await ops_test.model.deploy("kubeflow-profiles", channel="latest/edge", trust=True)
-    await ops_test.model.wait_for_idle(["kubeflow-profiles"], status="active", timeout=60 * 15)
-    await ops_test.model.deploy("kubeflow-dashboard", channel="latest/edge", trust=True)
-    await ops_test.model.add_relation("kubeflow-profiles", "kubeflow-dashboard")
+    await ops_test.model.deploy(
+        ADMISSION_WEBHOOK, channel=ADMISSION_WEBHOOK_CHANNEL, trust=ADMISSION_WEBHOOK_TRUST
+    )
+    await ops_test.model.deploy(
+        KUBEFLOW_PROFILES, channel=KUBEFLOW_PROFILES_CHANNEL, trust=KUBEFLOW_PROFILES_TRUST
+    )
+    await ops_test.model.wait_for_idle([KUBEFLOW_PROFILES], status="active", timeout=60 * 15)
+    await ops_test.model.deploy(
+        KUBEFLOW_DASHBOARD, channel=KUBEFLOW_DASHBOARD_CHANNEL, trust=KUBEFLOW_DASHBOARD_TRUST
+    )
+    await ops_test.model.add_relation(KUBEFLOW_PROFILES, KUBEFLOW_DASHBOARD)
 
     # Wait for everything to deploy
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
@@ -123,7 +161,7 @@ def driver(request, ops_test, lightkube_client):
     this_namespace = ops_test.model_name
 
     ingress_service = lightkube_client.get(
-        res=Service, name=f"{INGRESSGATEWAY_NAME}-workload", namespace=this_namespace
+        res=Service, name=f"{ISTIO_GATEWAY_APP_NAME}-workload", namespace=this_namespace
     )
     gateway_ip = ingress_service.status.loadBalancer.ingress[0].ip
 
@@ -273,51 +311,42 @@ def test_create_notebook(driver, ops_test, dummy_resources_for_testing):
 
 async def test_prometheus_grafana_integration(ops_test):
     """Deploy prometheus, grafana and required relations, then test the metrics."""
-    prometheus = "prometheus-k8s"
-    grafana = "grafana-k8s"
-    prometheus_scrape = "prometheus-scrape-config-k8s"
-    scrape_config = {"scrape_interval": "30s"}
+    await ops_test.model.deploy(
+        PROMETHEUS_K8S,
+        channel=PROMETHEUS_K8S_CHANNEL,
+        trust=PROMETHEUS_K8S_TRUST,
+    )
+    await ops_test.model.deploy(
+        GRAFANA_K8S,
+        channel=GRAFANA_K8S_CHANNEL,
+        trust=GRAFANA_K8S_TRUST,
+    )
+    await ops_test.model.deploy(
+        PROMETHEUS_SCRAPE_K8S,
+        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
+        config=PROMETHEUS_SCRAPE_CONFIG,
+    )
 
-    # Deploy and relate prometheus
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/688 is closed
-    await ops_test.juju(
-        "deploy",
-        prometheus,
-        "--channel",
-        "latest/edge",
-        "--revision",
-        "137",
-        "--trust",
-        check=True,
-    )
-    # FIXME: Unpin revision once https://github.com/canonical/bundle-kubeflow/issues/690 is closed
-    await ops_test.juju(
-        "deploy",
-        grafana,
-        "--channel",
-        "latest/edge",
-        "--revision",
-        "89",
-        "--trust",
-        check=True,
-    )
-    await ops_test.model.deploy(prometheus_scrape, channel="latest/beta", config=scrape_config)
-
-    await ops_test.model.add_relation(CONTROLLER_APP_NAME, prometheus_scrape)
+    await ops_test.model.add_relation(CONTROLLER_APP_NAME, PROMETHEUS_SCRAPE_K8S)
     await ops_test.model.add_relation(
-        f"{prometheus}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{PROMETHEUS_K8S}:grafana-dashboard",
+        f"{GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{CONTROLLER_APP_NAME}:grafana-dashboard", f"{grafana}:grafana-dashboard"
+        f"{CONTROLLER_APP_NAME}:grafana-dashboard",
+        f"{GRAFANA_K8S}:grafana-dashboard",
     )
     await ops_test.model.add_relation(
-        f"{prometheus}:metrics-endpoint", f"{prometheus_scrape}:metrics-endpoint"
+        f"{PROMETHEUS_K8S}:metrics-endpoint",
+        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
     )
 
     await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
 
     status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][prometheus]["units"][f"{prometheus}/0"]["address"]
+    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
+        "address"
+    ]
     logger.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
 
     for attempt in retry_for_5_attempts:
