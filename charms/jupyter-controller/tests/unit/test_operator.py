@@ -161,7 +161,7 @@ class TestCharm:
         assert pebble_plan_info["services"]["jupyter-controller"]["command"] == "./manager"
         test_env = pebble_plan_info["services"]["jupyter-controller"]["environment"]
         # there should be 3 environment variables
-        assert 3 == len(test_env)
+        assert 7 == len(test_env)
         assert "kubeflow/kubeflow-gateway" == test_env["ISTIO_GATEWAY"]
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)

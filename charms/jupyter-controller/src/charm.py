@@ -136,8 +136,12 @@ class JupyterController(CharmBase):
         """Return environment variables based on model configuration."""
         config = self.model.config
         ret_env_vars = {
+            "CLUSTER_DOMAIN": config["cluster-domain"],
+            "CULL_IDLE_TIME": config["cull-idle-time"],
+            "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
             "USE_ISTIO": config["use-istio"],
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
+            "ISTIO_HOST": "*",
             "ENABLE_CULLING": config["enable-culling"],
         }
 
