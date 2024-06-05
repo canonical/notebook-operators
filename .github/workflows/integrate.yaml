@@ -49,6 +49,7 @@ jobs:
           charmcraft-channel: latest/candidate
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.5/stable
+          bootstrap-options: "--agent-version 3.5.0" # Remove this option when this is resolved https://bugs.launchpad.net/juju/+bug/2067636
 
     - run: tox -e ${{ matrix.charm }}-integration
 
