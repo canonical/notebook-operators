@@ -1,8 +1,20 @@
 options:
+  cluster-domain:
+    type: string
+    default: cluster.local
+    description: Specifies the base domain name of the Kubernetes cluster, which is used in culling to correctly resolve and address the services and resources within the cluster.
+  cull-idle-time:
+    type: int
+    default: 1440
+    description: The amount of time (in seconds) that a Jupyter notebook server can remain idle before it is automatically shut down.
   enable-culling:
     type: boolean
     default: true
     description: Enables culling of idle Jupyter pods
+  idleness-check-period:
+    type: int
+    default: 1
+    description: Interval (in minutes) at which the system checks for idle Jupyter notebook servers to determine if they should be culled.
   use-istio:
     type: boolean
     default: true
