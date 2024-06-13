@@ -12,6 +12,7 @@ from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
 from charmed_kubeflow_chisme.pebble import update_layer
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.loki_k8s.v1.loki_push_api import LogForwarder
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
 from lightkube import ApiError
@@ -79,6 +80,7 @@ class JupyterController(CharmBase):
         )
 
         self.dashboard_provider = GrafanaDashboardProvider(self)
+        self._logging = LogForwarder(charm=self)
 
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
