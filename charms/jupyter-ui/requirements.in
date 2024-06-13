@@ -5,3 +5,5 @@ pyyaml
 # jupyter-ui's current implementation is not compatible
 # with SDI>0.3.
 serialized-data-interface<0.4
+# from loki_k8s.v1.loki_push_api.py
+cosl

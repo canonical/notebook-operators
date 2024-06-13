@@ -16,6 +16,7 @@ from charms.kubeflow_dashboard.v0.kubeflow_dashboard_links import (
     DashboardLink,
     KubeflowDashboardLinksRequirer,
 )
+from charms.loki_k8s.v1.loki_push_api import LogForwarder
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from jinja2 import Environment, FileSystemLoader
 from lightkube import ApiError
@@ -133,6 +134,7 @@ class JupyterUI(CharmBase):
                 )
             ],
         )
+        self._logging = LogForwarder(charm=self)
 
     @property
     def container(self):
