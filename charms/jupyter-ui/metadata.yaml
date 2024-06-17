@@ -56,3 +56,6 @@ requires:
     __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
   dashboard-links:
     interface: kubeflow_dashboard_links
+  logging:
+    interface: loki_push_api
+    optional: true

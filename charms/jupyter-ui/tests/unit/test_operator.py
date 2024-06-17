@@ -113,6 +113,14 @@ def harness() -> Harness:
 class TestCharm:
     """Test class for JupyterUI."""
 
+    @patch("charm.KubernetesServicePatch", MagicMock)
+    @patch("charm.JupyterUI.k8s_resource_handler", MagicMock)
+    def test_log_forwarding(self, harness: Harness):
+        """Test initialization LogForwarder."""
+        with patch("charm.LogForwarder") as mock_logging:
+            harness.begin()
+            mock_logging.assert_called_once_with(charm=harness.charm)
+
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_spawner_ui(self, k8s_resource_handler: MagicMock, harness: Harness):

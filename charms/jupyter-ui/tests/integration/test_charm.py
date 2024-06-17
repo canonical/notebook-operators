@@ -13,6 +13,11 @@ import dpath
 import pytest
 import tenacity
 import yaml
+from charmed_kubeflow_chisme.testing import (
+    GRAFANA_AGENT_APP,
+    assert_logging,
+    deploy_and_assert_grafana_agent,
+)
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -80,6 +85,11 @@ async def test_build_and_deploy(ops_test: OpsTest):
         apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=60 * 10, idle_period=30
     )
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
+
+    # Deploying grafana-agent-k8s and add all relations
+    await deploy_and_assert_grafana_agent(
+        ops_test.model, APP_NAME, metrics=False, dashboard=False, logging=True
+    )
 
 
 async def fetch_response(url, headers=None):
@@ -165,6 +175,12 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
             except AssertionError as e:
                 logger.info("Failed assertion that config is updated - will retry")
                 raise e
+
+
+async def test_logging(ops_test):
+    """Test logging is defined in relation data bag."""
+    app = ops_test.model.applications[GRAFANA_AGENT_APP]
+    await assert_logging(app)
 
 
 RETRY_120_SECONDS = tenacity.Retrying(
