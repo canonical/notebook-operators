@@ -3,14 +3,20 @@
 
 """Integration tests for Jupyter controller."""
 
-import json
 import logging
 from pathlib import Path
 
 import pytest
-import requests
 import tenacity
 import yaml
+from charmed_kubeflow_chisme.testing import (
+    GRAFANA_AGENT_APP,
+    assert_alert_rules,
+    assert_logging,
+    assert_metrics_endpoint,
+    deploy_and_assert_grafana_agent,
+    get_alert_rules,
+)
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client
 from lightkube.generic_resource import create_namespaced_resource
@@ -35,13 +41,6 @@ ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
 ISTIO_GATEWAY_TRUST = True
 ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
 
-PROMETHEUS_K8S = "prometheus-k8s"
-PROMETHEUS_K8S_CHANNEL = "latest/stable"
-PROMETHEUS_K8S_TRUST = True
-PROMETHEUS_SCRAPE_K8S = "prometheus-scrape-config-k8s"
-PROMETHEUS_SCRAPE_K8S_CHANNEL = "latest/stable"
-PROMETHEUS_SCRAPE_CONFIG = {"scrape_interval": "30s"}
-
 
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest):
@@ -61,10 +60,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
         trust=ISTIO_GATEWAY_TRUST,
     )
 
-    await ops_test.model.add_relation(
-        ISTIO_PILOT,
-        ISTIO_GATEWAY_APP_NAME,
-    )
+    await ops_test.model.integrate(ISTIO_PILOT, ISTIO_GATEWAY_APP_NAME)
 
     await ops_test.model.wait_for_idle(
         status="active",
@@ -74,7 +70,7 @@ async def test_build_and_deploy(ops_test: OpsTest):
     )
     # Deploy jupyter-ui and relate to istio
     await ops_test.model.deploy(JUPYTER_UI, channel=JUPYTER_UI_CHANNEL, trust=JUPYTER_UI_TRUST)
-    await ops_test.model.add_relation(JUPYTER_UI, ISTIO_PILOT)
+    await ops_test.model.integrate(JUPYTER_UI, ISTIO_PILOT)
     await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
 
     my_charm = await ops_test.build_charm(".")
@@ -87,114 +83,35 @@ async def test_build_and_deploy(ops_test: OpsTest):
 
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
 
-
-async def test_prometheus_integration(ops_test: OpsTest):
-    """Deploy prometheus and required relations, then test the metrics."""
-    await ops_test.model.deploy(
-        PROMETHEUS_K8S,
-        channel=PROMETHEUS_K8S_CHANNEL,
-        trust=PROMETHEUS_K8S_TRUST,
-    )
-    await ops_test.model.deploy(
-        PROMETHEUS_SCRAPE_K8S,
-        channel=PROMETHEUS_SCRAPE_K8S_CHANNEL,
-        config=PROMETHEUS_SCRAPE_CONFIG,
+    # Deploying grafana-agent-k8s and add all relations
+    await deploy_and_assert_grafana_agent(
+        ops_test.model, APP_NAME, metrics=True, dashboard=True, logging=True
     )
 
-    await ops_test.model.add_relation(APP_NAME, PROMETHEUS_SCRAPE_K8S)
-    await ops_test.model.add_relation(
-        f"{PROMETHEUS_K8S}:metrics-endpoint",
-        f"{PROMETHEUS_SCRAPE_K8S}:metrics-endpoint",
-    )
 
-    await ops_test.model.wait_for_idle(status="active", timeout=60 * 20)
-    status = await ops_test.model.get_status()
-    prometheus_unit_ip = status["applications"][PROMETHEUS_K8S]["units"][f"{PROMETHEUS_K8S}/0"][
-        "address"
-    ]
-    log.info(f"Prometheus available at http://{prometheus_unit_ip}:9090")
+async def test_alert_rules(ops_test):
+    """Test check charm alert rules and rules defined in relation data bag."""
+    app = ops_test.model.applications[APP_NAME]
+    alert_rules = get_alert_rules()
+    log.info("found alert_rules: %s", alert_rules)
+    await assert_alert_rules(app, alert_rules)
 
-    for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus deployment (attempt {attempt.retry_state.attempt_number})")
-        with attempt:
-            r = requests.get(
-                f"http://{prometheus_unit_ip}:9090/api/v1/query?"
-                f'query=up{{juju_application="{APP_NAME}"}}'
-            )
-            response = json.loads(r.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
-            assert len(response["data"]) > 0
-            assert len(response["data"]["result"]) > 0
-            response_metric = response["data"]["result"][0]["metric"]
-            assert response_metric["juju_application"] == APP_NAME
-            assert response_metric["juju_model"] == ops_test.model_name
 
-            # Assert the unit is available by checking the query result
-            # The data is presented as a list [1707357912.349, '1'], where the
-            # first value is a timestamp and the second value is the state of the unit
-            # 1 means available, 0 means unavailable
-            assert response["data"]["result"][0]["value"][1] == "1"
+async def test_metrics_enpoint(ops_test):
+    """Test metrics_endpoints are defined in relation data bag and their accessibility.
 
-    # Verify that Prometheus receives the same set of targets as specified.
-    for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus targets (attempt {attempt.retry_state.attempt_number})")
-        with attempt:
-            # obtain scrape targets from Prometheus
-            targets_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/targets")
-            response = json.loads(targets_result.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
+    This function gets all the metrics_endpoints from the relation data bag, checks if
+    they are available from the grafana-agent-k8s charm and finally compares them with the
+    ones provided to the function.
+    """
+    app = ops_test.model.applications[APP_NAME]
+    await assert_metrics_endpoint(app, metrics_port=8080, metrics_path="/metrics")
 
-            # verify that Argo Controller is in the target list
-            discovered_labels = response["data"]["activeTargets"][0]["discoveredLabels"]
-            assert discovered_labels["juju_application"] == "jupyter-controller"
 
-    # Verify that Prometheus receives the same set of alert rules as specified.
-    for attempt in retry_for_5_attempts:
-        log.info(f"Testing prometheus rules (attempt {attempt.retry_state.attempt_number})")
-        with attempt:
-            # obtain alert rules from Prometheus
-            rules_result = requests.get(f"http://{prometheus_unit_ip}:9090/api/v1/rules")
-            response = json.loads(rules_result.content.decode("utf-8"))
-            response_status = response["status"]
-            log.info(f"Response status is {response_status}")
-            assert response_status == "success"
-
-            # verify alerts are available in Prometheus
-            assert len(response["data"]["groups"]) > 0
-            rules = []
-            for group in response["data"]["groups"]:
-                for rule in group["rules"]:
-                    rules.append(rule)
-
-            # load alert rules from rules files
-            test_alerts = []
-            with open("src/prometheus_alert_rules/controller.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/host_resources.rules") as f:
-                file_alert = yaml.safe_load(f.read())
-                # there 2 alert rules in host_resources.rules
-                for rule in file_alert["groups"][0]["rules"]:
-                    test_alerts.append(rule["alert"])
-            with open("src/prometheus_alert_rules/model_errors.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-            with open("src/prometheus_alert_rules/unit_unavailable.rule") as f:
-                file_alert = yaml.safe_load(f.read())
-                test_alerts.append(file_alert["alert"])
-
-            # verify number of alerts is the same in Prometheus and in the rules file
-            assert len(rules) == len(test_alerts)
-
-            # verify that all Jupyter Controller alert rules are in the list and that alerts are
-            # obtained from Prometheus
-            # match alerts in the rules files
-            for rule in rules:
-                assert rule["name"] in test_alerts
+async def test_logging(ops_test):
+    """Test logging is defined in relation data bag."""
+    app = ops_test.model.applications[GRAFANA_AGENT_APP]
+    await assert_logging(app)
 
 
 # Helper to retry calling a function over 30 seconds for 10 attempts
