@@ -34,7 +34,7 @@ cffi==1.16.0
     # via
     #   cryptography
     #   pynacl
-charmed-kubeflow-chisme==0.4.0
+charmed-kubeflow-chisme==0.4.1
     # via -r requirements-integration.in
 charset-normalizer==3.3.2
     # via requests
