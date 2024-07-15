@@ -58,7 +58,7 @@ jobs:
           ref: ${{ inputs.source_branch }}
 
       - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@2.3.0
+        uses: canonical/charming-actions/channel@2.6.2
         id: select-channel
         if: ${{ inputs.destination_channel == '' }}
 
