@@ -91,3 +91,4 @@ jobs:
           charm-path: ${{ matrix.charm-path }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           tag-prefix: ${{ steps.parse-inputs.outputs.tag_prefix }}
+          charmcraft-channel: latest/candidate
