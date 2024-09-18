@@ -64,6 +64,17 @@ jobs:
     - run: sudo apt install tox
     - run: tox -e ${{ matrix.charm }}-lint
 
+  terraform-checks:
+    name: Terraform
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
+    strategy:
+      matrix:
+        charm: [controller, ui]
+    with:
+      charm-path: ./charms/jupyter-${{ matrix.charm }}
+      model: kubeflow
+      channel: latest/edge
+
   bundle-integration:
     name: Bundle Integration
     runs-on: ubuntu-20.04
