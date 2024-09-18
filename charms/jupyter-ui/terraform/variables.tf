@@ -22,7 +22,7 @@ variable "model_name" {
 }
 
 variable "resources" {
-  description = "Map of resources revisions"
+  description = "Map of resources"
   type        = map(string)
   default     = null
 }

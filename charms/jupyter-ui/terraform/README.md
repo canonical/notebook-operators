@@ -19,7 +19,7 @@ The module offers the following configurable inputs:
 | `channel`| string | Channel that the charm is deployed from | False |
 | `config`| map(string) | Map of the charm configuration options | False |
 | `model_name`| string | Name of the model that the charm is deployed on | True |
-| `resources`| map(number) | Map of charm resources revisions | False |
+| `resources`| map(string) | Map of the charm resources | False |
 | `revision`| number | Revision number of the charm name | False |
 
 ### Outputs
