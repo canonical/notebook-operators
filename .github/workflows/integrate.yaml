@@ -72,8 +72,6 @@ jobs:
         charm: [controller, ui]
     with:
       charm-path: ./charms/jupyter-${{ matrix.charm }}
-      model: kubeflow
-      channel: latest/edge
 
   bundle-integration:
     name: Bundle Integration
