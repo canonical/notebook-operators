@@ -72,6 +72,7 @@ jobs:
         charm: [controller, ui]
     with:
       charm-path: ./charms/jupyter-${{ matrix.charm }}
+      channel: 1.9/stable
 
   bundle-integration:
     name: Bundle Integration
