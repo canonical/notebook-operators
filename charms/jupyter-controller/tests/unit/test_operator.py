@@ -112,9 +112,11 @@ class TestCharm:
             # there 2 alert rules in host_resources.rules
             for rule in file_alert["groups"][0]["rules"]:
                 test_alerts.append(rule["alert"])
-        with open("src/prometheus_alert_rules/model_errors.rule") as f:
-            file_alert = yaml.safe_load(f.read())
-            test_alerts.append(file_alert["alert"])
+        # Uncomment once https://github.com/canonical/notebook-operators/issues/409
+        # is fixed.
+        # with open("src/prometheus_alert_rules/model_errors.rule") as f:
+        #     file_alert = yaml.safe_load(f.read())
+        #     test_alerts.append(file_alert["alert"])
         with open("src/prometheus_alert_rules/KubeflowJupyterControllerServices.rules") as f:
             file_alert = yaml.safe_load(f.read())
             # there 2 alert rules in host_resources.rules
