@@ -46,9 +46,9 @@ jobs:
       with:
           provider: microk8s
           channel: 1.29-strict/stable
-          charmcraft-channel: latest/candidate
+          charmcraft-channel: 3.x/stable
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
-          juju-channel: 3.4/stable
+          juju-channel: 3.6/stable
 
     - run: tox -e ${{ matrix.charm }}-integration
 
@@ -84,9 +84,9 @@ jobs:
       with:
           provider: microk8s
           channel: 1.29-strict/stable
-          charmcraft-channel: latest/candidate
+          charmcraft-channel: 3.x/stable
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
-          juju-channel: 3.4/stable
+          juju-channel: 3.6/stable
 
     - name: Run test
       run: |
