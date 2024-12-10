@@ -8,3 +8,4 @@ requests
 selenium
 selenium-wire
 tenacity
+blinker===1.7.0

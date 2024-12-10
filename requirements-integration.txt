@@ -18,8 +18,10 @@ backports-strenum==1.3.1
     # via juju
 bcrypt==4.2.1
     # via paramiko
-blinker==1.8.2
-    # via selenium-wire
+blinker===1.7.0
+    # via
+    #   -r requirements-integration.in
+    #   selenium-wire
 brotli==1.1.0
     # via selenium-wire
 cachetools==5.5.0
