@@ -26,12 +26,12 @@ cffi==1.17.1
     # via
     #   cryptography
     #   pynacl
-charmed-kubeflow-chisme==0.4.3
-    # via -r requirements.in
+charmed-kubeflow-chisme==0.4.4
+    # via -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
 charset-normalizer==3.4.0
     # via requests
-cosl==0.0.45
-    # via -r requirements.in
+cosl==0.0.47
+    # via -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
 coverage==7.6.1
     # via -r requirements-unit.in
 cryptography==44.0.0
@@ -42,14 +42,16 @@ exceptiongroup==1.2.2
     # via
     #   anyio
     #   pytest
-google-auth==2.36.0
+google-auth==2.37.0
     # via kubernetes
 h11==0.14.0
     # via httpcore
 httpcore==1.0.7
     # via httpx
 httpx==0.27.2
-    # via lightkube
+    # via
+    #   charmed-kubeflow-chisme
+    #   lightkube
 hvac==2.3.0
     # via juju
 idna==3.10
@@ -69,9 +71,9 @@ juju==3.6.0.0
     # via charmed-kubeflow-chisme
 kubernetes==30.1.0
     # via juju
-lightkube==0.15.6
+lightkube==0.15.7
     # via
-    #   -r requirements.in
+    #   -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
     #   charmed-kubeflow-chisme
     #   cosl
 lightkube-models==1.31.1.8
@@ -88,8 +90,8 @@ oauthlib==3.2.2
     #   requests-oauthlib
 ops==2.17.1
     # via
+    #   -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
     #   -r requirements-unit.in
-    #   -r requirements.in
     #   charmed-kubeflow-chisme
     #   cosl
     #   serialized-data-interface
@@ -141,8 +143,8 @@ pytz==2024.2
     # via pyrfc3339
 pyyaml==6.0.2
     # via
+    #   -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
     #   -r requirements-unit.in
-    #   -r requirements.in
     #   cosl
     #   juju
     #   kubernetes
@@ -166,7 +168,7 @@ ruamel-yaml-clib==0.2.8
     # via ruamel-yaml
 serialized-data-interface==0.3.6
     # via
-    #   -r requirements.in
+    #   -r /tmp/renovate/repos/github/canonical/notebook-operators/charms/jupyter-ui/requirements.in
     #   charmed-kubeflow-chisme
 six==1.17.0
     # via

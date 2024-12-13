@@ -56,7 +56,7 @@ exceptiongroup==1.2.2
     #   trio-websocket
 executing==2.1.0
     # via stack-data
-google-auth==2.36.0
+google-auth==2.37.0
     # via kubernetes
 h11==0.14.0
     # via
@@ -100,7 +100,7 @@ kaitaistruct==0.10
     # via selenium-wire
 kubernetes==30.1.0
     # via juju
-lightkube==0.15.6
+lightkube==0.15.7
     # via -r requirements-integration.in
 lightkube-models==1.31.1.8
     # via lightkube
@@ -178,7 +178,7 @@ pytest==8.3.4
     #   pytest-operator
 pytest-asyncio==0.21.2
     # via pytest-operator
-pytest-operator==0.38.0
+pytest-operator==0.39.0
     # via -r requirements-integration.in
 python-dateutil==2.9.0.post0
     # via kubernetes
