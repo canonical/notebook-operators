@@ -15,7 +15,7 @@ jobs:
         charm:
         - jupyter-controller
         - jupyter-ui
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@main
+    uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@kf-6725-use-charmcraft-3.x-edge-check-libs
     secrets: inherit
     with:
         charm-path: ./charms/${{ matrix.charm }}
@@ -46,7 +46,7 @@ jobs:
       with:
           provider: microk8s
           channel: 1.31-strict/stable
-          charmcraft-channel: 3.x/stable
+          charmcraft-channel: latest/candidate # TODO: remove after charmcraft 3.3 stable release
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.6/stable
 
@@ -84,7 +84,7 @@ jobs:
       with:
           provider: microk8s
           channel: 1.31-strict/stable
-          charmcraft-channel: 3.x/stable
+          charmcraft-channel: latest/candidate # TODO: remove after charmcraft 3.3 stable release
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.6/stable
 
