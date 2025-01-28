@@ -91,4 +91,3 @@ jobs:
           charm-path: ${{ matrix.charm-path }}
           channel: ${{ steps.parse-inputs.outputs.destination_channel }}
           tag-prefix: ${{ steps.parse-inputs.outputs.tag_prefix }}
-          charmcraft-channel: latest/candidate # TODO: remove after charmcraft 3.3 stable release
