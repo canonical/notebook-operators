@@ -46,7 +46,6 @@ jobs:
       with:
           provider: microk8s
           channel: 1.31-strict/stable
-          charmcraft-channel: latest/candidate # TODO: remove after charmcraft 3.3 stable release
           microk8s-addons: "dns storage rbac metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.6/stable
 
@@ -84,7 +83,6 @@ jobs:
       with:
           provider: microk8s
           channel: 1.31-strict/stable
-          charmcraft-channel: latest/candidate # TODO: remove after charmcraft 3.3 stable release
           microk8s-addons: "dns storage rbac ingress metallb:10.64.140.43-10.64.140.49"
           juju-channel: 3.6/stable
 
