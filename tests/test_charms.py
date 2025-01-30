@@ -94,7 +94,9 @@ def dummy_resources_for_testing(lightkube_client):
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test, lightkube_client, dummy_resources_for_testing, request):
     if charms_path := request.config.getoption("--charms-path"):
-        controller_charm = f"{charms_path}/{CONTROLLER_APP_NAME}/{CONTROLLER_APP_NAME}_ubuntu@20.04-amd64.charm"
+        controller_charm = (
+            f"{charms_path}/{CONTROLLER_APP_NAME}/{CONTROLLER_APP_NAME}_ubuntu@20.04-amd64.charm"
+        )
         ui_charm = f"{charms_path}/{UI_APP_NAME}/{UI_APP_NAME}_ubuntu@20.04-amd64.charm"
     else:
         controller_charm = await ops_test.build_charm(CONTROLLER_PATH)
