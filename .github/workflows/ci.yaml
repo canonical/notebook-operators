@@ -134,8 +134,8 @@ jobs:
       fail-fast: false
       matrix:
         charm:
-          - controller
-          - ui
+          - jupyter-controller
+          - jupyter-ui
     steps:
       - uses: actions/checkout@v3
 
