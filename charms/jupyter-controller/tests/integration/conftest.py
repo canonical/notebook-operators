@@ -18,6 +18,6 @@ def pytest_addoption(parser: Parser):
         parser (Parser): The pytest argument parser.
     """
     parser.addoption(
-        "--charms-path",
+        "--charm-path",
         help="Path to directory where charm files are stored.",
     )
