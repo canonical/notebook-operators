@@ -43,7 +43,7 @@ ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
 
 
 @pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
+async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
     # Deploy istio-operators first
     await ops_test.model.deploy(
@@ -73,10 +73,16 @@ async def test_build_and_deploy(ops_test: OpsTest):
     await ops_test.model.integrate(JUPYTER_UI, ISTIO_PILOT)
     await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
 
-    my_charm = await ops_test.build_charm(".")
+    # Keep the option to run the integration tests locally
+    # by building the charm and then deploying
+    entity_url = (
+        await ops_test.build_charm("./")
+        if not (entity_url := request.config.getoption("--charm-path"))
+        else entity_url
+    )
     image_path = METADATA["resources"]["oci-image"]["upstream-source"]
     resources = {"oci-image": image_path}
-    await ops_test.model.deploy(my_charm, resources=resources, trust=True)
+    await ops_test.model.deploy(entity_url, resources=resources, trust=True)
     await ops_test.model.wait_for_idle(
         status="active", raise_on_blocked=False, raise_on_error=False
     )

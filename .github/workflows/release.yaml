@@ -1,31 +1,29 @@
-# reusable workflow triggered manually
-name: Release charm to other tracks and channels
+name: Release to Charmhub
 
 on:
-  workflow_dispatch:
-    inputs:
-      destination-channel:
-        description: 'Destination Channel'
-        required: true
-      origin-channel:
-        description: 'Origin Channel'
-        required: true
-      charm-name:
-        description: 'Charm subdirectory name'
-        required: true
+  push:
+    branches:
+      - main
+      - track/**
 
 jobs:
-  promote-charm:
-    name: Promote charm
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v3
-      - name: Release charm to channel
-        uses: canonical/charming-actions/release-charm@2.6.2
-        with:
-          credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          destination-channel: ${{ github.event.inputs.destination-channel }}
-          origin-channel: ${{ github.event.inputs.origin-channel }}
-          tag-prefix: ${{ github.event.inputs.charm-name }}
-          charm-path: charms/${{ github.event.inputs.charm-name}}
+  ci-tests:
+    uses: ./.github/workflows/ci.yaml
+    secrets: inherit
+
+  release:
+    strategy:
+      matrix:
+        charm: ${{ fromJSON(needs.ci-tests.outputs.charm-paths) }}
+    name: Release charm | ${{ matrix.charm }}
+    needs:
+      - ci-tests
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v29.0.0
+    with:
+      channel: ${{ needs.ci-tests.outputs.channel }}
+      artifact-prefix: ${{ needs.ci-tests.outputs.artifact-prefix }}
+      path-to-charm-directory: ${{ matrix.charm }}
+    secrets:
+      charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
+    permissions:
+      contents: write  # Needed to create git tags
