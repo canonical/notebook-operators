@@ -157,8 +157,6 @@ jobs:
 
       - name: Integration tests
         run: |
-          # Requires the model to be called kubeflow due to
-          # https://github.com/canonical/kfp-operators/issues/389
           juju add-model kubeflow
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@20.04-amd64.charm
