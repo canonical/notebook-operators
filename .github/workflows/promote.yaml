@@ -18,14 +18,15 @@ jobs:
   promote-charm:
     name: Promote charm
     runs-on: ubuntu-20.04
+    env:
+      CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
     steps:
-      - uses: actions/checkout@v3
-      - name: Release charm to channel
-        uses: canonical/charming-actions/release-charm@2.6.2
-        with:
-          credentials: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          destination-channel: ${{ github.event.inputs.destination-channel }}
-          origin-channel: ${{ github.event.inputs.origin-channel }}
-          tag-prefix: ${{ github.event.inputs.charm-name }}
-          charm-path: charms/${{ github.event.inputs.charm-name}}
+      - name: Install charmcraft
+        run: |
+          sudo snap install charmcraft --classic --channel latest/stable
+      - name: Run charmcraft promote
+        run: |
+          charmcraft promote --name ${{ github.event.inputs.charm-name }} \
+                              --from-channel ${{ github.event.inputs.origin-channel }} \
+                              --to-channel ${{ github.event.inputs.destination-channel }} \
+                              --yes
