@@ -169,6 +169,7 @@ class JupyterUI(CharmBase):
             "UI": config["ui"],
             "USERID_HEADER": "kubeflow-userid",
             "USERID_PREFIX": "",
+            "METRICS": 1,
         }
 
         return ret_env_vars
