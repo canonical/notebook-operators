@@ -281,8 +281,8 @@ class TestCharm:
             == "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app"
         )
         test_env = pebble_plan_info["services"]["jupyter-ui"]["environment"]
-        # there should be 7 environment variables
-        assert 7 == len(test_env)
+        # there should be 8 environment variables
+        assert 8 == len(test_env)
         assert "cluster.local" == test_env["CLUSTER_DOMAIN"]
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
