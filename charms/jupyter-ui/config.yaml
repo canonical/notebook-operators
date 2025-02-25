@@ -25,21 +25,22 @@ options:
   jupyter-images:
     type: string
     default: |
-      - kubeflownotebookswg/jupyter-scipy:v1.9.0
-      - kubeflownotebookswg/jupyter-pytorch-full:v1.9.0
-      - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.9.0
-      - kubeflownotebookswg/jupyter-tensorflow-full:v1.9.0
-      - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.9.0
+      - kubeflownotebookswg/jupyter-scipy:v1.10.0-rc.1
+      - kubeflownotebookswg/jupyter-pytorch-full:v1.10.0-rc.1
+      - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.10.0-rc.1
+      - kubeflownotebookswg/jupyter-pytorch-gaudi-full:v1.10.0-rc.1
+      - kubeflownotebookswg/jupyter-tensorflow-full:v1.10.0-rc.1
+      - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.10.0-rc.1
     description: list of image options for Jupyter Notebook
   vscode-images:
     type: string
     default: |
-      - kubeflownotebookswg/codeserver-python:v1.9.0
+      - kubeflownotebookswg/codeserver-python:v1.10.0-rc.1
     description: list of image options for VSCode
   rstudio-images:
     type: string
     default: |
-      - kubeflownotebookswg/rstudio-tidyverse:v1.9.0
+      - kubeflownotebookswg/rstudio-tidyverse:v1.10.0-rc.1
     description: list of image options for RStudio
   gpu-number-default:
     type: int
@@ -48,7 +49,7 @@ options:
       The number of GPUs that are selected by default in the New Notebook UI when creating a Notebook.
   gpu-vendors:
     type: string
-    default: '[{"limitsKey": "nvidia.com/gpu", "uiName": "NVIDIA"}, {"limitsKey": "amd.com/gpu", "uiName": "AMD"}]'
+    default: '[{"limitsKey": "nvidia.com/gpu", "uiName": "NVIDIA"}, {"limitsKey": "amd.com/gpu", "uiName": "AMD"}, {"limitsKey": "habana.ai/gaudi", "uiName": "Intel Gaudi"}]'
     description: |
         The GPU vendors that are selectable by users in the New Notebook UI when creating a Notebook.
         Input is in JSON/YAML in the format defined by Kubeflow in:
