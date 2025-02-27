@@ -62,7 +62,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: python3 -m pip install tox
       - run: tox -e ${{ matrix.charm }}-lint
 
@@ -76,7 +76,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: python3 -m pip install tox
       - run: tox -e ${{ matrix.charm }}-unit
 
@@ -132,7 +132,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
@@ -164,7 +164,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Check out code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
