@@ -62,11 +62,11 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
+      - uses: actions/checkout@v3
       - name: Set up Python 3.8
         uses: actions/setup-python@v5.3.0
         with:
           python-version: 3.8
-      - uses: actions/checkout@v3
       - run: python3 -m pip install tox
       - run: tox -e ${{ matrix.charm }}-lint
 
