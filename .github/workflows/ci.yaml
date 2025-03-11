@@ -142,6 +142,11 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
+
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
         with:
@@ -158,11 +163,6 @@ jobs:
           pattern: ${{ needs.build.outputs.artifact-prefix }}-*
           merge-multiple: true
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v5.3.0
-        with:
-          python-version: 3.8
-
       - name: Integration tests
         run: |
           juju add-model kubeflow
@@ -178,6 +178,11 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
 
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
