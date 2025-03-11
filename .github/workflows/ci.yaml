@@ -169,7 +169,7 @@ jobs:
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@20.04-amd64.charm
           # We need to find a better way to dynamically get this value
-          sg snap_microk8s -c "tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@20.04-amd64.charm"
+          tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@20.04-amd64.charm
 
   test-bundle:
     name: Test the bundle
@@ -208,7 +208,7 @@ jobs:
           tar xf geckodriver-v0.28.0-linux64.tar.gz
           sudo mv geckodriver /usr/local/bin
           juju add-model kubeflow
-          sg snap_microk8s -c "tox -e integration -- --model kubeflow --charms-path=${{ github.workspace }}/charms/"
+          tox -e integration -- --model kubeflow --charms-path=${{ github.workspace }}/charms/
       
       - run: kubectl get all -A
         if: failure()
