@@ -54,7 +54,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -63,12 +63,16 @@ jobs:
           - jupyter-ui
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
       - run: python3 -m pip install tox
       - run: tox -e ${{ matrix.charm }}-lint
 
   unit:
     name: Unit tests
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -77,6 +81,10 @@ jobs:
           - jupyter-ui
     steps:
       - uses: actions/checkout@v3
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
       - run: python3 -m pip install tox
       - run: tox -e ${{ matrix.charm }}-unit
 
@@ -124,7 +132,7 @@ jobs:
     name: Integration tests (microk8s)
     needs:
       - build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
@@ -133,6 +141,11 @@ jobs:
           - jupyter-ui
     steps:
       - uses: actions/checkout@v3
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
 
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
@@ -156,15 +169,20 @@ jobs:
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@20.04-amd64.charm
           # We need to find a better way to dynamically get this value
-          sg snap_microk8s -c "tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@20.04-amd64.charm"
+          tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@20.04-amd64.charm
 
   test-bundle:
     name: Test the bundle
     needs: build
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Check out code
         uses: actions/checkout@v3
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
 
       - name: Setup operator environment
         uses: charmed-kubernetes/actions-operator@main
@@ -190,7 +208,7 @@ jobs:
           tar xf geckodriver-v0.28.0-linux64.tar.gz
           sudo mv geckodriver /usr/local/bin
           juju add-model kubeflow
-          sg snap_microk8s -c "tox -e integration -- --model kubeflow --charms-path=${{ github.workspace }}/charms/"
+          tox -e integration -- --model kubeflow --charms-path=${{ github.workspace }}/charms/
       
       - run: kubectl get all -A
         if: failure()

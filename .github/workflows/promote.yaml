@@ -17,7 +17,7 @@ on:
 jobs:
   promote-charm:
     name: Promote charm
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     env:
       CHARMCRAFT_AUTH: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
     steps:
