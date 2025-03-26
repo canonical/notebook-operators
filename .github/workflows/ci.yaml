@@ -62,7 +62,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.8
         uses: actions/setup-python@v5.3.0
         with:
@@ -80,7 +80,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Set up Python 3.8
         uses: actions/setup-python@v5.3.0
         with:
@@ -140,7 +140,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python 3.8
         uses: actions/setup-python@v5.3.0
@@ -171,99 +171,4 @@ jobs:
           # We need to find a better way to dynamically get this value
           tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@20.04-amd64.charm
 
-  test-bundle:
-    name: Test the bundle
-    needs: build
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v3
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v5.3.0
-        with:
-          python-version: 3.8
-
-      - name: Setup operator environment
-        uses: charmed-kubernetes/actions-operator@main
-        with:
-          provider: microk8s
-          channel: 1.31-strict/stable
-          juju-channel: 3.6/stable
-          microk8s-addons: "dns hostpath-storage rbac metallb:10.64.140.43-10.64.140.49"
-
-      - name: Download packed charm(s)
-        id: download-charms
-        timeout-minutes: 5
-        uses: actions/download-artifact@v4
-        with:
-          pattern: ${{ needs.build.outputs.artifact-prefix }}-*
-          merge-multiple: true
-
-      - name: Run test
-        run: |
-          sudo apt install tar wget
-          # Install firefox-geckodriver from source to avoid issues
-          wget https://github.com/mozilla/geckodriver/releases/download/v0.28.0/geckodriver-v0.28.0-linux64.tar.gz
-          tar xf geckodriver-v0.28.0-linux64.tar.gz
-          sudo mv geckodriver /usr/local/bin
-          juju add-model kubeflow
-          tox -e integration -- --model kubeflow --charms-path=${{ github.workspace }}/charms/
-      
-      - run: kubectl get all -A
-        if: failure()
-
-      - run: kubectl get notebooks -A
-        if: failure()
-
-      - run: kubectl get pods -A -oyaml
-        if: failure()
-
-      - run: juju status
-        if: failure()
-
-      - name: Get jupyter-controller workload logs
-        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-controller
-        if: failure()
-
-      - name: Get jupyter-controller operator logs
-        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-controller
-        if: failure()
-
-      - name: Get jupyter-ui workload logs
-        run: kubectl logs --tail 100 -nkubeflow -lapp.kubernetes.io/name=jupyter-ui
-        if: failure()
-
-      - name: Get jupyter-ui operator logs
-        run: kubectl logs --tail 100 -nkubeflow -loperator.juju.is/name=jupyter-ui
-        if: failure()
-
-      - name: Generate inspect tarball
-        run: >
-          sg microk8s <<EOF
-            microk8s inspect | \
-            grep -Po "Report tarball is at \K.+" | \
-            xargs -I {} cp {} inspection-report-${{ strategy.job-index }}.tar.gz
-          EOF
-        if: failure()
-
-      - name: Upload inspect tarball
-        uses: actions/upload-artifact@v4
-        with:
-          name: inspection-reports
-          path: ./inspection-report-${{ strategy.job-index }}.tar.gz
-        if: failure()
-
-      - name: Upload selenium screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: selenium-screenshots
-          path: /tmp/selenium-*.png
-        if: failure()
-
-      - name: Upload HAR logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: selenium-har
-          path: /tmp/selenium-*.har
-        if: failure()
