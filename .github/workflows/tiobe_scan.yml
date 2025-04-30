@@ -1,0 +1,48 @@
+name: TICS run self-hosted test (github-action)
+
+on:
+  pull_request:
+  workflow_dispatch: # Allows manual triggering
+  schedule:
+    - cron: "0 2 * * 6" # Every Saturday 2:00 AM UTC
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, amd64, tiobe, jammy]
+
+    steps:
+      - name: Checkout the project
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v5.3.0
+        with:
+          python-version: 3.8
+
+      - name: Install dependencies
+        run: |
+          pip install tox
+          pip install pylint flake8
+
+      - name: Run tox tests to create coverage.xml
+        run: |
+          tox run -e jupyter-controller-unit
+          tox run -e jupyter-ui-unit
+          
+
+      - name: move results to necessary folder for TICS
+        run: |
+          mkdir cover
+          cp charms/jupyter-controller/coverage.xml cover/jupyter-controller.xml
+          cp charms/jupyter-ui/coverage.xml cover/jupyter-ui.xml
+          
+
+      - name: Run TICS analysis with github-action
+        uses: tiobe/tics-github-action@v3
+        with:
+          mode: qserver
+          project: notebook-operators
+          branchdir: .
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
