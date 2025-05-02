@@ -6,7 +6,7 @@ options:
   cull-idle-time:
     type: int
     default: 1440
-    description: The amount of time (in seconds) that a Jupyter notebook server can remain idle before it is automatically shut down.
+    description: The amount of time (in minutes) that a Jupyter notebook server can remain idle before it is automatically shut down.
   enable-culling:
     type: boolean
     default: true
