@@ -29,18 +29,18 @@ options:
       - charmedkubeflow/jupyter-pytorch-full:v1.10.0-ef1fc67
       - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.10.0-rc.1
       - kubeflownotebookswg/jupyter-pytorch-gaudi-full:v1.10.0-rc.1
-      - kubeflownotebookswg/jupyter-tensorflow-full:v1.10.0-rc.1
+      - charmedkubeflow/jupyter-tensorflow-full:1.10.0-448e378
       - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.10.0-rc.1
     description: list of image options for Jupyter Notebook
   vscode-images:
     type: string
     default: |
-      - kubeflownotebookswg/codeserver-python:v1.10.0-rc.1
+      - charmedkubeflow/codeserver-python:1.10.0-55dcdeb
     description: list of image options for VSCode
   rstudio-images:
     type: string
     default: |
-      - kubeflownotebookswg/rstudio-tidyverse:v1.10.0-rc.1
+      - charmedkubeflow/rstudio-tidyverse:v1.10.0-9a7bded
     description: list of image options for RStudio
   gpu-number-default:
     type: int
