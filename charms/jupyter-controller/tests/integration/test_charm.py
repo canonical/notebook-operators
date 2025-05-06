@@ -29,10 +29,10 @@ log = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 JUPYTER_UI = "jupyter-ui"
-JUPYTER_UI_CHANNEL = "latest/edge"
+JUPYTER_UI_CHANNEL = "1.10/stable"
 JUPYTER_UI_TRUST = True
 
-ISTIO_OPERATORS_CHANNEL = "latest/edge"
+ISTIO_OPERATORS_CHANNEL = "1.24/stable"
 ISTIO_PILOT = "istio-pilot"
 ISTIO_PILOT_TRUST = True
 ISTIO_PILOT_CONFIG = {"default-gateway": "kubeflow-gateway"}
