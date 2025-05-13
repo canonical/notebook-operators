@@ -49,6 +49,7 @@ httpcore==1.0.7
 httpx==0.27.2
     # via
     #   -r requirements-integration.in
+    #   charmed-kubeflow-chisme
     #   lightkube
 hvac==2.3.0
     # via juju
