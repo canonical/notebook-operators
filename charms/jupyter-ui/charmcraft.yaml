@@ -1,6 +1,10 @@
+# Copyright 2025 Canonical Ltd.
+# See LICENSE file for licensing details.
+
 type: charm
 platforms:
-  ubuntu@20.04:amd64:
+  ubuntu@24.04:amd64:
+
 # Files implicitly created by charmcraft without a part:
 # - dispatch (https://github.com/canonical/charmcraft/pull/1898)
 # - manifest.yaml
@@ -20,6 +24,7 @@ parts:
       # versions of pip that do not recognize `--break-system-packages`
       # `--user` needed (in addition to `--break-system-packages`) for Ubuntu >=24.04
       PIP_BREAK_SYSTEM_PACKAGES=true python3 -m pip install --user --upgrade pip==24.3.1  # renovate: charmcraft-pip-latest
+
   # "charm-python" part name is arbitrary; use for consistency
   # Avoid using "charm" part name since that has special meaning to charmcraft
   charm-python:
@@ -34,8 +39,6 @@ parts:
     after:
       - python-deps
     python-requirements: [requirements.txt]
-    build-environment:
-      - PIP_CONSTRAINT: constraints.txt
     build-packages:
       - libffi-dev  # Needed to build Python dependencies with Rust from source
       - libssl-dev  # Needed to build Python dependencies with Rust from source
@@ -63,6 +66,7 @@ parts:
       craftctl default
       # Include requirements.txt in *.charm artifact for easier debugging
       cp requirements.txt "$CRAFT_PART_INSTALL/requirements.txt"
+
   # "files" part name is arbitrary; use for consistency
   files:
     plugin: dump
