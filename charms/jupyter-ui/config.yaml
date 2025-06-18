@@ -25,7 +25,7 @@ options:
   jupyter-images:
     type: string
     default: |
-      - charmedkubeflow/jupyter-scipy:1.10.0-ef1fc67
+      - charmedkubeflow/jupyter-scipy:1.10.0-0be57a5
       - charmedkubeflow/jupyter-pytorch-full:v1.10.0-ef1fc67
       - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.10.0-rc.1
       - kubeflownotebookswg/jupyter-pytorch-gaudi-full:v1.10.0-rc.1
