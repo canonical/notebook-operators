@@ -13,7 +13,7 @@ variable "base" {
 variable "channel" {
   description = "Charm channel"
   type        = string
-  default     = "1.10/stable"
+  default     = "1.10/edge"
 }
 
 variable "config" {
