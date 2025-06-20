@@ -1,6 +1,7 @@
 resource "juju_application" "jupyter_controller" {
   charm {
     name     = "jupyter-controller"
+    base     = var.base
     channel  = var.channel
     revision = var.revision
   }

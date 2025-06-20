@@ -4,6 +4,12 @@ variable "app_name" {
   default     = "jupyter-ui"
 }
 
+variable "base" {
+  description = "Application base"
+  type        = string
+  default     = "ubuntu@20.04"
+}
+
 variable "channel" {
   description = "Charm channel"
   type        = string
