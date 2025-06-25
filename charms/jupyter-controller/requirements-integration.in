@@ -7,5 +7,6 @@ pytest-operator
 pyyaml
 requests
 tenacity
-# This is required due to the abstraction of cos integration
-charmed-kubeflow-chisme>=0.4.0
+# "charmed-kubeflow-chisme" pinned to avoid closed "latest" tracks with COS charms, see:
+# https://github.com/canonical/charmed-kubeflow-chisme/issues/155
+charmed-kubeflow-chisme>=0.4.11
