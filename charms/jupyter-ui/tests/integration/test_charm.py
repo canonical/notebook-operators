@@ -120,7 +120,7 @@ async def get_unit_address(ops_test: OpsTest):
 @pytest.mark.abort_on_fail
 async def test_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible."""
-    # NOTE: This test is re-using deployment created in test_build_and_deploy()
+    # NOTE: This test is reusing deployment created in test_build_and_deploy()
     # NOTE: This test also tests Pebble checks since it uses the same URL.
     jupyter_ui_url = await get_unit_address(ops_test)
 
