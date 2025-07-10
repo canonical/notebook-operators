@@ -38,3 +38,63 @@ docstring-convention = "google"
 copyright-check = "True"
 copyright-author = "Canonical Ltd."
 copyright-regexp = "Copyright\\s\\d{4}([-,]\\d{4})*\\s+%(author)s"
+
+[tool.poetry]
+package-mode = false
+
+[tool.poetry.group.charm]
+optional = true
+
+[tool.poetry.group.charm.dependencies]
+charmed-kubeflow-chisme = ">=0.4.11"
+cosl = "^0.0.50"
+lightkube = "^0.15.6"
+ops = "^2.17.1"
+
+[tool.poetry.group.fmt]
+optional = true
+
+[tool.poetry.group.fmt.dependencies]
+black = "^24.8.0"
+isort = "^5.13.2"
+
+[tool.poetry.group.lint]
+optional = true
+
+[tool.poetry.group.lint.dependencies]
+black = "^24.8.0"
+codespell = "^2.3.0"
+flake8 = "^7.0.0"
+flake8-builtins = "^2.5.0"
+flake8-copyright = "^0.2.4"
+isort = "^5.13.2"
+pep8-naming = "^0.14.1"
+pyproject-flake8 = "^7.0.0"
+
+[tool.poetry.group.unit]
+optional = true
+
+[tool.poetry.group.unit.dependencies]
+coverage = "^7.6.1"
+ops = "^2.17.1"
+pytest = "^8.3.4"
+pytest-mock = "^3.14.0"
+pyyaml = "^6.0.2"
+
+[tool.poetry.group.integration]
+optional = true
+
+[tool.poetry.group.integration.dependencies]
+juju = "<4.0"
+charmed-kubeflow-chisme = ">=0.4.11"
+httpx = "^0.27.2"
+lightkube = "^0.15.6"
+pytest = "^8.3.4"
+pytest-operator = "^0.38.0"
+pyyaml = "^6.0.2"
+requests = "^2.32.3"
+tenacity = "^9.0.0"
+
+[project]
+name = "notebook-operators"
+requires-python = ">=3.12,<4.0"
