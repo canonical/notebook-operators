@@ -3,6 +3,7 @@
 #
 
 """Unit tests for JupyterUI Charm."""
+
 import copy
 import logging
 from contextlib import nullcontext as does_not_raise
@@ -41,7 +42,9 @@ AFFINITY_OPTIONS_CONFIG = [
                         NodeSelectorTerm(
                             matchExpressions=[
                                 NodeSelectorRequirement(
-                                    key="lifecycle", operator="In", values=["kubeflow-notebook-1"]
+                                    key="lifecycle",
+                                    operator="In",
+                                    values=["kubeflow-notebook-1"],
                                 )
                             ]
                         )
@@ -60,7 +63,9 @@ AFFINITY_OPTIONS_CONFIG = [
                         NodeSelectorTerm(
                             matchExpressions=[
                                 NodeSelectorRequirement(
-                                    key="lifecycle", operator="In", values=["kubeflow-notebook-2"]
+                                    key="lifecycle",
+                                    operator="In",
+                                    values=["kubeflow-notebook-2"],
                                 )
                             ]
                         )
@@ -79,7 +84,10 @@ TOLERATIONS_OPTIONS_CONFIG = [
         "displayName": "Test Tolerations Group 1",
         "tolerations": [
             Toleration(
-                effect="NoSchedule", key="dedicated", operator="Equal", value="big-machine"
+                effect="NoSchedule",
+                key="dedicated",
+                operator="Equal",
+                value="big-machine",
             ).to_dict()
         ],
     },
@@ -88,7 +96,10 @@ TOLERATIONS_OPTIONS_CONFIG = [
         "displayName": "Test Tolerations Group 2",
         "tolerations": [
             Toleration(
-                effect="NoSchedule", key="dedicated", operator="Equal", value="big-machine"
+                effect="NoSchedule",
+                key="dedicated",
+                operator="Equal",
+                value="big-machine",
             ).to_dict()
         ],
     },
@@ -155,7 +166,11 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_spawner_ui_has_correct_num_gpu(
-        self, k8s_resource_handler: MagicMock, harness: Harness, num_gpus: int, context_raised
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        num_gpus: int,
+        context_raised,
     ):
         """Test spawner UI.
 
@@ -191,7 +206,11 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_spawner_ui_for_incorrect_gpu_number(
-        self, k8s_resource_handler: MagicMock, harness: Harness, num_gpus: int, context_raised
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        num_gpus: int,
+        context_raised,
     ):
         """Test spawner UI.
 
@@ -305,8 +324,6 @@ class TestCharm:
             ("vscode-images", yaml.dump(["vscodeimage1", "vscodeimage2"])),
             ("rstudio-images", yaml.dump(["rstudioimage1", "rstudioimage2"])),
             ("jupyter-images", yaml.dump([])),
-            # Assert that we handle an empty string as if its an empty list
-            ("jupyter-images", ""),
             # poddefaults inputs function like an image selector, so test them here too
             ("default-poddefaults", yaml.dump(DEFAULT_PODDEFAULTS_CONFIG)),
             ("default-poddefaults", ""),
@@ -315,7 +332,11 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_notebook_selector_config(
-        self, k8s_resource_handler: MagicMock, harness: Harness, config_key, expected_config_yaml
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        config_key,
+        expected_config_yaml,
     ):
         """Test that updating the images config and poddefaults works as expected.
 
@@ -344,7 +365,11 @@ class TestCharm:
     @pytest.mark.parametrize(
         "config_key,default_value,config_as_yaml",
         [
-            ("affinity-options", "test-affinity-config-1", yaml.dump(AFFINITY_OPTIONS_CONFIG)),
+            (
+                "affinity-options",
+                "test-affinity-config-1",
+                yaml.dump(AFFINITY_OPTIONS_CONFIG),
+            ),
             ("gpu-vendors", "nvidia", yaml.dump(GPU_VENDORS_CONFIG)),
             (
                 "tolerations-options",
@@ -401,23 +426,27 @@ class TestCharm:
             (
                 dict(
                     jupyter_images_config=OptionsWithDefault(
-                        default="jupyterimage1", options=["jupyterimage1", "jupyterimage2"]
+                        default="jupyterimage1",
+                        options=["jupyterimage1", "jupyterimage2"],
                     ),
                     vscode_images_config=OptionsWithDefault(
                         default="vscodeimage1", options=["vscodeimage1", "vscodeimage2"]
                     ),
                     rstudio_images_config=OptionsWithDefault(
-                        default="rstudioimage1", options=["rstudioimage1", "rstudioimage2"]
+                        default="rstudioimage1",
+                        options=["rstudioimage1", "rstudioimage2"],
                     ),
                     gpu_number_default=1,
                     gpu_vendors_config=OptionsWithDefault(
                         default="nvidia", options=GPU_VENDORS_CONFIG
                     ),
                     affinity_options_config=OptionsWithDefault(
-                        default="test-affinity-config-1", options=AFFINITY_OPTIONS_CONFIG
+                        default="test-affinity-config-1",
+                        options=AFFINITY_OPTIONS_CONFIG,
                     ),
                     tolerations_options_config=OptionsWithDefault(
-                        default="test-tolerations-group-1", options=TOLERATIONS_OPTIONS_CONFIG
+                        default="test-tolerations-group-1",
+                        options=TOLERATIONS_OPTIONS_CONFIG,
                     ),
                     default_poddefaults_config=OptionsWithDefault(
                         default="", options=DEFAULT_PODDEFAULTS_CONFIG
@@ -546,15 +575,12 @@ class TestCharm:
     def test_failure_get_config(
         self, k8s_resource_handler: MagicMock, harness: Harness, config_key, yaml_string
     ):
-        """Tests that a warning is logged when a Notebook images config contains invalid input."""
+        """Tests that an exception is raised when Notebook images config contains invalid input."""
         # Arrange
         harness.update_config({config_key: yaml_string})
         harness.set_leader(True)
         harness.begin()
         harness.charm.logger = MagicMock()
 
-        # Act
-        harness.charm._get_from_config(config_key)
-
-        # Assert
-        harness.charm.logger.warning.assert_called_once()
+        with pytest.raises(ConfigValidationError):
+            harness.charm._get_from_config(config_key)
