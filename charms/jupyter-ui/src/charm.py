@@ -270,7 +270,8 @@ class JupyterUI(CharmBase):
             images = yaml.safe_load(str(self.model.config.get(key, "")))
             self.logger.info(f"Model config value: {self.model.config.get(key, '')}")
         except ParserError as e:
-            raise ConfigValidationError(f"Config value is not a yaml for {key}.") from e
+            self.logger.warning(f"Config value is not a yaml for {key}: {e}")
+            return OptionsWithDefault()
 
         # Config value is not changed, need to use the default images list
         if images is None:
@@ -278,7 +279,8 @@ class JupyterUI(CharmBase):
             images = yaml.safe_load(Path(default_images_file).read_text())
 
         if not isinstance(images, list):
-            raise ConfigValidationError(f"Config for {key} is not a yaml list: {images}")
+            self.logger.warning(f"Config for {key} is not a yaml list: {images}")
+            return OptionsWithDefault()
 
         # user explicitly asked for no images
         if images == []:

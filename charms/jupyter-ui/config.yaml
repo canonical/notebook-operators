@@ -29,7 +29,7 @@ options:
       List of image options for Jupyter Notebooks. You can see the current default
       values in the following yaml:
       https://github.com/canonical/notebook-operators/blob/main/charms/jupyter-ui/src/default-jupyter-images.yaml
-      To see how to update the default images, you can look at https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
+      To update the default images, follow https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
   vscode-images:
     type: string
     default: ""
@@ -37,7 +37,7 @@ options:
       List of image options for VSCode. You can see the current default values,
       values in the following yaml:
       https://github.com/canonical/notebook-operators/blob/main/charms/jupyter-ui/src/default-vscode-images.yaml
-      To see how to update the default images, you can look at https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
+      To update the default images, follow https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
   rstudio-images:
     type: string
     default: ""
@@ -45,7 +45,7 @@ options:
       List of image options for RStudio. You can see the current default values,
       values in the following yaml:
       https://github.com/canonical/notebook-operators/blob/main/charms/jupyter-ui/src/default-rstudio-images.yaml
-      To see how to update the default images, you can look at https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
+      To update the default images, follow https://documentation.ubuntu.com/charmed-kubeflow/how-to/manage/configure-notebook-page/#configure-images-list
   gpu-number-default:
     type: int
     default: 0

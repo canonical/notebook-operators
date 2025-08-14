@@ -7,6 +7,7 @@
 import copy
 import logging
 from contextlib import nullcontext as does_not_raise
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,7 @@ from lightkube.models.core_v1 import (
 from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
-from charm import JupyterUI
+from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
 from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
@@ -324,6 +325,7 @@ class TestCharm:
             ("vscode-images", yaml.dump(["vscodeimage1", "vscodeimage2"])),
             ("rstudio-images", yaml.dump(["rstudioimage1", "rstudioimage2"])),
             ("jupyter-images", yaml.dump([])),
+            ("jupyter-images", ""),
             # poddefaults inputs function like an image selector, so test them here too
             ("default-poddefaults", yaml.dump(DEFAULT_PODDEFAULTS_CONFIG)),
             ("default-poddefaults", ""),
@@ -345,9 +347,14 @@ class TestCharm:
         """
         # Arrange
         expected_config = yaml.safe_load(expected_config_yaml)
+
         # Recast an empty input as an empty list to match the expected output
+        if config_key == "jupyter-images" and expected_config_yaml == "":
+            expected_config = yaml.safe_load(Path(DEFAULT_JUPYTER_IMAGES_FILE).read_text())
+
         if expected_config is None:
             expected_config = []
+
         harness.set_leader(True)
         harness.begin()
         harness.update_config({config_key: expected_config_yaml})
@@ -582,5 +589,8 @@ class TestCharm:
         harness.begin()
         harness.charm.logger = MagicMock()
 
-        with pytest.raises(ConfigValidationError):
-            harness.charm._get_from_config(config_key)
+        # Act
+        harness.charm._get_from_config(config_key)
+
+        # Assert
+        harness.charm.logger.warning.assert_called_once()
