@@ -18,7 +18,7 @@ jobs:
     name: Release charm | ${{ matrix.charm }}
     needs:
       - ci-tests
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v32.2.3
     with:
       channel: ${{ needs.ci-tests.outputs.channel }}
       artifact-prefix: ${{ needs.ci-tests.outputs.artifact-prefix }}
