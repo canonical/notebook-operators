@@ -13,7 +13,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: charmedkubeflow/notebook-controller:1.10.0-ef1fc67
+    upstream-source: docker.io/charmedkubeflow/notebook-controller:1.10.0-cbf0edc
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
