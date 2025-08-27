@@ -2,5 +2,5 @@
 - charmedkubeflow/jupyter-pytorch-full:v1.10.0-ef1fc67
 - kubeflownotebookswg/jupyter-pytorch-cuda-full:v1.10.0
 - kubeflownotebookswg/jupyter-pytorch-gaudi-full:v1.10.0
-- charmedkubeflow/jupyter-tensorflow-full:1.10.0-448e378
+- docker.io/charmedkubeflow/jupyter-tensorflow-full:1.10.0-d4700ce
 - kubeflownotebookswg/jupyter-tensorflow-cuda-full:v1.10.0
