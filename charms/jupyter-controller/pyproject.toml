@@ -47,7 +47,7 @@ optional = true
 
 [tool.poetry.group.charm.dependencies]
 charmed-kubeflow-chisme = ">=0.4.11"
-cosl = "^0.0.50"
+cosl = "^1.0.0"
 lightkube = "^0.15.6"
 ops = "^2.17.1"
 
