@@ -36,7 +36,7 @@ jobs:
         id: get-charm-paths
         uses: canonical/kubeflow-ci/actions/get-charm-paths@main
       - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@2.6.2
+        uses: canonical/charming-actions/channel@2.7.0
         id: select-channel
 
   lib-check:
