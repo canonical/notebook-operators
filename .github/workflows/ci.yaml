@@ -29,7 +29,7 @@ jobs:
       charm-paths: ${{ steps.get-charm-paths.outputs.charm-paths }}
       charm-channel: ${{ steps.select-channel.outputs.name }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
       - name: Get paths for all charms in this repo
@@ -62,7 +62,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: python3 -m pipx install tox
       - run: tox -e ${{ matrix.charm }}-lint
 
@@ -76,7 +76,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - run: python3 -m pipx install tox
       - run: tox -e ${{ matrix.charm }}-unit
 
@@ -133,7 +133,7 @@ jobs:
           - jupyter-controller
           - jupyter-ui
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Install dependencies
         run: pipx install tox
 
