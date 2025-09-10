@@ -49,7 +49,7 @@ optional = true
 charmed-kubeflow-chisme = ">=0.4.11"
 cosl = "^0.0.50"
 lightkube = "^0.15.6"
-ops = "^2.17.1"
+ops = "^3.0.0"
 
 [tool.poetry.group.fmt]
 optional = true
@@ -76,7 +76,7 @@ optional = true
 
 [tool.poetry.group.unit.dependencies]
 coverage = "^7.6.1"
-ops = "^2.17.1"
+ops = "^3.0.0"
 pytest = "^8.3.4"
 pytest-mock = "^3.14.0"
 pyyaml = "^6.0.2"
