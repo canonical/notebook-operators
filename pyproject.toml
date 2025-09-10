@@ -35,7 +35,7 @@ optional = true
 [tool.poetry.group.integration.dependencies]
 juju = "<4.0"
 blinker = "===1.7.0"
-lightkube = "^0.15.6"
+lightkube = "^0.17.0"
 pytest = "^8.3.4"
 pytest-operator = "^0.38.0"
 pyyaml = "^6.0.2"
