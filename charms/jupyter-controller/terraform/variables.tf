@@ -5,9 +5,9 @@ variable "app_name" {
 }
 
 variable "base" {
-  description = "Application base"
+  description = "Charm base"
   type        = string
-  default     = "ubuntu@20.04"
+  default     = "ubuntu@24.04"
 }
 
 variable "channel" {
