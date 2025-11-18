@@ -191,7 +191,9 @@ class JupyterUI(CharmBase):
                 ),
             ],
         )
-        self.ingress.submit_config(config)
+        # Only submit config if we are a leader
+        if self.unit.is_leader():
+            self.ingress.submit_config(config)
 
     @property
     def container(self):
