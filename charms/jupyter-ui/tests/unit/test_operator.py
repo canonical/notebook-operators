@@ -118,15 +118,15 @@ def harness() -> Harness:
 
     # setup container networking simulation
     harness.set_can_connect("jupyter-ui", True)
-    
+
     # set model name to avoid validation errors
     harness.set_model_name("kubeflow")
-    
+
     # set leader by default
     harness.set_leader(True)
 
     yield harness
-    
+
     harness.cleanup()
 
 
