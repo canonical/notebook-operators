@@ -145,7 +145,6 @@ jobs:
       track: ${{ needs.determine-track.outputs.track }}
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       path-to-charm-directory: ${{ matrix.charm }}
-      create-git-tags: false
     secrets:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
 
