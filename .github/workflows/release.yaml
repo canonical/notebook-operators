@@ -11,6 +11,33 @@ jobs:
     uses: ./.github/workflows/ci.yaml
     secrets: inherit
 
+  determine-track:
+    name: Determine Charmhub track
+    runs-on: ubuntu-latest
+    outputs:
+      track: ${{ steps.determine-track.outputs.track }}
+    steps:
+      - name: Determine track
+        id: determine-track
+        shell: python
+        run: |
+          import os
+          
+          if "${{ github.event_name }}" == "pull_request":
+              ref = "${{ github.base_ref }}"
+          else:
+              ref = "${{ github.ref_name }}"
+          
+          if ref.startswith("track/"):
+              track = ref.removeprefix("track/")
+          else:
+              track = "latest"
+          
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"track={track}\n")
+          
+          print(f"Track: {track}")
+
   release:
     strategy:
       matrix:
@@ -18,9 +45,10 @@ jobs:
     name: Release charm | ${{ matrix.charm }}
     needs:
       - ci-tests
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v38.0.0
+      - determine-track
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm_edge.yaml@v38.0.0
     with:
-      channel: ${{ needs.ci-tests.outputs.channel }}
+      track: ${{ needs.determine-track.outputs.track }}
       artifact-prefix: ${{ needs.ci-tests.outputs.artifact-prefix }}
       path-to-charm-directory: ${{ matrix.charm }}
     secrets:
