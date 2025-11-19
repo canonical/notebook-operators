@@ -112,7 +112,7 @@ jobs:
     needs:
       - get-charm-paths-channel
       - build
-    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@v29.0.0
+    uses: canonical/data-platform-workflows/.github/workflows/release_charm.yaml@debug-29.0.0
     with:
       channel: ${{ needs.get-charm-paths-channel.outputs.charm-channel }}
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
