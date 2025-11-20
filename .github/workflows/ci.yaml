@@ -16,18 +16,18 @@ on:
         value: ${{ jobs.build.outputs.artifact-prefix }}
       charm-paths:
         description: paths for all charms in this repo
-        value: ${{ jobs.get-charm-paths-channel.outputs.charm-paths }}
-      channel:
-        description: Charmhub channel the charms are released to
-        value: ${{ jobs.get-charm-paths-channel.outputs.charm-channel }}
+        value: ${{ jobs.get-charm-paths-track.outputs.charm-paths }}
+      track:
+        description: Charmhub track determined from branch name
+        value: ${{ jobs.get-charm-paths-track.outputs.track }}
 
 jobs:
-  get-charm-paths-channel:
-    name: Get charm paths and charmhub channel
+  get-charm-paths-track:
+    name: Get charm paths and track
     runs-on: ubuntu-latest
     outputs:
       charm-paths: ${{ steps.get-charm-paths.outputs.charm-paths }}
-      charm-channel: ${{ steps.select-channel.outputs.name }}
+      track: ${{ steps.determine-track.outputs.track }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,17 +35,34 @@ jobs:
       - name: Get paths for all charms in this repo
         id: get-charm-paths
         uses: canonical/kubeflow-ci/actions/get-charm-paths@main
-      - name: Select charmhub channel
-        uses: canonical/charming-actions/channel@2.6.2
-        id: select-channel
+      - name: Determine track
+        id: determine-track
+        shell: python
+        run: |
+          import os
+          
+          if "${{ github.event_name }}" == "pull_request":
+              ref = "${{ github.base_ref }}"
+          else:
+              ref = "${{ github.ref_name }}"
+          
+          if ref.startswith("track/"):
+              track = ref.removeprefix("track/")
+          else:
+              track = "latest"
+          
+          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
+              f.write(f"track={track}\n")
+          
+          print(f"Track: {track}")
 
   lib-check:
     name: Check libraries
     needs:
-      - get-charm-paths-channel
+      - get-charm-paths-track
     strategy:
       matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-channel.outputs.charm-paths) }}
+        charm: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@main
     secrets: inherit
     with:
@@ -83,66 +100,38 @@ jobs:
   terraform-checks:
     name: Terraform
     needs:
-      - get-charm-paths-channel
+      - get-charm-paths-track
     uses: canonical/charmed-kubeflow-workflows/.github/workflows/terraform-checks.yaml@main
     strategy:
       matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-channel.outputs.charm-paths) }}
+        charm: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
     with:
       charm-path: ${{ matrix.charm }}
 
   build:
     strategy:
       matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-channel.outputs.charm-paths) }}
+        charm: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
     name: Build charm | ${{ matrix.charm }}
     needs:
-      - get-charm-paths-channel
+      - get-charm-paths-track
     uses: canonical/data-platform-workflows/.github/workflows/build_charm.yaml@v38.0.0
     with:
       path-to-charm-directory: ${{ matrix.charm }}
       cache: true
 
-  determine-track:
-    name: Determine Charmhub track
-    runs-on: ubuntu-latest
-    outputs:
-      track: ${{ steps.determine-track.outputs.track }}
-    steps:
-      - name: Determine track
-        id: determine-track
-        shell: python
-        run: |
-          import os
-          
-          if "${{ github.event_name }}" == "pull_request":
-              ref = "${{ github.base_ref }}"
-          else:
-              ref = "${{ github.ref_name }}"
-          
-          if ref.startswith("track/"):
-              track = ref.removeprefix("track/")
-          else:
-              track = "latest"
-          
-          with open(os.environ["GITHUB_OUTPUT"], "a") as f:
-              f.write(f"track={track}\n")
-          
-          print(f"Track: {track}")
-
   release:
     strategy:
       matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-channel.outputs.charm-paths) }}
+        charm: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
     name: Release charm to Charmhub branch | ${{ matrix.charm }}
     if: ${{ github.event_name == 'pull_request' }}
     needs:
-      - get-charm-paths-channel
+      - get-charm-paths-track
       - build
-      - determine-track
     uses: canonical/data-platform-workflows/.github/workflows/release_charm_pr.yaml@v38.0.0
     with:
-      track: ${{ needs.determine-track.outputs.track }}
+      track: ${{ needs.get-charm-paths-track.outputs.track }}
       artifact-prefix: ${{ needs.build.outputs.artifact-prefix }}
       path-to-charm-directory: ${{ matrix.charm }}
     secrets:
