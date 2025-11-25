@@ -187,7 +187,7 @@ class JupyterUI(CharmBase):
                     matches=[
                         HTTPRouteMatch(
                             path=HTTPPathMatch(
-                                type=HTTPPathMatchType.PathPrefix, value="/jupyter"
+                                type=HTTPPathMatchType.PathPrefix, value="/jupyter/"
                             ),
                         )
                     ],
