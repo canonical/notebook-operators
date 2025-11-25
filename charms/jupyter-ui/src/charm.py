@@ -22,7 +22,11 @@ from charms.istio_ingress_k8s.v0.istio_ingress_route import (
     IstioIngressRouteConfig,
     IstioIngressRouteRequirer,
     Listener,
+    PathModifier,
+    PathModifierType,
     ProtocolType,
+    URLRewriteFilter,
+    URLRewriteSpec,
 )
 from charms.kubeflow_dashboard.v0.kubeflow_dashboard_links import (
     DashboardLink,
@@ -189,6 +193,15 @@ class JupyterUI(CharmBase):
                             path=HTTPPathMatch(
                                 type=HTTPPathMatchType.PathPrefix, value="/jupyter/"
                             ),
+                        )
+                    ],
+                    filters=[
+                        URLRewriteFilter(
+                            urlRewrite=URLRewriteSpec(
+                                path=PathModifier(
+                                    type=PathModifierType.ReplacePrefixMatch, value="/"
+                                )
+                            )
                         )
                     ],
                     backends=[BackendRef(service=self.app.name, port=self.model.config["port"])],
