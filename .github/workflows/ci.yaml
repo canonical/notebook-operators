@@ -148,6 +148,11 @@ jobs:
         charm:
           - jupyter-controller
           - jupyter-ui
+        test-type: [integration, integration-ambient]
+        # TODO: Remove this exclusion once jupyter-controller integration-ambient tests are implemented
+        exclude:
+          - charm: jupyter-controller
+            test-type: integration-ambient
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
@@ -174,6 +179,4 @@ jobs:
           # Pass the path where the charm artefact is downloaded to the tox command
           # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@24.04-amd64.charm
           # We need to find a better way to dynamically get this value
-          tox -e ${{ matrix.charm }}-integration -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@24.04-amd64.charm
-
-
+          tox -e ${{ matrix.charm }}-${{ matrix.test-type }} -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@24.04-amd64.charm
