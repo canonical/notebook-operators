@@ -20,7 +20,7 @@ from lightkube.models.core_v1 import (
     NodeSelectorTerm,
     Toleration,
 )
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
@@ -592,3 +592,26 @@ class TestCharm:
 
         # Assert
         harness.charm.logger.warning.assert_called_once()
+
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_sidecar_and_ambient_relations_added(
+        self, k8s_resource_handler: MagicMock, harness: Harness
+    ):
+        """Test the charm is in BlockedStatus when both sidecar and ambient relations are added."""
+        # Arrange
+        harness.add_relation("ingress", "istio-pilot")
+
+        harness.add_relation("istio-ingress-route", "istio-ingress-k8s")
+
+        harness.set_leader(True)
+
+        # Act
+        harness.begin_with_initial_hooks()
+        harness.container_pebble_ready("jupyter-ui")
+
+        # Assert
+        assert isinstance(
+            harness.charm.model.unit.status,
+            BlockedStatus,
+        )

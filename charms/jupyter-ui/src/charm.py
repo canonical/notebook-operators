@@ -148,6 +148,7 @@ class JupyterUI(CharmBase):
             self.on.upgrade_charm,
             self.on.config_changed,
             self.on["ingress"].relation_changed,
+            self.on["istio-ingress-route"].relation_changed,
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.jupyter_ui_pebble_ready, self._on_pebble_ready)
@@ -571,6 +572,20 @@ class JupyterUI(CharmBase):
             raise CheckFailed(str(err), BlockedStatus)
         return interfaces
 
+    def _check_istio_relations(self):
+        """Check that both ambient and sidecar relations are not present simultaneously."""
+        ambient_relation = self.model.get_relation("istio-ingress-route")
+        sidecar_relation = self.model.get_relation("ingress")
+
+        if ambient_relation and sidecar_relation:
+            self.logger.error(
+                "Both 'istio-ingress-route' and 'ingress' relations are added, remove one to unblock."
+            )
+            raise CheckFailed(
+                "Cannot have both 'istio-ingress-route' and 'ingress' relations at the same time.",
+                BlockedStatus,
+            )
+
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
         try:
@@ -579,6 +594,7 @@ class JupyterUI(CharmBase):
             if self._is_container_ready():
                 self._update_layer()
                 self._update_spawner_ui_config()
+                self._check_istio_relations()
                 interfaces = self._get_interfaces()
                 self._configure_mesh(interfaces)
         except CheckFailed as err:

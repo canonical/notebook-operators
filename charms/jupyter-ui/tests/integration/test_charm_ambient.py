@@ -10,6 +10,7 @@ from pathlib import Path
 
 import aiohttp
 import dpath
+import lightkube
 import pytest
 import tenacity
 import yaml
@@ -67,6 +68,7 @@ DEFAULT_PODDEFAULTS = [
 ]
 
 
+@pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Build and deploy the charm.
@@ -101,6 +103,7 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
+    """Deploy and integrate Istio dependencies with the application under test."""
     await ops_test.model.deploy(
         ISTIO_K8S.charm,
         channel=ISTIO_K8S.channel,
@@ -109,14 +112,12 @@ async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
 
     await ops_test.model.deploy(
         ISTIO_INGRESS_K8S.charm,
-        application_name=ISTIO_INGRESS_K8S.charm,
         channel=ISTIO_INGRESS_K8S.channel,
         trust=ISTIO_INGRESS_K8S.trust,
     )
 
     await ops_test.model.deploy(
         ISTIO_BEACON_K8S.charm,
-        application_name=ISTIO_BEACON_K8S.charm,
         channel=ISTIO_BEACON_K8S.channel,
         trust=ISTIO_BEACON_K8S.trust,
     )
@@ -147,28 +148,39 @@ async def fetch_response(url, headers=None):
     return result_status, str(result_text)
 
 
+async def get_gateway_ip(ops_test: OpsTest, service_name: str = "istio-ingress-k8s-istio"):
+    """Return the gateway IP address of the istio ingress gateway service."""
+    client = lightkube.Client()
+
+    gateway_svc = client.get(
+        lightkube.resources.core_v1.Service,
+        name=service_name,
+        namespace=ops_test.model_name,
+    )
+
+    return gateway_svc.status.loadBalancer.ingress[0].ip
+
+
+@pytest.mark.abort_on_fail
+async def test_ui_is_accessible(ops_test: OpsTest):
+    """Verify that UI is accessible through the ingress gateway."""
+    ingress_ip = await get_gateway_ip(ops_test)
+
+    # obtain status and response text from jupyter UI through ingress gateway
+    result_status, result_text = await fetch_response(f"http://{ingress_ip}/jupyter/", HEADERS)
+
+    # verify that UI is accessible (NOTE: this also tests Pebble checks)
+    assert result_status == 200
+    assert len(result_text) > 0
+    assert "Jupyter Management UI" in result_text
+
+
 async def get_unit_address(ops_test: OpsTest):
     """Return the unit address of jupyter-ui application."""
     status = await ops_test.model.get_status()
     jupyter_ui_units = status["applications"]["jupyter-ui"]["units"]
     jupyter_ui_url = jupyter_ui_units["jupyter-ui/0"]["address"]
     return jupyter_ui_url
-
-
-@pytest.mark.abort_on_fail
-async def test_ui_is_accessible(ops_test: OpsTest):
-    """Verify that UI is accessible."""
-    # NOTE: This test is reusing deployment created in test_build_and_deploy()
-    # NOTE: This test also tests Pebble checks since it uses the same URL.
-    jupyter_ui_url = await get_unit_address(ops_test)
-
-    # obtain status and response text from Jupyter UI URL
-    result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{PORT}", HEADERS)
-
-    # verify that UI is accessible (NOTE: this also tests Pebble checks)
-    assert result_status == 200
-    assert len(result_text) > 0
-    assert "Jupyter Management UI" in result_text
 
 
 @pytest.mark.parametrize(
