@@ -579,10 +579,12 @@ class JupyterUI(CharmBase):
 
         if ambient_relation and sidecar_relation:
             self.logger.error(
-                "Both 'istio-ingress-route' and 'ingress' relations are added, remove one to unblock."
+                "Both 'istio-ingress-route' and 'ingress' relations are present, "
+                "remove one to unblock."
             )
             raise CheckFailed(
-                "Cannot have both 'istio-ingress-route' and 'ingress' relations at the same time.",
+                "Cannot have both 'istio-ingress-route' and 'ingress' relations "
+                "at the same time.",
                 BlockedStatus,
             )
 
