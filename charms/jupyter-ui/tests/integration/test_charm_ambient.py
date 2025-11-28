@@ -18,11 +18,10 @@ from charmed_kubeflow_chisme.testing import (
     deploy_and_assert_grafana_agent,
 )
 from charmed_kubeflow_chisme.testing.ambient_integration import (
-    deploy_and_integrate_service_mesh_charms,
     assert_path_reachable_through_ingress,
-    fetch_response
+    deploy_and_integrate_service_mesh_charms,
+    fetch_response,
 )
-
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
