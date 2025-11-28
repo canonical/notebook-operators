@@ -14,6 +14,18 @@ resources:
     description: 'Backing OCI image'
     upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.10.0-ef1fc67
 requires:
+  istio-ingress-route:
+    interface: istio_ingress_route
+  service-mesh:
+    limit: 1
+    interface: service_mesh
+    description: |
+      Subscribe this charm into a service mesh to enforce authorization policies.
+  require-cmr-mesh:
+    interface: cross_model_mesh
+    description: |
+      Allow a cross-model application access to catalogue via the service mesh.
+      This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
   ingress:
     interface: ingress
     schema:
@@ -59,3 +71,9 @@ requires:
   logging:
     interface: loki_push_api
     optional: true
+provides:
+  provide-cmr-mesh:
+    interface: cross_model_mesh
+    description: |
+      Access a cross-model application from catalogue via the service mesh.
+      This relation provides additional data required by the service mesh to enforce cross-model authorization policies.

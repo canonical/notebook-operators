@@ -51,11 +51,12 @@ parts:
     source: .
     after:
       - poetry-deps
-    poetry-export-extra-args: ['--only', 'charm']
+    poetry-export-extra-args: ['--only', 'charm', '--without-hashes']
     build-packages:
       - libffi-dev  # Needed to build Python dependencies with Rust from source
       - libssl-dev  # Needed to build Python dependencies with Rust from source
       - pkg-config  # Needed to build Python dependencies with Rust from source
+      - git # TODO: remove before merging
     override-build: |
       # Workaround for https://github.com/canonical/charmcraft/issues/2068
       # rustup used to install rustc and cargo, which are needed to build Python dependencies with Rust from source
