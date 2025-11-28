@@ -91,7 +91,8 @@ optional = true
 
 [tool.poetry.group.integration.dependencies]
 juju = "<4.0"
-charmed-kubeflow-chisme = ">=0.4.11"
+# TODO: remove pin before merging and update to new version
+charmed-kubeflow-chisme = { git = "https://github.com/canonical/charmed-kubeflow-chisme.git", branch="kf-8201-feat-add-ambient-integration-test-utils" }
 aiohttp = "^3.10.11"
 dpath = "^2.2.0"
 pytest = "^8.3.4"

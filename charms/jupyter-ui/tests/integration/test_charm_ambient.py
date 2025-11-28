@@ -8,9 +8,7 @@ import json
 import logging
 from pathlib import Path
 
-import aiohttp
 import dpath
-import lightkube
 import pytest
 import tenacity
 import yaml
@@ -19,7 +17,12 @@ from charmed_kubeflow_chisme.testing import (
     assert_logging,
     deploy_and_assert_grafana_agent,
 )
-from charms_dependencies import ISTIO_BEACON_K8S, ISTIO_INGRESS_K8S, ISTIO_K8S
+from charmed_kubeflow_chisme.testing.ambient_integration import (
+    deploy_and_integrate_service_mesh_charms,
+    assert_path_reachable_through_ingress,
+    fetch_response
+)
+
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
@@ -104,75 +107,24 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
     """Deploy and integrate Istio dependencies with the application under test."""
-    await ops_test.model.deploy(
-        ISTIO_K8S.charm,
-        channel=ISTIO_K8S.channel,
-        trust=ISTIO_K8S.trust,
+    await deploy_and_integrate_service_mesh_charms(
+        app=APP_NAME,
+        model=ops_test.model,
+        channel="2/edge",
     )
-
-    await ops_test.model.deploy(
-        ISTIO_INGRESS_K8S.charm,
-        channel=ISTIO_INGRESS_K8S.channel,
-        trust=ISTIO_INGRESS_K8S.trust,
-    )
-
-    await ops_test.model.deploy(
-        ISTIO_BEACON_K8S.charm,
-        channel=ISTIO_BEACON_K8S.channel,
-        trust=ISTIO_BEACON_K8S.trust,
-    )
-
-    await ops_test.model.integrate(
-        f"{ISTIO_INGRESS_K8S.charm}:istio-ingress-route", f"{APP_NAME}:istio-ingress-route"
-    )
-
-    await ops_test.model.integrate(
-        f"{ISTIO_BEACON_K8S.charm}:service-mesh", f"{APP_NAME}:service-mesh"
-    )
-
-    await ops_test.model.wait_for_idle(
-        raise_on_blocked=False,
-        raise_on_error=True,
-        timeout=900,
-    )
-
-
-async def fetch_response(url, headers=None):
-    """Fetch provided URL and return pair - status and text (int, string)."""
-    result_status = 0
-    result_text = ""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            result_status = response.status
-            result_text = await response.text()
-    return result_status, str(result_text)
-
-
-async def get_gateway_ip(ops_test: OpsTest, service_name: str = "istio-ingress-k8s-istio"):
-    """Return the gateway IP address of the istio ingress gateway service."""
-    client = lightkube.Client()
-
-    gateway_svc = client.get(
-        lightkube.resources.core_v1.Service,
-        name=service_name,
-        namespace=ops_test.model_name,
-    )
-
-    return gateway_svc.status.loadBalancer.ingress[0].ip
 
 
 @pytest.mark.abort_on_fail
 async def test_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible through the ingress gateway."""
-    ingress_ip = await get_gateway_ip(ops_test)
-
-    # obtain status and response text from jupyter UI through ingress gateway
-    result_status, result_text = await fetch_response(f"http://{ingress_ip}/jupyter/", HEADERS)
-
-    # verify that UI is accessible (NOTE: this also tests Pebble checks)
-    assert result_status == 200
-    assert len(result_text) > 0
-    assert "Jupyter Management UI" in result_text
+    await assert_path_reachable_through_ingress(
+        http_path="/jupyter/",
+        namespace=ops_test.model_name,
+        headers=HEADERS,
+        expected_status=200,
+        expected_content_type="text/html",
+        expected_response_text="Jupyter Management UI",
+    )
 
 
 async def get_unit_address(ops_test: OpsTest):
@@ -222,10 +174,10 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
         logger.info("Testing whether the config has been updated")
         with attempt:
             try:
-                response = await fetch_response(
+                _, response_text, _ = await fetch_response(
                     f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS
                 )
-                response_json = json.loads(response[1])
+                response_json = json.loads(response_text)
                 actual_config = dpath.get(response_json, yaml_path)
                 assert actual_config == expected_images
             except AssertionError as e:
