@@ -184,23 +184,22 @@ files = [
 
 [[package]]
 name = "anyio"
-version = "4.11.0"
+version = "4.12.0"
 description = "High-level concurrency and networking framework on top of asyncio or Trio"
 optional = false
 python-versions = ">=3.9"
 groups = ["charm", "integration"]
 files = [
-    {file = "anyio-4.11.0-py3-none-any.whl", hash = "sha256:0287e96f4d26d4149305414d4e3bc32f0dcd0862365a4bddea19d7a1ec38c4fc"},
-    {file = "anyio-4.11.0.tar.gz", hash = "sha256:82a8d0b81e318cc5ce71a5f1f8b5c4e63619620b63141ef8c995fa0db95a57c4"},
+    {file = "anyio-4.12.0-py3-none-any.whl", hash = "sha256:dad2376a628f98eeca4881fc56cd06affd18f659b17a747d3ff0307ced94b1bb"},
+    {file = "anyio-4.12.0.tar.gz", hash = "sha256:73c693b567b0c55130c104d0b43a9baf3aa6a31fc6110116509f27bf75e21ec0"},
 ]
 
 [package.dependencies]
 idna = ">=2.8"
-sniffio = ">=1.1"
 typing_extensions = {version = ">=4.5", markers = "python_version < \"3.13\""}
 
 [package.extras]
-trio = ["trio (>=0.31.0)"]
+trio = ["trio (>=0.31.0) ; python_version < \"3.10\"", "trio (>=0.32.0) ; python_version >= \"3.10\""]
 
 [[package]]
 name = "asttokens"
@@ -533,13 +532,15 @@ pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
 
 [[package]]
 name = "charmed-kubeflow-chisme"
-version = "0.4.12"
+version = "0.4.15"
 description = "A collection of helpers for Charms maintained by the Charmed Kubeflow team"
 optional = false
 python-versions = ">=3.6"
 groups = ["charm", "integration"]
-files = []
-develop = false
+files = [
+    {file = "charmed_kubeflow_chisme-0.4.15-py3-none-any.whl", hash = "sha256:5ed71e865f1874dd10eb9b8a560e03f3bc947f7f8a5ab7d57a5f095761281539"},
+    {file = "charmed_kubeflow_chisme-0.4.15.tar.gz", hash = "sha256:3080fd25048b9055b52430356542df91f7072bbcae805d0410db47c0001e5bf8"},
+]
 
 [package.dependencies]
 aiohttp = ">=3.8,<4.0"
@@ -556,12 +557,6 @@ tenacity = "*"
 
 [package.extras]
 test = ["black", "pytest"]
-
-[package.source]
-type = "git"
-url = "https://github.com/canonical/charmed-kubeflow-chisme.git"
-reference = "kf-8201-feat-add-ambient-integration-test-utils"
-resolved_reference = "728a20cbc9e0392492451c1968a64caf0a0c5131"
 
 [[package]]
 name = "charmed-service-mesh-helpers"
@@ -3510,4 +3505,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<4.0"
-content-hash = "c56e0f3d468503fb5c83733c1b75ca31b01ed2fabe3daf46aca4579b5ec8d14c"
+content-hash = "3884adbfc841f08e327ca2dbbd26f9cb2b4d1a26116592bd11c2ea2761a5733a"
