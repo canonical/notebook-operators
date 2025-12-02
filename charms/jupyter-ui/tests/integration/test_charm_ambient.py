@@ -20,7 +20,7 @@ from charmed_kubeflow_chisme.testing import (
 from charmed_kubeflow_chisme.testing.ambient_integration import (
     assert_path_reachable_through_ingress,
     deploy_and_integrate_service_mesh_charms,
-    fetch_response,
+    get_http_response,
 )
 from pytest_operator.plugin import OpsTest
 
@@ -173,7 +173,7 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
         logger.info("Testing whether the config has been updated")
         with attempt:
             try:
-                _, response_text, _ = await fetch_response(
+                _, response_text, _ = await get_http_response(
                     f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS
                 )
                 response_json = json.loads(response_text)
