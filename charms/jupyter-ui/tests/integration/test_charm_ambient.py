@@ -164,7 +164,7 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
                    for more information on the path syntax.
     """
     await ops_test.model.applications[APP_NAME].set_config({config_key: yaml.dump(config_value)})
-    expected_images = config_value
+    expected_config = config_value
 
     # To avoid waiting for a long idle_period between each of this series of tests, we do not use
     # wait_for_idle.  Instead we push the config and then try for 120 seconds to assert the config
@@ -181,7 +181,7 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
                 )
                 response_json = json.loads(response_text)
                 actual_config = dpath.get(response_json, yaml_path)
-                assert actual_config == expected_images
+                assert actual_config == expected_config
             except AssertionError as e:
                 logger.info("Failed assertion that config is updated - will retry")
                 raise e
