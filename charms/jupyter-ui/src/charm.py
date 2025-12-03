@@ -56,6 +56,8 @@ from config_validators import (
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
 ]
+INGRESS_RELATION = "ingress"
+ISTIO_INGRESS_ROUTE_RELATION = "istio-ingress-route"
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
 RSTUDIO_IMAGES_CONFIG = "rstudio-images"
@@ -135,7 +137,7 @@ class JupyterUI(CharmBase):
 
         self.ingress = IstioIngressRouteRequirer(
             self,
-            relation_name="istio-ingress-route",
+            relation_name=ISTIO_INGRESS_ROUTE_RELATION,
         )
 
         self._configure_ambient_ingress()
@@ -147,8 +149,8 @@ class JupyterUI(CharmBase):
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on["ingress"].relation_changed,
-            self.on["istio-ingress-route"].relation_changed,
+            self.on[INGRESS_RELATION].relation_changed,
+            self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_changed,
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.jupyter_ui_pebble_ready, self._on_pebble_ready)
@@ -535,8 +537,8 @@ class JupyterUI(CharmBase):
         self.unit.status = MaintenanceStatus("K8S resources removed")
 
     def _configure_mesh(self, interfaces):
-        if interfaces["ingress"]:
-            interfaces["ingress"].send_data(
+        if interfaces[INGRESS_RELATION]:
+            interfaces[INGRESS_RELATION].send_data(
                 {
                     "prefix": self.model.config["url-prefix"] + "/",
                     "rewrite": "/",
@@ -574,17 +576,17 @@ class JupyterUI(CharmBase):
 
     def _check_istio_relations(self):
         """Check that both ambient and sidecar relations are not present simultaneously."""
-        ambient_relation = self.model.get_relation("istio-ingress-route")
-        sidecar_relation = self.model.get_relation("ingress")
+        ambient_relation = self.model.get_relation(ISTIO_INGRESS_ROUTE_RELATION)
+        sidecar_relation = self.model.get_relation(INGRESS_RELATION)
 
         if ambient_relation and sidecar_relation:
             self.logger.error(
-                "Both 'istio-ingress-route' and 'ingress' relations are present, "
-                "remove one to unblock."
+                f"Both '{ISTIO_INGRESS_ROUTE_RELATION}' and '{INGRESS_RELATION}' "
+                "relations are present, remove one to unblock."
             )
             raise CheckFailed(
-                "Cannot have both 'istio-ingress-route' and 'ingress' relations "
-                "at the same time.",
+                f"Cannot have both '{ISTIO_INGRESS_ROUTE_RELATION}' and '{INGRESS_RELATION}' "
+                "relations at the same time.",
                 BlockedStatus,
             )
 
