@@ -8,6 +8,8 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-ui:
     resource: oci-image
+    uid: 584792
+    gid: 584792
 resources:
   oci-image:
     type: oci-image
@@ -77,3 +79,4 @@ provides:
     description: |
       Access a cross-model application from catalogue via the service mesh.
       This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
+charm-user: non-root
