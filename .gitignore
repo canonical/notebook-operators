@@ -8,3 +8,4 @@ geckodriver.log
 venv/
 .terraform*
 *.tfstate*
+coverage.xml
