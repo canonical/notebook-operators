@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
 from lightkube.models.core_v1 import (
     Affinity,
     NodeAffinity,
@@ -27,6 +28,9 @@ from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
 from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
+
+INGRESS_ENDPOINT = "ingress"
+ISTIO_PILOT_APP = "istio-pilot"
 
 # Sample inputs for render_jwa_file tests
 JUPYTER_IMAGES_CONFIG = ["jupyterimage1", "jupyterimage2"]
@@ -266,13 +270,13 @@ class TestCharm:
                 "password": "",
             },
         )
-        rel_id = harness.add_relation("ingress", "istio-pilot")
+        rel_id = harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
 
-        harness.add_relation_unit(rel_id, "istio-pilot/0")
+        harness.add_relation_unit(rel_id, f"{ISTIO_PILOT_APP}/0")
         data = {"service-name": "service-name", "service-port": "6666"}
         harness.update_relation_data(
             rel_id,
-            "istio-pilot",
+            ISTIO_PILOT_APP,
             {"_supported_versions": "- v1", "data": yaml.dump(data)},
         )
         harness.begin_with_initial_hooks()
@@ -600,15 +604,12 @@ class TestCharm:
     ):
         """Test the charm is in BlockedStatus when both sidecar and ambient relations are added."""
         # Arrange
-        harness.add_relation("ingress", "istio-pilot")
+        harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
 
-        harness.add_relation("istio-ingress-route", "istio-ingress-k8s")
-
-        harness.set_leader(True)
+        harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
         # Act
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-ui")
 
         # Assert
         assert isinstance(

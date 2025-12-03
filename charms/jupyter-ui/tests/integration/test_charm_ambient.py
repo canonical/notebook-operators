@@ -15,10 +15,8 @@ import yaml
 from charmed_kubeflow_chisme.testing import (
     GRAFANA_AGENT_APP,
     assert_logging,
-    deploy_and_assert_grafana_agent,
-)
-from charmed_kubeflow_chisme.testing.ambient_integration import (
     assert_path_reachable_through_ingress,
+    deploy_and_assert_grafana_agent,
     deploy_and_integrate_service_mesh_charms,
     get_http_response,
 )
@@ -36,7 +34,13 @@ PORT = CONFIG["options"]["port"]["default"]
 HEADERS = {
     "kubeflow-userid": "",
 }
-
+HTTP_PATH = "/jupyter/"
+EXPECTED_RESPONSE_TEXT = "Jupyter Management UI"
+RETRY_120_SECONDS = tenacity.Retrying(
+    stop=tenacity.stop_after_delay(120),
+    wait=tenacity.wait_fixed(2),
+    reraise=True,
+)
 AFFINITY_OPTIONS = [
     {
         "configKey": "test-affinity-config-1",
@@ -109,7 +113,6 @@ async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
     await deploy_and_integrate_service_mesh_charms(
         app=APP_NAME,
         model=ops_test.model,
-        channel="2/edge",
     )
 
 
@@ -117,12 +120,12 @@ async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
 async def test_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible through the ingress gateway."""
     await assert_path_reachable_through_ingress(
-        http_path="/jupyter/",
+        http_path=HTTP_PATH,
         namespace=ops_test.model_name,
         headers=HEADERS,
         expected_status=200,
         expected_content_type="text/html",
-        expected_response_text="Jupyter Management UI",
+        expected_response_text=EXPECTED_RESPONSE_TEXT,
     )
 
 
@@ -188,10 +191,3 @@ async def test_logging(ops_test):
     """Test logging is defined in relation data bag."""
     app = ops_test.model.applications[GRAFANA_AGENT_APP]
     await assert_logging(app)
-
-
-RETRY_120_SECONDS = tenacity.Retrying(
-    stop=tenacity.stop_after_delay(120),
-    wait=tenacity.wait_fixed(2),
-    reraise=True,
-)
