@@ -98,7 +98,6 @@ pytest = "^8.3.4"
 pytest-operator = "^0.38.0"
 pyyaml = "^6.0.2"
 tenacity = "^9.0.0"
-lightkube = "^0.15.6"
 
 [project]
 name = "notebook-operators"
