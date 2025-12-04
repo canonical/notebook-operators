@@ -88,9 +88,7 @@ charm-user: non-root
 storage:
   config:
     type: filesystem
-    location: /etc/config
     minimum-size: 1M
   logos:
     type: filesystem
-    location: /src/apps/default/static/assets/logos/
     minimum-size: 1M
