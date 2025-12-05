@@ -121,6 +121,7 @@ class JupyterUI(CharmBase):
             " - entrypoint:app"
         )
         self._container_name = "jupyter-ui"
+        self._container_meta = self.meta.containers[self._container_name]
         self._container = self.unit.get_container(self._name)
         self._config_storage_name = "config"
         self._logos_storage_name = "logos"
@@ -525,6 +526,11 @@ class JupyterUI(CharmBase):
         if not self._is_container_ready():
             return
 
+        try:
+            self._check_storage()
+        except CheckFailed as err:
+            self.model.unit.status = err.status
+            return
         # upload files to container
         self._upload_logos_files_to_container()
 
@@ -596,10 +602,23 @@ class JupyterUI(CharmBase):
                 BlockedStatus,
             )
 
+    def _check_storage(self):
+        """Check if storage is available."""
+        config_storage_path = Path(self._container_meta.mounts[self._config_storage_name].location)
+        logos_storage_path = Path(self._container_meta.mounts[self._logos_storage_name].location)
+
+        if not self.container.exists(config_storage_path):
+            self.logger.info('Storage "config" not yet available')
+            raise CheckFailed('Waiting for "config" storage', WaitingStatus)
+        if not self.container.exists(logos_storage_path):
+            self.logger.info('Storage "logos" not yet available')
+            raise CheckFailed('Waiting for "logos" storage', WaitingStatus)
+
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
         try:
             self._check_leader()
+            self._check_storage()
             self._deploy_k8s_resources()
             if self._is_container_ready():
                 self._update_layer()
