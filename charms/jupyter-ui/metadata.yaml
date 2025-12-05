@@ -8,6 +8,13 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-ui:
     resource: oci-image
+    uid: 584792
+    gid: 584792
+    mounts:
+    - storage: config
+      location: /etc/config
+    - storage: logos
+      location: /src/apps/default/static/assets/logos/
 resources:
   oci-image:
     type: oci-image
@@ -59,3 +66,11 @@ requires:
   logging:
     interface: loki_push_api
     optional: true
+charm-user: non-root
+storage:
+  config:
+    type: filesystem
+    minimum-size: 1M
+  logos:
+    type: filesystem
+    minimum-size: 1M

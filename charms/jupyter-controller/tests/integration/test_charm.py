@@ -14,8 +14,11 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_logging,
     assert_metrics_endpoint,
+    assert_security_context,
     deploy_and_assert_grafana_agent,
+    generate_container_securitycontext_map,
     get_alert_rules,
+    get_pod_names,
 )
 from charms_dependencies import ISTIO_GATEWAY, ISTIO_PILOT, JUPYTER_UI
 from httpx import HTTPStatusError
@@ -29,7 +32,15 @@ log = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> Client:
+    """Returns lightkube Kubernetes client"""
+    client = Client(field_manager=f"{APP_NAME}")
+    return client
 
 
 @pytest.mark.abort_on_fail
@@ -142,9 +153,8 @@ def assert_replicas(client, resource_class, resource_name, namespace):
     assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
 
 
-async def test_create_notebook(ops_test: OpsTest):
+async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client):
     """Test notebook creation."""
-    lightkube_client = Client()
     this_ns = lightkube_client.get(res=Namespace, name=ops_test.model.name)
     lightkube_client.patch(res=Namespace, name=this_ns.metadata.name, obj=this_ns)
 
@@ -172,8 +182,30 @@ async def test_create_notebook(ops_test: OpsTest):
     assert_replicas(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
 
 
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
 @pytest.mark.abort_on_fail
-async def test_remove_with_resources_present(ops_test: OpsTest):
+async def test_container_security_context(
+    ops_test: OpsTest,
+    lightkube_client: Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(ops_test.model.name, APP_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        ops_test.model.name,
+    )
+
+
+@pytest.mark.abort_on_fail
+async def test_remove_with_resources_present(ops_test: OpsTest, lightkube_client: Client):
     """Test remove with all resources deployed.
 
     Verify that all deployed resources that need to be removed are removed.
@@ -184,7 +216,6 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     assert APP_NAME not in ops_test.model.applications
 
     # verify that all resources that were deployed are removed
-    lightkube_client = Client()
 
     # verify all CRDs in namespace are removed
     crd_list = lightkube_client.list(

@@ -46,7 +46,7 @@ package-mode = false
 optional = true
 
 [tool.poetry.group.charm.dependencies]
-charmed-kubeflow-chisme = ">=0.4.11"
+charmed-kubeflow-chisme = ">=0.4.14"
 serialized-data-interface = "<0.4"
 cosl = "^0.0.50"
 lightkube = "^0.15.6"
