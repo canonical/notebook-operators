@@ -16,15 +16,20 @@ import yaml
 from charmed_kubeflow_chisme.testing import (
     GRAFANA_AGENT_APP,
     assert_logging,
+    assert_security_context,
     deploy_and_assert_grafana_agent,
+    generate_container_securitycontext_map,
+    get_pod_names,
 )
+from lightkube import Client
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CONFIG = yaml.safe_load(Path("./config.yaml").read_text())
-APP_NAME = "jupyter-ui"
+APP_NAME = METADATA["name"]
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
 RSTUDIO_IMAGES_CONFIG = "rstudio-images"
@@ -64,6 +69,13 @@ DEFAULT_PODDEFAULTS = [
     "poddefault1",
     "poddefault2",
 ]
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> Client:
+    """Return lightkube Kubernetes client."""
+    client = Client(field_manager=f"{APP_NAME}")
+    return client
 
 
 @pytest.mark.abort_on_fail
@@ -187,6 +199,28 @@ async def test_logging(ops_test):
     """Test logging is defined in relation data bag."""
     app = ops_test.model.applications[GRAFANA_AGENT_APP]
     await assert_logging(app)
+
+
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
+@pytest.mark.abort_on_fail
+async def test_container_security_context(
+    ops_test: OpsTest,
+    lightkube_client: Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(ops_test.model.name, APP_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        ops_test.model.name,
+    )
 
 
 RETRY_120_SECONDS = tenacity.Retrying(
