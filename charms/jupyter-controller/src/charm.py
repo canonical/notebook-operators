@@ -12,6 +12,7 @@ from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
 from charmed_kubeflow_chisme.pebble import update_layer
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
+from charms.istio_beacon_k8s.v0.service_mesh import ServiceMeshConsumer, UnitPolicy
 from charms.loki_k8s.v1.loki_push_api import LogForwarder
 from charms.observability_libs.v1.kubernetes_service_patch import KubernetesServicePatch
 from charms.prometheus_k8s.v0.prometheus_scrape import MetricsEndpointProvider
@@ -34,6 +35,8 @@ K8S_RESOURCE_FILES = [
 CRD_RESOURCE_FILES = [
     "src/templates/crds.yaml.j2",
 ]
+
+SERVICE_MESH_RELATION = "service-mesh"
 
 
 class JupyterController(CharmBase):
@@ -81,6 +84,17 @@ class JupyterController(CharmBase):
 
         self.dashboard_provider = GrafanaDashboardProvider(self)
         self._logging = LogForwarder(charm=self)
+
+        if self.unit.is_leader():
+            self._mesh = ServiceMeshConsumer(
+                self,
+                policies=[
+                    UnitPolicy(
+                        relation="metrics-endpoint",
+                        ports=[METRICS_PORT],
+                    ),
+                ],
+            )
 
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
@@ -141,7 +155,10 @@ class JupyterController(CharmBase):
             "CLUSTER_DOMAIN": config["cluster-domain"],
             "CULL_IDLE_TIME": config["cull-idle-time"],
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
-            "USE_ISTIO": config["use-istio"],
+            "USE_ISTIO": str(self._use_istio).lower(),
+            "USE_GATEWAY_API": str(self._use_gateway_api).lower(),
+            "K8S_GATEWAY_NAME": "kubeflow-gateway",
+            "K8S_GATEWAY_NAMESPACE": "kubeflow",
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
             "ISTIO_HOST": "*",
             "ENABLE_CULLING": config["enable-culling"],
@@ -249,6 +266,20 @@ class JupyterController(CharmBase):
             else:
                 self.model.unit.status = ActiveStatus()
 
+    def _set_istio_configurations(self):
+        """Set Istio configuration based on service-mesh relation presence."""
+        ambient_relation = self.model.get_relation(SERVICE_MESH_RELATION)
+
+        # Sidecar mode: USE_ISTIO=true, USE_GATEWAY_API=false
+        # Ambient mode: USE_ISTIO=false, USE_GATEWAY_API=true
+        self._use_istio = ambient_relation is None
+        self._use_gateway_api = ambient_relation is not None
+
+        logging.info(
+            f"Updating Istio configurations: USE_ISTIO={self._use_istio}, "
+            f"USE_GATEWAY_API={self._use_gateway_api}"
+        )
+
     def _on_install(self, _):
         """Installation only tasks."""
         # deploy K8S resources to speed up deployment
@@ -304,6 +335,7 @@ class JupyterController(CharmBase):
             self._check_container_connection()
             self._check_leader()
             self._apply_k8s_resources(force_conflicts=force_conflicts)
+            self._set_istio_configurations()
             update_layer(
                 self._container_name,
                 self._container,
