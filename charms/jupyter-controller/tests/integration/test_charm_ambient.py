@@ -14,6 +14,7 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_logging,
     assert_metrics_endpoint,
+    assert_path_reachable_through_ingress,
     assert_security_context,
     deploy_and_assert_grafana_agent,
     deploy_and_integrate_service_mesh_charms,
@@ -22,12 +23,12 @@ from charmed_kubeflow_chisme.testing import (
     get_pod_names,
     integrate_with_service_mesh,
 )
-from charms_dependencies import JUPYTER_UI
+from charms_dependencies import JUPYTER_UI, KUBEFLOW_PROFILES
 from httpx import HTTPStatusError
-from lightkube import ApiError, Client
-from lightkube.generic_resource import create_namespaced_resource
+from lightkube import ApiError, Client, codecs
+from lightkube.generic_resource import create_namespaced_resource, create_global_resource
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
-from lightkube.resources.core_v1 import Namespace, Service
+from lightkube.resources.core_v1 import Service
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -35,13 +36,6 @@ log = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
-
-HTTP_ROUTE = create_namespaced_resource(
-    group="gateway.networking.k8s.io",
-    version="v1",
-    kind="HTTPRoute",
-    plural="httproutes",
-)
 
 NOTEBOOK_RESOURCE = create_namespaced_resource(
     group="kubeflow.org",
@@ -51,12 +45,30 @@ NOTEBOOK_RESOURCE = create_namespaced_resource(
     verbs=None,
 )
 
+NOTEBOOK_NAME = yaml.safe_load(Path("examples/sample-notebook.yaml").read_text())["metadata"][
+    "name"
+]
+
 
 @pytest.fixture(scope="session")
 def lightkube_client() -> Client:
     """Returns lightkube Kubernetes client"""
     client = Client(field_manager=f"{APP_NAME}")
+    create_global_resource(group="kubeflow.org", version="v1", kind="Profile", plural="profiles")
     return client
+
+
+@pytest.fixture(scope="session")
+def profile(lightkube_client):
+    """Create a Profile object in cluster, cleaning it up after."""
+    profile_file = "examples/profile.yaml"
+    yaml_text = Path(profile_file).read_text()
+    profile_obj = codecs.load_all_yaml(yaml_text)[0]
+    profilename = profile_obj["metadata"]["name"]
+
+    lightkube_client.create(profile_obj)
+    yield profilename
+    lightkube_client.delete(type(profile_obj), profilename)
 
 
 @pytest.mark.skip_if_deployed
@@ -98,6 +110,21 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
         model=ops_test.model,
     )
 
+    # Deploy kubeflow-profiles to test notebook creation in a profile namespace
+    await ops_test.model.deploy(
+        KUBEFLOW_PROFILES.charm,
+        channel="latest/edge",
+        revision=789,
+        trust=KUBEFLOW_PROFILES.trust,
+        config=KUBEFLOW_PROFILES.config,
+        base="ubuntu@24.04",
+    )
+    await integrate_with_service_mesh(
+        app=KUBEFLOW_PROFILES.charm,
+        model=ops_test.model,
+        relate_to_ingress=False,
+    )
+
     # Deploying grafana-agent-k8s and add all relations
     await deploy_and_assert_grafana_agent(
         ops_test.model, APP_NAME, metrics=True, dashboard=True, logging=True
@@ -129,14 +156,6 @@ async def test_logging(ops_test):
     await assert_logging(app)
 
 
-# Helper to retry calling a function over 30 seconds for 10 attempts
-retry_for_5_attempts = tenacity.Retrying(
-    stop=(tenacity.stop_after_attempt(10) | tenacity.stop_after_delay(30)),
-    wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
-    reraise=True,
-)
-
-
 @tenacity.retry(
     wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
     stop=tenacity.stop_after_attempt(30),
@@ -159,37 +178,37 @@ def assert_replicas(client, resource_class, resource_name, namespace):
     assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
 
 
-async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client):
+async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client, profile: str):
     """Test notebook creation."""
-    this_ns = lightkube_client.get(res=Namespace, name=ops_test.model.name)
-    lightkube_client.patch(res=Namespace, name=this_ns.metadata.name, obj=this_ns)
 
     with open("examples/sample-notebook.yaml") as f:
         notebook = NOTEBOOK_RESOURCE(yaml.safe_load(f.read()))
-        lightkube_client.create(notebook, namespace=ops_test.model.name)
+        lightkube_client.create(notebook, namespace=profile)
 
     try:
         notebook_ready = lightkube_client.get(
             NOTEBOOK_RESOURCE,
-            name="sample-notebook",
-            namespace=ops_test.model.name,
+            name=NOTEBOOK_NAME,
+            namespace=profile,
         )
     except ApiError:
         assert False
     assert notebook_ready
 
-    assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, "sample-notebook", ops_test.model.name)
+    assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, NOTEBOOK_NAME, profile)
 
 
-async def test_notebook_http_route_created_reachable(ops_test: OpsTest, lightkube_client: Client):
-    """Test HTTP route is created for the notebook and is reachable.
+async def test_notebook_reachable(ops_test: OpsTest, profile: str):
+    """Test notebook is reachable through the ingress.
 
+    Verify that the notebook deployed in the profile namespace is reachable
+    through the ingress.
     This test reuses the notebook created in test_create_notebook.
-    Checks that:
-    1. The HTTP route is created by the controller for the notebook.
-    2. The Notebook route is reachable through the ingress.
     """
-    # TODO: write test logic
+    assert_path_reachable_through_ingress(
+        http_path=f"/notebook/{profile}/{NOTEBOOK_NAME}/",
+        namespace=ops_test.model.name,
+    )
 
 
 @pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
@@ -252,7 +271,7 @@ async def test_remove_with_resources_present(ops_test: OpsTest, lightkube_client
     try:
         _ = lightkube_client.get(
             NOTEBOOK_RESOURCE,
-            name="sample-notebook",
+            name=NOTEBOOK_NAME,
             namespace=ops_test.model.name,
         )
     except HTTPStatusError:
