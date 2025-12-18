@@ -157,7 +157,7 @@ class JupyterController(CharmBase):
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
             "USE_ISTIO": str(self._use_istio).lower(),
             "USE_GATEWAY_API": str(self._use_gateway_api).lower(),
-            "K8S_GATEWAY_NAME": "kubeflow-gateway",
+            "K8S_GATEWAY_NAME": self._k8s_gateway_name,
             "K8S_GATEWAY_NAMESPACE": "kubeflow",
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
             "ISTIO_HOST": "*",
@@ -274,6 +274,7 @@ class JupyterController(CharmBase):
         # Ambient mode: USE_ISTIO=false, USE_GATEWAY_API=true
         self._use_istio = ambient_relation is None
         self._use_gateway_api = ambient_relation is not None
+        self._k8s_gateway_name = "istio-ingress-k8s" if ambient_relation else "kubeflow-gateway"
 
         logging.info(
             f"Updating Istio configurations: USE_ISTIO={self._use_istio}, "
