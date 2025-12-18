@@ -15,7 +15,7 @@ resources:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    upstream-source: kimwnasptd/notebook-controller:ambient1
+    upstream-source: kimwnasptd/notebook-controller:ambient2
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
