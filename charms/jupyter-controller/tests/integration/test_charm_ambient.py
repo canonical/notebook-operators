@@ -26,7 +26,7 @@ from charmed_kubeflow_chisme.testing import (
 from charms_dependencies import JUPYTER_UI, KUBEFLOW_PROFILES
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client, codecs
-from lightkube.generic_resource import create_namespaced_resource, create_global_resource
+from lightkube.generic_resource import create_global_resource, create_namespaced_resource
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
 from lightkube.resources.core_v1 import Service
 from pytest_operator.plugin import OpsTest
