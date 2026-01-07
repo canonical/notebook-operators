@@ -27,6 +27,9 @@ provides:
       Access a cross-model application from catalogue via the service mesh.
       This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
 requires:
+  gateway-metadata:
+    interface: gateway_metadata
+    limit: 1
   logging:
     interface: loki_push_api
     optional: true

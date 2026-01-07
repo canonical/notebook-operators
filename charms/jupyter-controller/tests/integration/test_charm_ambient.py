@@ -49,6 +49,9 @@ NOTEBOOK_NAME = yaml.safe_load(Path("examples/sample-notebook.yaml").read_text()
     "name"
 ]
 
+SERVICE_MESH_ENDPOINT = "service-mesh"
+GATEWAY_METADATA_ENDPOINT = "gateway-metadata"
+
 
 @pytest.fixture(scope="session")
 def lightkube_client() -> Client:
@@ -60,14 +63,20 @@ def lightkube_client() -> Client:
 
 @pytest.fixture(scope="session")
 def profile(lightkube_client):
-    """Create a Profile object in cluster, cleaning it up after."""
+    """Create a Profile object in cluster, cleaning it up after.
+
+    Returns:
+        tuple: (profilename, profile_owner) where profilename is the profile's
+               metadata.name and profile_owner is the spec.owner.name value.
+    """
     profile_file = "examples/profile.yaml"
     yaml_text = Path(profile_file).read_text()
     profile_obj = codecs.load_all_yaml(yaml_text)[0]
     profilename = profile_obj["metadata"]["name"]
+    profile_owner = profile_obj["spec"]["owner"]["name"]
 
     lightkube_client.create(profile_obj)
-    yield profilename
+    yield profilename, profile_owner
     lightkube_client.delete(type(profile_obj), profilename)
 
 
@@ -102,7 +111,23 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
         app=APP_NAME,
         model=ops_test.model,
         relate_to_ingress=False,
+        relate_to_beacon=False,
     )
+
+    await ops_test.model.integrate(
+        f"istio-beacon-k8s:{SERVICE_MESH_ENDPOINT}", f"{APP_NAME}:{SERVICE_MESH_ENDPOINT}"
+    )
+
+    # Verify that the charm is blocked without gateway metadata relation
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", raise_on_error=True)
+
+    # add Jupyter-Controller/Istio Gateway relation
+    await ops_test.model.integrate(
+        f"istio-ingress-k8s:{GATEWAY_METADATA_ENDPOINT}",
+        f"{APP_NAME}:{GATEWAY_METADATA_ENDPOINT}",
+    )
+
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=60 * 5)
 
     # Integrate Jupyter UI with service mesh
     await integrate_with_service_mesh(
@@ -178,36 +203,44 @@ def assert_replicas(client, resource_class, resource_name, namespace):
     assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
 
 
-async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client, profile: str):
+async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client, profile):
     """Test notebook creation."""
+    profilename, _ = profile
 
     with open("examples/sample-notebook.yaml") as f:
         notebook = NOTEBOOK_RESOURCE(yaml.safe_load(f.read()))
-        lightkube_client.create(notebook, namespace=profile)
+        lightkube_client.create(notebook, namespace=profilename)
 
     try:
         notebook_ready = lightkube_client.get(
             NOTEBOOK_RESOURCE,
             name=NOTEBOOK_NAME,
-            namespace=profile,
+            namespace=profilename,
         )
     except ApiError:
         assert False
     assert notebook_ready
 
-    assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, NOTEBOOK_NAME, profile)
+    assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, NOTEBOOK_NAME, profilename)
 
 
-async def test_notebook_reachable(ops_test: OpsTest, profile: str):
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
+    stop=tenacity.stop_after_delay(60),
+    reraise=True,
+)
+async def test_notebook_reachable(ops_test: OpsTest, profile):
     """Test notebook is reachable through the ingress.
 
     Verify that the notebook deployed in the profile namespace is reachable
     through the ingress.
     This test reuses the notebook created in test_create_notebook.
     """
-    assert_path_reachable_through_ingress(
-        http_path=f"/notebook/{profile}/{NOTEBOOK_NAME}/",
+    profilename, profile_owner = profile
+    await assert_path_reachable_through_ingress(
+        http_path=f"/notebook/{profilename}/{NOTEBOOK_NAME}/lab",
         namespace=ops_test.model.name,
+        headers={"kubeflow-userid": profile_owner},
     )
 
 
@@ -233,7 +266,6 @@ async def test_container_security_context(
     )
 
 
-@pytest.mark.skip()
 @pytest.mark.abort_on_fail
 async def test_remove_with_resources_present(ops_test: OpsTest, lightkube_client: Client):
     """Test remove with all resources deployed.

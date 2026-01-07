@@ -6,11 +6,13 @@
 https://github.com/canonical/notebook-operators
 """
 import logging
+from typing import Tuple
 
 from charmed_kubeflow_chisme.exceptions import ErrorWithStatus, GenericCharmRuntimeError
 from charmed_kubeflow_chisme.kubernetes import KubernetesResourceHandler
 from charmed_kubeflow_chisme.lightkube.batch import delete_many
 from charmed_kubeflow_chisme.pebble import update_layer
+from charmed_service_mesh_helpers.interfaces import GatewayMetadataRequirer
 from charms.grafana_k8s.v0.grafana_dashboard import GrafanaDashboardProvider
 from charms.istio_beacon_k8s.v0.service_mesh import ServiceMeshConsumer, UnitPolicy
 from charms.loki_k8s.v1.loki_push_api import LogForwarder
@@ -21,7 +23,7 @@ from lightkube.generic_resource import load_in_cluster_generic_resources
 from lightkube.models.core_v1 import ServicePort
 from ops import main
 from ops.charm import CharmBase
-from ops.model import ActiveStatus, MaintenanceStatus, ModelError, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, ModelError, WaitingStatus
 from ops.pebble import CheckStatus, Layer
 
 METRICS_PORT = "8080"
@@ -37,6 +39,7 @@ CRD_RESOURCE_FILES = [
 ]
 
 SERVICE_MESH_RELATION = "service-mesh"
+AMBIENT_GATEWAY_RELATION = "gateway-metadata"
 
 
 class JupyterController(CharmBase):
@@ -96,6 +99,8 @@ class JupyterController(CharmBase):
                 ],
             )
 
+        self.ambient_gateway = GatewayMetadataRequirer(self, relation_name="gateway-metadata")
+
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
         self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
@@ -151,14 +156,15 @@ class JupyterController(CharmBase):
     def service_environment(self):
         """Return environment variables based on model configuration."""
         config = self.model.config
+        k8s_gateway_namespace, k8s_gateway_name = self._get_gateway_info()
         ret_env_vars = {
             "CLUSTER_DOMAIN": config["cluster-domain"],
             "CULL_IDLE_TIME": config["cull-idle-time"],
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
             "USE_ISTIO": str(self._use_istio).lower(),
             "USE_GATEWAY_API": str(self._use_gateway_api).lower(),
-            "K8S_GATEWAY_NAME": self._k8s_gateway_name,
-            "K8S_GATEWAY_NAMESPACE": "kubeflow",
+            "K8S_GATEWAY_NAME": k8s_gateway_name,
+            "K8S_GATEWAY_NAMESPACE": k8s_gateway_namespace,
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
             "ISTIO_HOST": "*",
             "ENABLE_CULLING": config["enable-culling"],
@@ -194,6 +200,35 @@ class JupyterController(CharmBase):
         }
 
         return Layer(layer_config)
+
+    def _get_gateway_info(self) -> Tuple[str, str]:
+        """Retrieve gateway namespace and name.
+
+        Returns:
+            Tuple[str, str]: gateway namespace and name.
+        Raises:
+            ErrorWithStatus: if service mesh relation is present without gateway metadata relation,
+                             or if gateway metadata relation data is not yet available.
+        """
+        service_mesh_relation = self.model.get_relation(SERVICE_MESH_RELATION)
+        ambient_gateway_relation = self.model.get_relation(AMBIENT_GATEWAY_RELATION)
+
+        if service_mesh_relation and not ambient_gateway_relation:
+            raise ErrorWithStatus(
+                "Service mesh relation present without gateway metadata relation",
+                BlockedStatus,
+            )
+        # Try to get data from ambient gateway relation
+        if ambient_gateway_relation:
+            ambient_data = self.ambient_gateway.get_metadata()
+            if ambient_data is None:
+                raise ErrorWithStatus("Waiting for gateway metadata relation data", WaitingStatus)
+            gateway_namespace = ambient_data.namespace
+            gateway_name = ambient_data.gateway_name
+            return gateway_namespace, gateway_name
+        else:
+            # Fallback to default values
+            return "kubeflow", "kubeflow-gateway"
 
     def _check_leader(self):
         """Check if this unit is a leader."""
@@ -274,7 +309,6 @@ class JupyterController(CharmBase):
         # Ambient mode: USE_ISTIO=false, USE_GATEWAY_API=true
         self._use_istio = ambient_relation is None
         self._use_gateway_api = ambient_relation is not None
-        self._k8s_gateway_name = "istio-ingress-k8s" if ambient_relation else "kubeflow-gateway"
 
         logging.info(
             f"Updating Istio configurations: USE_ISTIO={self._use_istio}, "
