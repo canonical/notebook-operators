@@ -621,6 +621,7 @@ class JupyterUI(CharmBase):
             self._check_leader()
             self._deploy_k8s_resources()
             if self._is_container_ready():
+                self._check_storage()
                 self._update_layer()
                 self._update_spawner_ui_config()
                 self._check_istio_relations()
