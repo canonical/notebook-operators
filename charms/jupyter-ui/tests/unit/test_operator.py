@@ -264,19 +264,16 @@ class TestCharm:
     ):
         """Test no storage available scenario."""
         harness.set_leader(True)
+        harness.begin()
         if missing_storage == "config":
             harness.add_storage("logos")
         else:
             harness.add_storage("config")
-        harness.begin_with_initial_hooks()
 
-        with pytest.raises(ErrorWithStatus) as exception_info:
-            harness.container_pebble_ready("jupyter-ui")
+        harness.container_pebble_ready("jupyter-ui")
 
-        assert exception_info.value.status_type(WaitingStatus)
-        assert match("Waiting for .* storage", str(exception_info))
         assert isinstance(harness.charm.model.unit.status, WaitingStatus)
-        assert match("Storage .* not yet available", harness.charm.model.unit.status.message)
+        assert match("Waiting for .* storage", harness.charm.model.unit.status.message)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
