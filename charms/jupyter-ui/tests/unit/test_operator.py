@@ -8,12 +8,10 @@ import copy
 import logging
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
-from re import match
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
 from lightkube.models.core_v1 import (
     Affinity,
@@ -269,9 +267,7 @@ class TestCharm:
             harness.add_storage("logos")
         else:
             harness.add_storage("config")
-
         harness.container_pebble_ready("jupyter-ui")
-
         assert harness.charm.model.unit.status == WaitingStatus(
             f'Waiting for "{missing_storage}" storage'
         )
