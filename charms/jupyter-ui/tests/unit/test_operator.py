@@ -272,10 +272,8 @@ class TestCharm:
 
         harness.container_pebble_ready("jupyter-ui")
 
-        assert isinstance(harness.charm.model.unit.status, WaitingStatus)
-        assert match(
-            f"Waiting for {missing_storage} storage",
-            harness.charm.model.unit.status.message
+        assert harness.charm.model.unit.status == WaitingStatus(
+            f'Waiting for "{missing_storage}" storage'
         )
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
