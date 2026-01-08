@@ -528,7 +528,7 @@ class JupyterUI(CharmBase):
 
         try:
             self._check_storage()
-        except ErrorWithStatus as err:
+        except CheckFailed as err:
             self.model.unit.status = err.status
             return
 
@@ -610,10 +610,10 @@ class JupyterUI(CharmBase):
 
         if not self.container.exists(config_storage_path):
             self.logger.info('Storage "config" not yet available')
-            raise ErrorWithStatus('Waiting for "config" storage', WaitingStatus)
+            raise CheckFailed('Waiting for "config" storage', WaitingStatus)
         if not self.container.exists(logos_storage_path):
             self.logger.info('Storage "logos" not yet available')
-            raise ErrorWithStatus('Waiting for "logos" storage', WaitingStatus)
+            raise CheckFailed('Waiting for "logos" storage', WaitingStatus)
 
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
