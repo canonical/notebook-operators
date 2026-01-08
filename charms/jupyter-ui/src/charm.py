@@ -526,7 +526,7 @@ class JupyterUI(CharmBase):
         if not self._is_container_ready():
             return
 
-            self._check_storage()
+        self._check_storage()
 
         # upload files to container
         self._upload_logos_files_to_container()
