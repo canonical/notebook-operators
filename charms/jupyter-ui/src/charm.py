@@ -526,7 +526,11 @@ class JupyterUI(CharmBase):
         if not self._is_container_ready():
             return
 
-        self._check_storage()
+        try:
+            self._check_storage()
+        except ErrorWithStatus as err:
+            self.model.unit.status = err.status
+            return
 
         # upload files to container
         self._upload_logos_files_to_container()
