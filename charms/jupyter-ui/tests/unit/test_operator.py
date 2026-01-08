@@ -8,10 +8,12 @@ import copy
 import logging
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path
+from re import match
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from charmed_kubeflow_chisme.exceptions import ErrorWithStatus
 from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
 from lightkube.models.core_v1 import (
     Affinity,
@@ -267,10 +269,14 @@ class TestCharm:
         else:
             harness.add_storage("config")
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-ui")
-        assert harness.charm.model.unit.status == WaitingStatus(
-            f'Waiting for "{missing_storage}" storage'
-        )
+
+        with pytest.raises(ErrorWithStatus) as exception_info:
+            harness.container_pebble_ready("jupyter-ui")
+
+            assert exception_info.value.status_type(WaitingStatus)
+            assert match("Storage .* not yet available", str(exception_info))
+            assert isinstance(harness.charm.model.unit.status, WaitingStatus)
+            assert match("Waiting for .* storage", harness.charm.model.unit.status.message)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
