@@ -264,11 +264,11 @@ class TestCharm:
     ):
         """Test no storage available scenario."""
         harness.set_leader(True)
-        harness.begin()
         if missing_storage == "config":
             harness.add_storage("logos")
         else:
             harness.add_storage("config")
+        harness.begin_with_initial_hooks()
 
         with pytest.raises(ErrorWithStatus) as exception_info:
             harness.container_pebble_ready("jupyter-ui")
