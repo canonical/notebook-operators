@@ -273,10 +273,10 @@ class TestCharm:
         with pytest.raises(ErrorWithStatus) as exception_info:
             harness.container_pebble_ready("jupyter-ui")
 
-            assert exception_info.value.status_type(WaitingStatus)
-            assert match("Storage .* not yet available", str(exception_info))
-            assert isinstance(harness.charm.model.unit.status, WaitingStatus)
-            assert match("Waiting for .* storage", harness.charm.model.unit.status.message)
+        assert exception_info.value.status_type(WaitingStatus)
+        assert match("Storage .* not yet available", str(exception_info))
+        assert isinstance(harness.charm.model.unit.status, WaitingStatus)
+        assert match("Waiting for .* storage", harness.charm.model.unit.status.message)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
