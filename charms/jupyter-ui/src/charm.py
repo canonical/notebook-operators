@@ -618,7 +618,6 @@ class JupyterUI(CharmBase):
         """Perform all required actions of the Charm."""
         try:
             self._check_leader()
-            self._check_storage()
             self._deploy_k8s_resources()
             if self._is_container_ready():
                 self._update_layer()
