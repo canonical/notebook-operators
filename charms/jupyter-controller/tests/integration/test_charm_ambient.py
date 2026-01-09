@@ -110,21 +110,8 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     await deploy_and_integrate_service_mesh_charms(
         app=APP_NAME,
         model=ops_test.model,
-        relate_to_ingress=False,
-        relate_to_beacon=False,
-    )
-
-    await ops_test.model.integrate(
-        f"istio-beacon-k8s:{SERVICE_MESH_ENDPOINT}", f"{APP_NAME}:{SERVICE_MESH_ENDPOINT}"
-    )
-
-    # Verify that the charm is blocked without gateway metadata relation
-    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="blocked", raise_on_error=True)
-
-    # add Jupyter-Controller/Istio Gateway relation
-    await ops_test.model.integrate(
-        f"istio-ingress-k8s:{GATEWAY_METADATA_ENDPOINT}",
-        f"{APP_NAME}:{GATEWAY_METADATA_ENDPOINT}",
+        relate_to_ingress_route_endpoint=False,
+        relate_to_ingress_gateway_endpoint=True,
     )
 
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=60 * 5)
@@ -138,17 +125,17 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     # Deploy kubeflow-profiles to test notebook creation in a profile namespace
     await ops_test.model.deploy(
         KUBEFLOW_PROFILES.charm,
-        channel="latest/edge",
-        revision=789,
+        channel=KUBEFLOW_PROFILES.channel,
         trust=KUBEFLOW_PROFILES.trust,
         config=KUBEFLOW_PROFILES.config,
-        base="ubuntu@24.04",
     )
     await integrate_with_service_mesh(
         app=KUBEFLOW_PROFILES.charm,
         model=ops_test.model,
-        relate_to_ingress=False,
+        relate_to_ingress_route_endpoint=False,
     )
+
+    await ops_test.model.wait_for_idle(status="active", timeout=60 * 5, raise_on_error=False)
 
     # Deploying grafana-agent-k8s and add all relations
     await deploy_and_assert_grafana_agent(
