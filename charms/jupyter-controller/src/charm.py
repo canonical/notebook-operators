@@ -94,7 +94,6 @@ class JupyterController(CharmBase):
                 policies=[
                     UnitPolicy(
                         relation="metrics-endpoint",
-                        ports=[METRICS_PORT],
                     ),
                 ],
             )
