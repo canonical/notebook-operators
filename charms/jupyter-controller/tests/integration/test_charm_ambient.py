@@ -45,7 +45,7 @@ NOTEBOOK_RESOURCE = create_namespaced_resource(
     verbs=None,
 )
 
-NOTEBOOK_NAME = yaml.safe_load(Path("examples/sample-notebook.yaml").read_text())["metadata"][
+NOTEBOOK_NAME = yaml.safe_load(Path("tests/integration/examples/sample-notebook.yaml").read_text())["metadata"][
     "name"
 ]
 
@@ -69,7 +69,7 @@ def profile(lightkube_client):
         tuple: (profilename, profile_owner) where profilename is the profile's
                metadata.name and profile_owner is the spec.owner.name value.
     """
-    profile_file = "examples/profile.yaml"
+    profile_file = "tests/integration/examples/profile.yaml"
     yaml_text = Path(profile_file).read_text()
     profile_obj = codecs.load_all_yaml(yaml_text)[0]
     profilename = profile_obj["metadata"]["name"]
@@ -194,7 +194,7 @@ async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client, prof
     """Test notebook creation."""
     profilename, _ = profile
 
-    with open("examples/sample-notebook.yaml") as f:
+    with open("tests/integration/examples/sample-notebook.yaml") as f:
         notebook = NOTEBOOK_RESOURCE(yaml.safe_load(f.read()))
         lightkube_client.create(notebook, namespace=profilename)
 

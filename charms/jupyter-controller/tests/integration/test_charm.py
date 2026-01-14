@@ -165,7 +165,7 @@ async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client):
         plural="notebooks",
         verbs=None,
     )
-    with open("examples/sample-notebook.yaml") as f:
+    with open("tests/integration/examples/sample-notebook.yaml") as f:
         notebook = notebook_resource(yaml.safe_load(f.read()))
         lightkube_client.create(notebook, namespace=ops_test.model.name)
 
