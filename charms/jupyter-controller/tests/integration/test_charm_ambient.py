@@ -45,9 +45,9 @@ NOTEBOOK_RESOURCE = create_namespaced_resource(
     verbs=None,
 )
 
-NOTEBOOK_NAME = yaml.safe_load(Path("tests/integration/examples/sample-notebook.yaml").read_text())["metadata"][
-    "name"
-]
+NOTEBOOK_NAME = yaml.safe_load(
+    Path("tests/integration/examples/sample-notebook.yaml").read_text()
+)["metadata"]["name"]
 
 SERVICE_MESH_ENDPOINT = "service-mesh"
 GATEWAY_METADATA_ENDPOINT = "gateway-metadata"
