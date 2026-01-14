@@ -164,8 +164,7 @@ class TestCharm:
         pebble_plan_info = pebble_plan.to_dict()
         assert pebble_plan_info["services"]["jupyter-controller"]["command"] == "./manager"
         test_env = pebble_plan_info["services"]["jupyter-controller"]["environment"]
-        # there should be 10 environment variables:
-        # (added USE_GATEWAY_API, K8S_GATEWAY_NAME, K8S_GATEWAY_NAMESPACE)
+        # there should be 10 environment variables
         assert 10 == len(test_env)
         assert "kubeflow/kubeflow-gateway" == test_env["ISTIO_GATEWAY"]
 
