@@ -1,4 +1,4 @@
-# Copyright 2023 Canonical Ltd.
+# Copyright 2025 Canonical Ltd.
 # See LICENSE file for licensing details.
 
 """Integration tests for Jupyter controller."""
@@ -14,18 +14,21 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_logging,
     assert_metrics_endpoint,
+    assert_path_reachable_through_ingress,
     assert_security_context,
     deploy_and_assert_grafana_agent,
+    deploy_and_integrate_service_mesh_charms,
     generate_container_securitycontext_map,
     get_alert_rules,
     get_pod_names,
+    integrate_with_service_mesh,
 )
-from charms_dependencies import ISTIO_GATEWAY, ISTIO_PILOT, JUPYTER_UI
+from charms_dependencies import JUPYTER_UI, KUBEFLOW_PROFILES
 from httpx import HTTPStatusError
-from lightkube import ApiError, Client
-from lightkube.generic_resource import create_namespaced_resource
+from lightkube import ApiError, Client, codecs
+from lightkube.generic_resource import create_global_resource, create_namespaced_resource
 from lightkube.resources.apiextensions_v1 import CustomResourceDefinition
-from lightkube.resources.core_v1 import Namespace, Service
+from lightkube.resources.core_v1 import Service
 from pytest_operator.plugin import OpsTest
 
 log = logging.getLogger(__name__)
@@ -33,48 +36,59 @@ log = logging.getLogger(__name__)
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
 CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
-ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
+
+NOTEBOOK_RESOURCE = create_namespaced_resource(
+    group="kubeflow.org",
+    version="v1",
+    kind="notebook",
+    plural="notebooks",
+    verbs=None,
+)
+
+NOTEBOOK_NAME = yaml.safe_load(
+    Path("tests/integration/examples/sample-notebook.yaml").read_text()
+)["metadata"]["name"]
+
+SERVICE_MESH_ENDPOINT = "service-mesh"
+GATEWAY_METADATA_ENDPOINT = "gateway-metadata"
 
 
 @pytest.fixture(scope="session")
 def lightkube_client() -> Client:
     """Returns lightkube Kubernetes client"""
     client = Client(field_manager=f"{APP_NAME}")
+    create_global_resource(group="kubeflow.org", version="v1", kind="Profile", plural="profiles")
     return client
 
 
+@pytest.fixture(scope="session")
+def profile(lightkube_client):
+    """Create a Profile object in cluster, cleaning it up after.
+
+    Returns:
+        tuple: (profilename, profile_owner) where profilename is the profile's
+               metadata.name and profile_owner is the spec.owner.name value.
+    """
+    profile_file = "tests/integration/examples/profile.yaml"
+    yaml_text = Path(profile_file).read_text()
+    profile_obj = codecs.load_all_yaml(yaml_text)[0]
+    profilename = profile_obj["metadata"]["name"]
+    profile_owner = profile_obj["spec"]["owner"]["name"]
+
+    lightkube_client.create(profile_obj)
+    yield profilename, profile_owner
+    lightkube_client.delete(type(profile_obj), profilename)
+
+
+@pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
-    # Deploy istio-operators first
-    await ops_test.model.deploy(
-        entity_url=ISTIO_PILOT.charm,
-        channel=ISTIO_PILOT.channel,
-        config=ISTIO_PILOT.config,
-        trust=ISTIO_PILOT.trust,
-    )
-    await ops_test.model.deploy(
-        entity_url=ISTIO_GATEWAY.charm,
-        application_name=ISTIO_GATEWAY_APP_NAME,
-        channel=ISTIO_GATEWAY.channel,
-        config=ISTIO_GATEWAY.config,
-        trust=ISTIO_GATEWAY.trust,
-    )
 
-    await ops_test.model.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY_APP_NAME)
-
-    await ops_test.model.wait_for_idle(
-        status="active",
-        raise_on_blocked=False,
-        raise_on_error=True,
-        timeout=300,
-    )
-    # Deploy jupyter-ui and relate to istio
+    # Deploy jupyter-ui
     await ops_test.model.deploy(
         JUPYTER_UI.charm, channel=JUPYTER_UI.channel, trust=JUPYTER_UI.trust
     )
-    await ops_test.model.integrate(JUPYTER_UI.charm, ISTIO_PILOT.charm)
-    await ops_test.model.wait_for_idle(apps=[JUPYTER_UI.charm], status="active", timeout=60 * 15)
 
     # Keep the option to run the integration tests locally
     # by building the charm and then deploying
@@ -91,6 +105,37 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     )
 
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
+
+    # Deploy Istio service mesh charms and integrate with Jupyter Controller
+    await deploy_and_integrate_service_mesh_charms(
+        app=APP_NAME,
+        model=ops_test.model,
+        relate_to_ingress_route_endpoint=False,
+        relate_to_ingress_gateway_endpoint=True,
+    )
+
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=60 * 5)
+
+    # Integrate Jupyter UI with service mesh
+    await integrate_with_service_mesh(
+        app=JUPYTER_UI.charm,
+        model=ops_test.model,
+    )
+
+    # Deploy kubeflow-profiles to test notebook creation in a profile namespace
+    await ops_test.model.deploy(
+        KUBEFLOW_PROFILES.charm,
+        channel=KUBEFLOW_PROFILES.channel,
+        trust=KUBEFLOW_PROFILES.trust,
+        config=KUBEFLOW_PROFILES.config,
+    )
+    await integrate_with_service_mesh(
+        app=KUBEFLOW_PROFILES.charm,
+        model=ops_test.model,
+        relate_to_ingress_route_endpoint=False,
+    )
+
+    await ops_test.model.wait_for_idle(status="active", timeout=60 * 5, raise_on_error=False)
 
     # Deploying grafana-agent-k8s and add all relations
     await deploy_and_assert_grafana_agent(
@@ -123,14 +168,6 @@ async def test_logging(ops_test):
     await assert_logging(app)
 
 
-# Helper to retry calling a function over 30 seconds for 10 attempts
-retry_for_5_attempts = tenacity.Retrying(
-    stop=(tenacity.stop_after_attempt(10) | tenacity.stop_after_delay(30)),
-    wait=tenacity.wait_exponential(multiplier=1, min=1, max=10),
-    reraise=True,
-)
-
-
 @tenacity.retry(
     wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
     stop=tenacity.stop_after_attempt(30),
@@ -153,33 +190,45 @@ def assert_replicas(client, resource_class, resource_name, namespace):
     assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
 
 
-async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client):
+async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client, profile):
     """Test notebook creation."""
-    this_ns = lightkube_client.get(res=Namespace, name=ops_test.model.name)
-    lightkube_client.patch(res=Namespace, name=this_ns.metadata.name, obj=this_ns)
+    profilename, _ = profile
 
-    notebook_resource = create_namespaced_resource(
-        group="kubeflow.org",
-        version="v1",
-        kind="notebook",
-        plural="notebooks",
-        verbs=None,
-    )
     with open("tests/integration/examples/sample-notebook.yaml") as f:
-        notebook = notebook_resource(yaml.safe_load(f.read()))
-        lightkube_client.create(notebook, namespace=ops_test.model.name)
+        notebook = NOTEBOOK_RESOURCE(yaml.safe_load(f.read()))
+        lightkube_client.create(notebook, namespace=profilename)
 
     try:
         notebook_ready = lightkube_client.get(
-            notebook_resource,
-            name="sample-notebook",
-            namespace=ops_test.model.name,
+            NOTEBOOK_RESOURCE,
+            name=NOTEBOOK_NAME,
+            namespace=profilename,
         )
     except ApiError:
         assert False
     assert notebook_ready
 
-    assert_replicas(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
+    assert_replicas(lightkube_client, NOTEBOOK_RESOURCE, NOTEBOOK_NAME, profilename)
+
+
+@tenacity.retry(
+    wait=tenacity.wait_exponential(multiplier=2, min=1, max=10),
+    stop=tenacity.stop_after_delay(60),
+    reraise=True,
+)
+async def test_notebook_reachable(ops_test: OpsTest, profile):
+    """Test notebook is reachable through the ingress.
+
+    Verify that the notebook deployed in the profile namespace is reachable
+    through the ingress.
+    This test reuses the notebook created in test_create_notebook.
+    """
+    profilename, profile_owner = profile
+    await assert_path_reachable_through_ingress(
+        http_path=f"/notebook/{profilename}/{NOTEBOOK_NAME}/lab",
+        namespace=ops_test.model.name,
+        headers={"kubeflow-userid": profile_owner},
+    )
 
 
 @pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
@@ -238,16 +287,10 @@ async def test_remove_with_resources_present(ops_test: OpsTest, lightkube_client
             assert False
 
     # verify notebook is deleted
-    notebook_resource = create_namespaced_resource(
-        group="kubeflow.org",
-        version="v1",
-        kind="notebook",
-        plural="notebooks",
-    )
     try:
         _ = lightkube_client.get(
-            notebook_resource,
-            name="sample-notebook",
+            NOTEBOOK_RESOURCE,
+            name=NOTEBOOK_NAME,
             namespace=ops_test.model.name,
         )
     except HTTPStatusError:

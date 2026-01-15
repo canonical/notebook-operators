@@ -16,8 +16,17 @@ from charm import JupyterController
 
 @pytest.fixture(scope="function")
 def harness() -> Harness:
-    """Create and return Harness for testing."""
+    """Create and return Harness for testing.
+
+    Make the harness a leader and set a model name so tests don't need to repeat this setup.
+    """
     harness = Harness(JupyterController)
+
+    # set a model name expected by the charm's service_environment
+    harness.set_model_name("kubeflow")
+
+    # make this unit a leader by default to avoid leader-guarded codepaths in tests
+    harness.set_leader(True)
 
     # setup container networking simulation
     harness.set_can_connect("jupyter-controller", True)
@@ -46,6 +55,7 @@ class TestCharm:
         harness: Harness,
     ):
         """Test that charm waits if not leader."""
+        harness.set_leader(False)
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
@@ -60,7 +70,6 @@ class TestCharm:
         harness: Harness,
     ):
         """Test charm goes to active if no additional relations exist."""
-        harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
             {
@@ -76,8 +85,6 @@ class TestCharm:
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     def test_prometheus_data_set(self, harness: Harness, mocker):
         """Test Prometheus data setting."""
-        harness.set_leader(True)
-        harness.set_model_name("test_kubeflow")
         harness.begin()
 
         rel_id = harness.add_relation("metrics-endpoint", "otherapp")
@@ -140,7 +147,6 @@ class TestCharm:
         harness: Harness,
     ):
         """Test creation of Pebble layer. Only test specific items."""
-        harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
             {
@@ -149,7 +155,6 @@ class TestCharm:
                 "password": "",
             },
         )
-        harness.set_model_name("kubeflow")
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.container.get_service("jupyter-controller").is_running()
@@ -159,8 +164,8 @@ class TestCharm:
         pebble_plan_info = pebble_plan.to_dict()
         assert pebble_plan_info["services"]["jupyter-controller"]["command"] == "./manager"
         test_env = pebble_plan_info["services"]["jupyter-controller"]["environment"]
-        # there should be 7 environment variables
-        assert 7 == len(test_env)
+        # there should be 10 environment variables
+        assert 10 == len(test_env)
         assert "kubeflow/kubeflow-gateway" == test_env["ISTIO_GATEWAY"]
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
@@ -188,7 +193,6 @@ class TestCharm:
         harness: Harness,
     ):
         """Test update status handler."""
-        harness.set_leader(True)
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
 

@@ -149,10 +149,6 @@ jobs:
           - jupyter-controller
           - jupyter-ui
         test-type: [integration, integration-ambient]
-        # TODO: Remove this exclusion once jupyter-controller integration-ambient tests are implemented
-        exclude:
-          - charm: jupyter-controller
-            test-type: integration-ambient
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
