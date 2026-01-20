@@ -12,3 +12,12 @@ ISTIO_PILOT = CharmSpec(
     trust=True,
     config={"default-gateway": "kubeflow-gateway"},
 )
+KUBEFLOW_PROFILES = CharmSpec(
+    charm="kubeflow-profiles",
+    channel="latest/edge",
+    trust=True,
+    config={
+        "service-mesh-mode": "istio-ambient",
+        "istio-gateway-principal": "cluster.local/ns/kubeflow/sa/istio-ingress-k8s-istio",
+    },
+)

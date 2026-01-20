@@ -531,6 +531,7 @@ class JupyterUI(CharmBase):
         except CheckFailed as err:
             self.model.unit.status = err.status
             return
+
         # upload files to container
         self._upload_logos_files_to_container()
 
@@ -618,9 +619,9 @@ class JupyterUI(CharmBase):
         """Perform all required actions of the Charm."""
         try:
             self._check_leader()
-            self._check_storage()
             self._deploy_k8s_resources()
             if self._is_container_ready():
+                self._check_storage()
                 self._update_layer()
                 self._update_spawner_ui_config()
                 self._check_istio_relations()
