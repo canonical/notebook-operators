@@ -14,9 +14,13 @@ from charmed_kubeflow_chisme.testing import (
     assert_alert_rules,
     assert_logging,
     assert_metrics_endpoint,
+    assert_security_context,
     deploy_and_assert_grafana_agent,
+    generate_container_securitycontext_map,
     get_alert_rules,
+    get_pod_names,
 )
+from charms_dependencies import ISTIO_GATEWAY, ISTIO_PILOT, JUPYTER_UI
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client
 from lightkube.generic_resource import create_namespaced_resource
@@ -28,18 +32,15 @@ log = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 APP_NAME = METADATA["name"]
-JUPYTER_UI = "jupyter-ui"
-JUPYTER_UI_CHANNEL = "1.10/stable"
-JUPYTER_UI_TRUST = True
-
-ISTIO_OPERATORS_CHANNEL = "1.24/stable"
-ISTIO_PILOT = "istio-pilot"
-ISTIO_PILOT_TRUST = True
-ISTIO_PILOT_CONFIG = {"default-gateway": "kubeflow-gateway"}
-ISTIO_GATEWAY = "istio-gateway"
+CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
 ISTIO_GATEWAY_APP_NAME = "istio-ingressgateway"
-ISTIO_GATEWAY_TRUST = True
-ISTIO_GATEWAY_CONFIG = {"kind": "ingress"}
+
+
+@pytest.fixture(scope="session")
+def lightkube_client() -> Client:
+    """Returns lightkube Kubernetes client"""
+    client = Client(field_manager=f"{APP_NAME}")
+    return client
 
 
 @pytest.mark.abort_on_fail
@@ -47,20 +48,20 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
     # Deploy istio-operators first
     await ops_test.model.deploy(
-        entity_url=ISTIO_PILOT,
-        channel=ISTIO_OPERATORS_CHANNEL,
-        config=ISTIO_PILOT_CONFIG,
-        trust=ISTIO_PILOT_TRUST,
+        entity_url=ISTIO_PILOT.charm,
+        channel=ISTIO_PILOT.channel,
+        config=ISTIO_PILOT.config,
+        trust=ISTIO_PILOT.trust,
     )
     await ops_test.model.deploy(
-        entity_url=ISTIO_GATEWAY,
+        entity_url=ISTIO_GATEWAY.charm,
         application_name=ISTIO_GATEWAY_APP_NAME,
-        channel=ISTIO_OPERATORS_CHANNEL,
-        config=ISTIO_GATEWAY_CONFIG,
-        trust=ISTIO_GATEWAY_TRUST,
+        channel=ISTIO_GATEWAY.channel,
+        config=ISTIO_GATEWAY.config,
+        trust=ISTIO_GATEWAY.trust,
     )
 
-    await ops_test.model.integrate(ISTIO_PILOT, ISTIO_GATEWAY_APP_NAME)
+    await ops_test.model.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY_APP_NAME)
 
     await ops_test.model.wait_for_idle(
         status="active",
@@ -69,9 +70,11 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
         timeout=300,
     )
     # Deploy jupyter-ui and relate to istio
-    await ops_test.model.deploy(JUPYTER_UI, channel=JUPYTER_UI_CHANNEL, trust=JUPYTER_UI_TRUST)
-    await ops_test.model.integrate(JUPYTER_UI, ISTIO_PILOT)
-    await ops_test.model.wait_for_idle(apps=[JUPYTER_UI], status="active", timeout=60 * 15)
+    await ops_test.model.deploy(
+        JUPYTER_UI.charm, channel=JUPYTER_UI.channel, trust=JUPYTER_UI.trust
+    )
+    await ops_test.model.integrate(JUPYTER_UI.charm, ISTIO_PILOT.charm)
+    await ops_test.model.wait_for_idle(apps=[JUPYTER_UI.charm], status="active", timeout=60 * 15)
 
     # Keep the option to run the integration tests locally
     # by building the charm and then deploying
@@ -150,9 +153,8 @@ def assert_replicas(client, resource_class, resource_name, namespace):
     assert replicas == 1, f"Waited too long for {resource_class_kind}/{resource_name}!"
 
 
-async def test_create_notebook(ops_test: OpsTest):
+async def test_create_notebook(ops_test: OpsTest, lightkube_client: Client):
     """Test notebook creation."""
-    lightkube_client = Client()
     this_ns = lightkube_client.get(res=Namespace, name=ops_test.model.name)
     lightkube_client.patch(res=Namespace, name=this_ns.metadata.name, obj=this_ns)
 
@@ -180,8 +182,30 @@ async def test_create_notebook(ops_test: OpsTest):
     assert_replicas(lightkube_client, notebook_resource, "sample-notebook", ops_test.model.name)
 
 
+@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
 @pytest.mark.abort_on_fail
-async def test_remove_with_resources_present(ops_test: OpsTest):
+async def test_container_security_context(
+    ops_test: OpsTest,
+    lightkube_client: Client,
+    container_name: str,
+):
+    """Test container security context is correctly set.
+
+    Verify that container spec defines the security context with correct
+    user ID and group ID.
+    """
+    pod_name = get_pod_names(ops_test.model.name, APP_NAME)[0]
+    assert_security_context(
+        lightkube_client,
+        pod_name,
+        container_name,
+        CONTAINERS_SECURITY_CONTEXT_MAP,
+        ops_test.model.name,
+    )
+
+
+@pytest.mark.abort_on_fail
+async def test_remove_with_resources_present(ops_test: OpsTest, lightkube_client: Client):
     """Test remove with all resources deployed.
 
     Verify that all deployed resources that need to be removed are removed.
@@ -192,7 +216,6 @@ async def test_remove_with_resources_present(ops_test: OpsTest):
     assert APP_NAME not in ops_test.model.applications
 
     # verify that all resources that were deployed are removed
-    lightkube_client = Client()
 
     # verify all CRDs in namespace are removed
     crd_list = lightkube_client.list(
