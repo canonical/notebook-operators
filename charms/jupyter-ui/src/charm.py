@@ -121,11 +121,7 @@ class JupyterUI(CharmBase):
             " - entrypoint:app"
         )
         self._container_name = "jupyter-ui"
-        self._container_meta = self.meta.containers[self._container_name]
         self._container = self.unit.get_container(self._name)
-        self._config_storage_name = "config"
-        self._logos_storage_name = "logos"
-        self._container_meta = self.meta.containers[self._container_name]
 
         # setup context to be used for updating K8S resources
         self._context = {
@@ -307,7 +303,7 @@ class JupyterUI(CharmBase):
         splits it into files as expected by the workload,
         and pushes the files to the container.
         """
-        logos_storage_path = Path(self._container_meta.mounts[self._logos_storage_name].location)
+        logos_storage_path = Path("/src/apps/default/static/assets/logos/")
         for file_name, file_content in yaml.safe_load(
             Path("src/logos-configmap.yaml").read_text()
         )["data"].items():
@@ -480,7 +476,7 @@ class JupyterUI(CharmBase):
 
     def _upload_jwa_file_to_container(self, file_content):
         """Pushes the JWA spawner config file to the workload container."""
-        config_storage_path = Path(self._container_meta.mounts[self._config_storage_name].location)
+        config_storage_path = Path("/etc/config/")
         self.container.push(
             config_storage_path / JWA_CONFIG_FILE_DST,
             file_content,
@@ -524,12 +520,6 @@ class JupyterUI(CharmBase):
     def _on_pebble_ready(self, _):
         """Configure started container."""
         if not self._is_container_ready():
-            return
-
-        try:
-            self._check_storage()
-        except CheckFailed as err:
-            self.model.unit.status = err.status
             return
 
         # upload files to container
@@ -603,25 +593,12 @@ class JupyterUI(CharmBase):
                 BlockedStatus,
             )
 
-    def _check_storage(self):
-        """Check if storage is available."""
-        config_storage_path = Path(self._container_meta.mounts[self._config_storage_name].location)
-        logos_storage_path = Path(self._container_meta.mounts[self._logos_storage_name].location)
-
-        if not self.container.exists(config_storage_path):
-            self.logger.info('Storage "config" not yet available')
-            raise CheckFailed('Waiting for "config" storage', WaitingStatus)
-        if not self.container.exists(logos_storage_path):
-            self.logger.info('Storage "logos" not yet available')
-            raise CheckFailed('Waiting for "logos" storage', WaitingStatus)
-
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
         try:
             self._check_leader()
             self._deploy_k8s_resources()
             if self._is_container_ready():
-                self._check_storage()
                 self._update_layer()
                 self._update_spawner_ui_config()
                 self._check_istio_relations()

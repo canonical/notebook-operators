@@ -154,8 +154,6 @@ class TestCharm:
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.begin_with_initial_hooks()
 
         spawner_ui_config = yaml.safe_load(
@@ -192,8 +190,6 @@ class TestCharm:
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.update_config({"gpu-number-default": num_gpus})
         harness.begin_with_initial_hooks()
 
@@ -234,8 +230,6 @@ class TestCharm:
         should be reviewed and changes to this tests should be made, if required.
         """
         with context_raised:
-            harness.add_storage("config")
-            harness.add_storage("logos")
             harness.update_config({"gpu-number-default": num_gpus})
             harness.begin_with_initial_hooks()
 
@@ -244,33 +238,9 @@ class TestCharm:
     def test_not_leader(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test not a leader scenario."""
         harness.set_leader(False)
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-ui")
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
-
-    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    @patch("charm.JupyterUI.k8s_resource_handler")
-    @pytest.mark.parametrize(
-        "missing_storage",
-        ["config", "logos"],
-        ids=["missing-config-storage", "missing-logos-storage"],
-    )
-    def test_no_storage_available(
-        self, k8s_resource_handler: MagicMock, harness: Harness, missing_storage: str
-    ):
-        """Test no storage available scenario."""
-        harness.set_leader(True)
-        if missing_storage == "config":
-            harness.add_storage("logos")
-        else:
-            harness.add_storage("config")
-        harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-ui")
-        assert harness.charm.model.unit.status == WaitingStatus(
-            f'Waiting for "{missing_storage}" storage'
-        )
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
@@ -284,8 +254,6 @@ class TestCharm:
                 "password": "",
             },
         )
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-ui")
         assert harness.charm.model.unit.status == ActiveStatus("")
@@ -311,8 +279,6 @@ class TestCharm:
             ISTIO_PILOT_APP,
             {"_supported_versions": "- v1", "data": yaml.dump(data)},
         )
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.begin_with_initial_hooks()
 
         assert isinstance(harness.charm.model.unit.status, ActiveStatus)
@@ -330,8 +296,6 @@ class TestCharm:
             },
         )
         harness.set_model_name("kubeflow")
-        harness.add_storage("config")
-        harness.add_storage("logos")
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-ui")
         assert harness.charm.container.get_service("jupyter-ui").is_running()
@@ -644,8 +608,6 @@ class TestCharm:
 
         harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
-        harness.add_storage("config")
-        harness.add_storage("logos")
         # Act
         harness.begin_with_initial_hooks()
 
