@@ -71,6 +71,8 @@ TOLERATIONS_OPTIONS_CONFIG_DEFAULT = f"{TOLERATIONS_OPTIONS_CONFIG}-default"
 DEFAULT_PODDEFAULTS_CONFIG = "default-poddefaults"
 JWA_CONFIG_FILE = "src/templates/spawner_ui_config.yaml.j2"
 JWA_CONFIG_FILE_DST = "spawner_ui_config.yaml"
+LOGOS_PATH = Path("/src/apps/default/static/assets/logos/")
+CONFIG_PATH = Path("/etc/config/")
 
 IMAGE_CONFIGS = [
     JUPYTER_IMAGES_CONFIG,
@@ -303,11 +305,10 @@ class JupyterUI(CharmBase):
         splits it into files as expected by the workload,
         and pushes the files to the container.
         """
-        logos_storage_path = Path("/src/apps/default/static/assets/logos/")
         for file_name, file_content in yaml.safe_load(
             Path("src/logos-configmap.yaml").read_text()
         )["data"].items():
-            logo_file = logos_storage_path / file_name
+            logo_file = LOGOS_PATH / file_name
             self.container.push(
                 logo_file,
                 file_content,
@@ -476,9 +477,8 @@ class JupyterUI(CharmBase):
 
     def _upload_jwa_file_to_container(self, file_content):
         """Pushes the JWA spawner config file to the workload container."""
-        config_storage_path = Path("/etc/config/")
         self.container.push(
-            config_storage_path / JWA_CONFIG_FILE_DST,
+            CONFIG_PATH / JWA_CONFIG_FILE_DST,
             file_content,
             make_dirs=True,
         )
