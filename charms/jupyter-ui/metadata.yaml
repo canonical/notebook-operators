@@ -10,16 +10,11 @@ containers:
     resource: oci-image
     uid: 584792
     gid: 584792
-    mounts:
-    - storage: config
-      location: /etc/config
-    - storage: logos
-      location: /src/apps/default/static/assets/logos/
 resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.10.0-ef1fc67
+    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.10.0-d6faf4a
 requires:
   ingress:
     interface: ingress
@@ -67,10 +62,3 @@ requires:
     interface: loki_push_api
     optional: true
 charm-user: non-root
-storage:
-  config:
-    type: filesystem
-    minimum-size: 1M
-  logos:
-    type: filesystem
-    minimum-size: 1M
