@@ -3,13 +3,18 @@ output "app_name" {
 }
 
 output "provides" {
-  value = {}
+  value = {
+    provide_cmr_mesh = "provide-cmr-mesh"
+  }
 }
 
 output "requires" {
   value = {
-    ingress         = "ingress",
-    dashboard_links = "dashboard-links",
-    logging         = "logging",
+    dashboard_links     = "dashboard-links",
+    ingress             = "ingress",
+    istio_ingress_route = "istio-ingress-route",
+    logging             = "logging",
+    require_cmr_mesh    = "require-cmr-mesh",
+    service_mesh        = "service-mesh"
   }
 }

@@ -12,6 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
 from lightkube.models.core_v1 import (
     Affinity,
     NodeAffinity,
@@ -20,13 +21,16 @@ from lightkube.models.core_v1 import (
     NodeSelectorTerm,
     Toleration,
 )
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
 from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
+
+INGRESS_ENDPOINT = "ingress"
+ISTIO_PILOT_APP = "istio-pilot"
 
 # Sample inputs for render_jwa_file tests
 JUPYTER_IMAGES_CONFIG = ["jupyterimage1", "jupyterimage2"]
@@ -119,7 +123,15 @@ def harness() -> Harness:
     # setup container networking simulation
     harness.set_can_connect("jupyter-ui", True)
 
-    return harness
+    # set model name to avoid validation errors
+    harness.set_model_name("kubeflow")
+
+    # set leader by default
+    harness.set_leader(True)
+
+    yield harness
+
+    harness.cleanup()
 
 
 class TestCharm:
@@ -142,7 +154,6 @@ class TestCharm:
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        harness.set_leader(True)
         harness.begin_with_initial_hooks()
 
         spawner_ui_config = yaml.safe_load(
@@ -179,7 +190,6 @@ class TestCharm:
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        harness.set_leader(True)
         harness.update_config({"gpu-number-default": num_gpus})
         harness.begin_with_initial_hooks()
 
@@ -219,7 +229,6 @@ class TestCharm:
         Kubeflow. This test is to validate those. If it fails, spawner_ui_config.yaml.j2
         should be reviewed and changes to this tests should be made, if required.
         """
-        harness.set_leader(True)
         with context_raised:
             harness.update_config({"gpu-number-default": num_gpus})
             harness.begin_with_initial_hooks()
@@ -228,6 +237,7 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_not_leader(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test not a leader scenario."""
+        harness.set_leader(False)
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-ui")
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
@@ -236,7 +246,6 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_no_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test no relation scenario."""
-        harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
             {
@@ -253,7 +262,6 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test charm with relation."""
-        harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
             {
@@ -262,13 +270,13 @@ class TestCharm:
                 "password": "",
             },
         )
-        rel_id = harness.add_relation("ingress", "istio-pilot")
+        rel_id = harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
 
-        harness.add_relation_unit(rel_id, "istio-pilot/0")
+        harness.add_relation_unit(rel_id, f"{ISTIO_PILOT_APP}/0")
         data = {"service-name": "service-name", "service-port": "6666"}
         harness.update_relation_data(
             rel_id,
-            "istio-pilot",
+            ISTIO_PILOT_APP,
             {"_supported_versions": "- v1", "data": yaml.dump(data)},
         )
         harness.begin_with_initial_hooks()
@@ -279,7 +287,6 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_pebble_layer(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test creation of Pebble layer. Only test specific items."""
-        harness.set_leader(True)
         harness.add_oci_resource(
             "oci-image",
             {
@@ -355,7 +362,6 @@ class TestCharm:
         if expected_config is None:
             expected_config = []
 
-        harness.set_leader(True)
         harness.begin()
         harness.update_config({config_key: expected_config_yaml})
 
@@ -401,7 +407,6 @@ class TestCharm:
         # Recast an empty input as an empty list to match the expected output
         if expected_config is None:
             expected_config = []
-        harness.set_leader(True)
         harness.begin()
         harness.update_config({config_key: config_as_yaml})
         harness.update_config({config_key + "-default": default_value})
@@ -477,7 +482,6 @@ class TestCharm:
         # Build the expected results
         expected = copy.deepcopy(render_args)
 
-        harness.set_leader(True)
         harness.begin()
 
         # Act
@@ -553,7 +557,6 @@ class TestCharm:
     def test_upload_jwa_file(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Tests uploading the jwa config file to the container with the right contents."""
         # Arrange
-        harness.set_leader(True)
         harness.begin()
         test_config = {"config": "test"}
         test_config_yaml = yaml.dump(test_config)
@@ -585,7 +588,6 @@ class TestCharm:
         """Tests that an exception is raised when Notebook images config contains invalid input."""
         # Arrange
         harness.update_config({config_key: yaml_string})
-        harness.set_leader(True)
         harness.begin()
         harness.charm.logger = MagicMock()
 
@@ -594,3 +596,23 @@ class TestCharm:
 
         # Assert
         harness.charm.logger.warning.assert_called_once()
+
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_sidecar_and_ambient_relations_added(
+        self, k8s_resource_handler: MagicMock, harness: Harness
+    ):
+        """Test the charm is in BlockedStatus when both sidecar and ambient relations are added."""
+        # Arrange
+        harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
+
+        harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
+
+        # Act
+        harness.begin_with_initial_hooks()
+
+        # Assert
+        assert isinstance(
+            harness.charm.model.unit.status,
+            BlockedStatus,
+        )

@@ -8,7 +8,6 @@ import json
 import logging
 from pathlib import Path
 
-import aiohttp
 import dpath
 import pytest
 import tenacity
@@ -16,20 +15,18 @@ import yaml
 from charmed_kubeflow_chisme.testing import (
     GRAFANA_AGENT_APP,
     assert_logging,
-    assert_security_context,
+    assert_path_reachable_through_ingress,
     deploy_and_assert_grafana_agent,
-    generate_container_securitycontext_map,
-    get_pod_names,
+    deploy_and_integrate_service_mesh_charms,
+    get_http_response,
 )
-from lightkube import Client
 from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
 CONFIG = yaml.safe_load(Path("./config.yaml").read_text())
-APP_NAME = METADATA["name"]
-CONTAINERS_SECURITY_CONTEXT_MAP = generate_container_securitycontext_map(METADATA)
+APP_NAME = "jupyter-ui"
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
 RSTUDIO_IMAGES_CONFIG = "rstudio-images"
@@ -37,7 +34,13 @@ PORT = CONFIG["options"]["port"]["default"]
 HEADERS = {
     "kubeflow-userid": "",
 }
-
+HTTP_PATH = "/jupyter/"
+EXPECTED_RESPONSE_TEXT = "Jupyter Management UI"
+RETRY_120_SECONDS = tenacity.Retrying(
+    stop=tenacity.stop_after_delay(120),
+    wait=tenacity.wait_fixed(2),
+    reraise=True,
+)
 AFFINITY_OPTIONS = [
     {
         "configKey": "test-affinity-config-1",
@@ -71,13 +74,7 @@ DEFAULT_PODDEFAULTS = [
 ]
 
 
-@pytest.fixture(scope="session")
-def lightkube_client() -> Client:
-    """Return lightkube Kubernetes client."""
-    client = Client(field_manager=f"{APP_NAME}")
-    return client
-
-
+@pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Build and deploy the charm.
@@ -110,15 +107,26 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     )
 
 
-async def fetch_response(url, headers=None):
-    """Fetch provided URL and return pair - status and text (int, string)."""
-    result_status = 0
-    result_text = ""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url, headers=headers) as response:
-            result_status = response.status
-            result_text = await response.text()
-    return result_status, str(result_text)
+@pytest.mark.abort_on_fail
+async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
+    """Deploy and integrate Istio dependencies with the application under test."""
+    await deploy_and_integrate_service_mesh_charms(
+        app=APP_NAME,
+        model=ops_test.model,
+    )
+
+
+@pytest.mark.abort_on_fail
+async def test_ui_is_accessible(ops_test: OpsTest):
+    """Verify that UI is accessible through the ingress gateway."""
+    await assert_path_reachable_through_ingress(
+        http_path=HTTP_PATH,
+        namespace=ops_test.model_name,
+        headers=HEADERS,
+        expected_status=200,
+        expected_content_type="text/html",
+        expected_response_text=EXPECTED_RESPONSE_TEXT,
+    )
 
 
 async def get_unit_address(ops_test: OpsTest):
@@ -127,22 +135,6 @@ async def get_unit_address(ops_test: OpsTest):
     jupyter_ui_units = status["applications"]["jupyter-ui"]["units"]
     jupyter_ui_url = jupyter_ui_units["jupyter-ui/0"]["address"]
     return jupyter_ui_url
-
-
-@pytest.mark.abort_on_fail
-async def test_ui_is_accessible(ops_test: OpsTest):
-    """Verify that UI is accessible."""
-    # NOTE: This test is reusing deployment created in test_build_and_deploy()
-    # NOTE: This test also tests Pebble checks since it uses the same URL.
-    jupyter_ui_url = await get_unit_address(ops_test)
-
-    # obtain status and response text from Jupyter UI URL
-    result_status, result_text = await fetch_response(f"http://{jupyter_ui_url}:{PORT}", HEADERS)
-
-    # verify that UI is accessible (NOTE: this also tests Pebble checks)
-    assert result_status == 200
-    assert len(result_text) > 0
-    assert "Jupyter Management UI" in result_text
 
 
 @pytest.mark.parametrize(
@@ -172,7 +164,7 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
                    for more information on the path syntax.
     """
     await ops_test.model.applications[APP_NAME].set_config({config_key: yaml.dump(config_value)})
-    expected_images = config_value
+    expected_config = config_value
 
     # To avoid waiting for a long idle_period between each of this series of tests, we do not use
     # wait_for_idle.  Instead we push the config and then try for 120 seconds to assert the config
@@ -184,12 +176,12 @@ async def test_notebook_configuration(ops_test: OpsTest, config_key, config_valu
         logger.info("Testing whether the config has been updated")
         with attempt:
             try:
-                response = await fetch_response(
+                _, response_text, _ = await get_http_response(
                     f"http://{jupyter_ui_url}:{PORT}/api/config", HEADERS
                 )
-                response_json = json.loads(response[1])
+                response_json = json.loads(response_text)
                 actual_config = dpath.get(response_json, yaml_path)
-                assert actual_config == expected_images
+                assert actual_config == expected_config
             except AssertionError as e:
                 logger.info("Failed assertion that config is updated - will retry")
                 raise e
@@ -199,32 +191,3 @@ async def test_logging(ops_test):
     """Test logging is defined in relation data bag."""
     app = ops_test.model.applications[GRAFANA_AGENT_APP]
     await assert_logging(app)
-
-
-@pytest.mark.parametrize("container_name", list(CONTAINERS_SECURITY_CONTEXT_MAP.keys()))
-@pytest.mark.abort_on_fail
-async def test_container_security_context(
-    ops_test: OpsTest,
-    lightkube_client: Client,
-    container_name: str,
-):
-    """Test container security context is correctly set.
-
-    Verify that container spec defines the security context with correct
-    user ID and group ID.
-    """
-    pod_name = get_pod_names(ops_test.model.name, APP_NAME)[0]
-    assert_security_context(
-        lightkube_client,
-        pod_name,
-        container_name,
-        CONTAINERS_SECURITY_CONTEXT_MAP,
-        ops_test.model.name,
-    )
-
-
-RETRY_120_SECONDS = tenacity.Retrying(
-    stop=tenacity.stop_after_delay(120),
-    wait=tenacity.wait_fixed(2),
-    reraise=True,
-)
