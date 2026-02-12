@@ -28,6 +28,7 @@ from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingSta
 from ops.pebble import ChangeError, Layer
 from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 from yaml import YAMLError
+from yaml.parser import ParserError
 
 from config_validators import (
     ConfigValidationError,
@@ -65,6 +66,10 @@ DEFAULT_WITH_OPTIONS_CONFIGS = [
     TOLERATIONS_OPTIONS_CONFIG,
     AFFINITY_OPTIONS_CONFIG,
 ]
+
+DEFAULT_JUPYTER_IMAGES_FILE = "src/default-jupyter-images.yaml"
+DEFAULT_RSTUDIO_IMAGES_FILE = "src/default-rstudio-images.yaml"
+DEFAULT_VSCODE_IMAGES_FILE = "src/default-vscode-images.yaml"
 
 
 class CheckFailed(Exception):
@@ -133,7 +138,11 @@ class JupyterUI(CharmBase):
             relation_name="dashboard-links",
             dashboard_links=[
                 DashboardLink(
-                    type="item", link="/jupyter/", text="Notebooks", icon="book", location="menu"
+                    type="item",
+                    link="/jupyter/",
+                    text="Notebooks",
+                    icon="book",
+                    location="menu",
                 )
             ],
         )
@@ -245,6 +254,44 @@ class JupyterUI(CharmBase):
             raise ErrorWithStatus("K8S resources creation failed", BlockedStatus)
         self.model.unit.status = MaintenanceStatus("K8S resources created")
 
+    def _get_images_config(self, key: str) -> OptionsWithDefault:
+        """Load, validate, render and return the config value for Notebook Images.
+
+        The config options for the notebook images will have an empty value by default.
+        Thus the default value will be read from the corresponding files with the default
+        values.
+        """
+        default_images_file = ""
+        if key == JUPYTER_IMAGES_CONFIG:
+            default_images_file = DEFAULT_JUPYTER_IMAGES_FILE
+        if key == RSTUDIO_IMAGES_CONFIG:
+            default_images_file = DEFAULT_RSTUDIO_IMAGES_FILE
+        if key == VSCODE_IMAGES_CONFIG:
+            default_images_file = DEFAULT_VSCODE_IMAGES_FILE
+
+        try:
+            images = yaml.safe_load(str(self.model.config.get(key, "")))
+            self.logger.info(f"Model config value: {self.model.config.get(key, '')}")
+        except ParserError as e:
+            self.logger.warning(f"Config value is not a yaml for {key}: {e}")
+            return OptionsWithDefault()
+
+        # Config value is not changed, need to use the default images list
+        if images is None:
+            self.logger.info(f"No images in the config {key}. Will use default values.")
+            images = yaml.safe_load(Path(default_images_file).read_text())
+
+        if not isinstance(images, list):
+            self.logger.warning(f"Config for {key} is not a yaml list: {images}")
+            return OptionsWithDefault()
+
+        # user explicitly asked for no images
+        if images == []:
+            self.logger.info(f"Config for {key} has empty list. Will not set any images")
+            return OptionsWithDefault(default="", options=[])
+
+        return OptionsWithDefault(default=images[0], options=images)
+
     def _get_from_config(self, key) -> Union[OptionsWithDefault, str]:
         """Load, validate, render, and return the config value stored in self.model.config[key].
 
@@ -253,7 +300,7 @@ class JupyterUI(CharmBase):
         invalid input.
         """
         if key in IMAGE_CONFIGS:
-            return self._get_list_config(key)
+            return self._get_images_config(key)
         elif key in DEFAULT_WITH_OPTIONS_CONFIGS:
             return self._get_options_with_default_from_config(key)
         elif key == DEFAULT_PODDEFAULTS_CONFIG:
