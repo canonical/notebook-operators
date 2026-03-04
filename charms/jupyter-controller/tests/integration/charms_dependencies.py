@@ -18,6 +18,6 @@ KUBEFLOW_PROFILES = CharmSpec(
     trust=True,
     config={
         "service-mesh-mode": "istio-ambient",
-        "istio-gateway-principal": "cluster.local/ns/kubeflow/sa/istio-ingress-k8s-istio",
+        "istio-gateway-service-account": "istio-ingress-k8s-istio",
     },
 )
