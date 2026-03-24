@@ -14,7 +14,7 @@ resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.10.0-d6faf4a
+    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.11.0-rc.0-4e6b939
 requires:
   istio-ingress-route:
     interface: istio_ingress_route
