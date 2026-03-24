@@ -17,7 +17,7 @@ resources:
     auto-fetch: true
     # TODO: Replace image with upstream image or rock
     # once https://github.com/kubeflow/notebooks/pull/628 is merged
-    upstream-source: kimwnasptd/notebook-controller:ambient2
+    upstream-source: docker.io/charmedkubeflow/notebook-controller:1.11.0-rc.0-ambient-070fab3
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
