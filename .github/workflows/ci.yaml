@@ -138,7 +138,7 @@ jobs:
       charmhub-token: ${{ secrets.CHARMCRAFT_CREDENTIALS }}
 
   integration:
-    name: Integration tests (microk8s)
+    name: Integration tests (Canonical K8s)
     needs:
       - build
     runs-on: ubuntu-24.04
@@ -150,7 +150,11 @@ jobs:
           - jupyter-ui
         test-type: [integration, integration-ambient]
     steps:
+      - name: Maximise GH runner space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be
+
       - uses: actions/checkout@v4
+
       - name: Install dependencies
         run: pipx install tox
 
