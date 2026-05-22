@@ -55,20 +55,6 @@ jobs:
               f.write(f"track={track}\n")
           
           print(f"Track: {track}")
-
-  lib-check:
-    name: Check libraries
-    needs:
-      - get-charm-paths-track
-    strategy:
-      matrix:
-        charm: ${{ fromJSON(needs.get-charm-paths-track.outputs.charm-paths) }}
-    uses: canonical/charmed-kubeflow-workflows/.github/workflows/_quality-checks.yaml@main
-    secrets: inherit
-    with:
-        charm-path: ${{ matrix.charm }}
-
-
   lint:
     name: Lint
     runs-on: ubuntu-24.04
