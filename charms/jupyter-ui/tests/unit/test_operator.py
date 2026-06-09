@@ -24,6 +24,7 @@ from lightkube.models.core_v1 import (
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
+from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
 from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
 from config_validators import ConfigValidationError, OptionsWithDefault
 
@@ -136,6 +137,31 @@ def harness() -> Harness:
 
 class TestCharm:
     """Test class for JupyterUI."""
+
+    @pytest.mark.parametrize("tls_enabled, expected_port", [(False, 80), (True, 443)])
+    @patch("charm.KubernetesServicePatch", MagicMock)
+    @patch("charm.JupyterUI.k8s_resource_handler", MagicMock)
+    @patch("charm.ServiceMeshConsumer", MagicMock)
+    @patch("charm.IstioIngressRouteRequirer")
+    def test_ambient_ingress_listener_port(
+        self,
+        mock_ingress_cls: MagicMock,
+        harness: Harness,
+        tls_enabled: bool,
+        expected_port: int,
+    ):
+        """Test that the ambient ingress listener uses the correct port based on TLS setting."""
+        mock_ingress = MagicMock()
+        mock_ingress.tls_enabled = tls_enabled
+        mock_ingress_cls.return_value = mock_ingress
+
+        harness.begin()
+
+        mock_ingress.submit_config.assert_called_once()
+        config = mock_ingress.submit_config.call_args[0][0]
+        assert len(config.listeners) == 1
+        assert config.listeners[0].port == expected_port
+        assert config.listeners[0].protocol == ProtocolType.HTTP
 
     @patch("charm.KubernetesServicePatch", MagicMock)
     @patch("charm.JupyterUI.k8s_resource_handler", MagicMock)
