@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
+from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
 from lightkube.models.core_v1 import (
     Affinity,
     NodeAffinity,
@@ -24,7 +25,6 @@ from lightkube.models.core_v1 import (
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
-from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
 from charm import DEFAULT_JUPYTER_IMAGES_FILE, JupyterUI
 from config_validators import ConfigValidationError, OptionsWithDefault
 
