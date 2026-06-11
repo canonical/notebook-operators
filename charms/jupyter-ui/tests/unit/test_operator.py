@@ -13,7 +13,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 import yaml
 from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
-from charms.istio_ingress_k8s.v0.istio_ingress_route import ProtocolType
+from charms.istio_ingress_k8s.v0.istio_ingress_route import (
+    HTTPPathMatchType,
+    IstioIngressRouteConfig,
+    ProtocolType,
+)
 from lightkube.models.core_v1 import (
     Affinity,
     NodeAffinity,
@@ -642,3 +646,50 @@ class TestCharm:
             harness.charm.model.unit.status,
             BlockedStatus,
         )
+
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_multiple_istio_ingress_route_relations_added(
+        self, k8s_resource_handler: MagicMock, harness: Harness
+    ):
+        """Test the charm handles more than one istio-ingress-route relation without erroring."""
+        # Arrange
+        harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
+        harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, f"{ISTIO_INGRESS_K8S_APP}-2")
+
+        # Act
+        harness.begin_with_initial_hooks()
+
+        # Assert
+        assert isinstance(
+            harness.charm.model.unit.status,
+            ActiveStatus,
+        )
+
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_each_istio_ingress_route_relation_receives_config(
+        self, k8s_resource_handler: MagicMock, harness: Harness
+    ):
+        """Test that an HTTPRoute config is submitted to every istio-ingress-route relation."""
+        # Arrange
+        rel_id_1 = harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
+        rel_id_2 = harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, f"{ISTIO_INGRESS_K8S_APP}-2")
+
+        # Act
+        harness.begin_with_initial_hooks()
+
+        # Assert
+        # Each relation's application databag should contain a valid config that
+        # defines the jupyter-ui HTTPRoute, proving the lib handles every ingress.
+        for rel_id in (rel_id_1, rel_id_2):
+            app_data = harness.get_relation_data(rel_id, harness.charm.app.name)
+            assert "config" in app_data
+
+            config = IstioIngressRouteConfig.model_validate_json(app_data["config"])
+            assert len(config.http_routes) == 1
+            http_route = config.http_routes[0]
+            assert http_route.matches[0].path.type == HTTPPathMatchType.PathPrefix
+            assert http_route.matches[0].path.value == "/jupyter/"
+            assert http_route.backends[0].service == harness.charm.app.name
+            assert http_route.backends[0].port == harness.charm.model.config["port"]
