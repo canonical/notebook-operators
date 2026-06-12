@@ -41,8 +41,6 @@ HEADERS = {
 HTTP_PATH = "/jupyter/"
 EXPECTED_RESPONSE_TEXT = "Jupyter Management UI"
 # A second istio-ingress-k8s instance used to verify multiple-ingress support.
-# NOTE: Juju rejects application names whose final segment is all digits (e.g.
-# "istio-ingress-k8s-2"), so the suffix must contain a letter.
 SECOND_INGRESS_APP = "istio-ingress-k8s-alt"
 INGRESS_CHANNEL = "2/stable"
 # Name of the HTTPRoute submitted by jupyter-ui (see charm._configure_ambient_ingress).
