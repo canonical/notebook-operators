@@ -218,6 +218,8 @@ class JupyterUI(CharmBase):
             ],
         )
         # Only submit config if we are a leader
+        # submit_config publishes this same config to every istio-ingress-route
+        # relation, so all related ingress providers are (re)configured at once.
         if self.unit.is_leader():
             self.ingress.submit_config(config)
 
@@ -581,11 +583,20 @@ class JupyterUI(CharmBase):
         return interfaces
 
     def _check_istio_relations(self):
-        """Check that both ambient and sidecar relations are not present simultaneously."""
-        ambient_relation = self.model.get_relation(ISTIO_INGRESS_ROUTE_RELATION)
-        sidecar_relation = self.model.get_relation(INGRESS_RELATION)
+        """Validate the charm's ingress relations are mutually exclusive.
 
-        if ambient_relation and sidecar_relation:
+        The charm supports both ambient ingress (via the '{ISTIO_INGRESS_ROUTE_RELATION}'
+        endpoint) and sidecar ingress (via the '{INGRESS_RELATION}' endpoint), but the two
+        cannot be used at the same time. Each endpoint may hold any number of relations,
+        so this inspects the full list of relations on each endpoint.
+
+        Raises:
+            CheckFailed: with BlockedStatus if relations exist on both endpoints.
+        """
+        ambient_relations = self.model.relations[ISTIO_INGRESS_ROUTE_RELATION]
+        sidecar_relations = self.model.relations[INGRESS_RELATION]
+
+        if ambient_relations and sidecar_relations:
             self.logger.error(
                 f"Both '{ISTIO_INGRESS_ROUTE_RELATION}' and '{INGRESS_RELATION}' "
                 "relations are present, remove one to unblock."
