@@ -134,8 +134,7 @@ async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
     )
 
 
-@pytest.mark.abort_on_fail
-async def test_ui_is_accessible(ops_test: OpsTest):
+async def assert_ui_is_accessible(ops_test: OpsTest):
     """Verify that UI is accessible through the ingress gateway."""
     await assert_path_reachable_through_ingress(
         http_path=HTTP_PATH,
@@ -145,6 +144,12 @@ async def test_ui_is_accessible(ops_test: OpsTest):
         expected_content_type="text/html",
         expected_response_text=EXPECTED_RESPONSE_TEXT,
     )
+
+
+@pytest.mark.abort_on_fail
+async def test_ui_is_accessible(ops_test: OpsTest):
+    """Verify that UI is accessible through the ingress gateway before the second ingress."""
+    await assert_ui_is_accessible(ops_test)
 
 
 @pytest.mark.abort_on_fail
@@ -221,6 +226,12 @@ async def test_httproute_attached_to_second_gateway(ops_test: OpsTest):
     rule = httproute.spec["rules"][0]
     assert rule["matches"][0]["path"]["value"] == HTTP_PATH
     assert rule["backendRefs"][0]["name"] == APP_NAME
+
+
+@pytest.mark.abort_on_fail
+async def test_ui_is_accessible_after_second_ingress(ops_test: OpsTest):
+    """Verify that UI is still accessible through the ingress gateway after the second ingress."""
+    await assert_ui_is_accessible(ops_test)
 
 
 async def get_unit_address(ops_test: OpsTest):

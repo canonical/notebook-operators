@@ -693,3 +693,6 @@ class TestCharm:
             assert http_route.matches[0].path.value == "/jupyter/"
             assert http_route.backends[0].service == harness.charm.app.name
             assert http_route.backends[0].port == harness.charm.model.config["port"]
+            # The route's parent (the Gateway listener referenced under parentRefs in
+            # the HTTPRouteSpec) should be the expected HTTP listener.
+            assert http_route.listener.name == "http-80"
