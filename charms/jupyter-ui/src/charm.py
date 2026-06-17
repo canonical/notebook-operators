@@ -218,6 +218,8 @@ class JupyterUI(CharmBase):
             ],
         )
         # Only submit config if we are a leader
+        # submit_config publishes this same config to every istio-ingress-route
+        # relation, so all related ingress providers are (re)configured at once.
         if self.unit.is_leader():
             self.ingress.submit_config(config)
 
