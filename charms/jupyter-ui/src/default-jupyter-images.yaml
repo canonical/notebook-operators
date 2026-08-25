@@ -2,5 +2,5 @@
 - docker.io/charmedkubeflow/jupyter-pytorch-full:v1.10.0-d7721a2
 - ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-pytorch-cuda-full:v1.10.0
 - ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-pytorch-gaudi-full:v1.10.0
-- charmedkubeflow/jupyter-tensorflow-full:1.10.0-448e378
+- docker.io/charmedkubeflow/jupyter-tensorflow-full:1.10.0-72e0617-20260728134730
 - ghcr.io/kubeflow/kubeflow/notebook-servers/jupyter-tensorflow-cuda-full:v1.10.0
