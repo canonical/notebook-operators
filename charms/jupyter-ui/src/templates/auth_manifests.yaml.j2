@@ -1,18 +1,9 @@
-# Source: manifests/apps/jupyter/jupyter-web-app/upstream/base/cluster-role.yaml
+# Source: kubeflow/community-distribution 26.10.0 applications/notebooks-v1/upstream/jupyter-web-app/base/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   name: {{ app_name }}
 rules:
-- apiGroups:
-  - ""
-  resources:
-  - namespaces
-  verbs:
-  - get
-  - list
-  - create
-  - delete
 - apiGroups:
   - "authorization.k8s.io"
   resources:
@@ -78,7 +69,7 @@ subjects:
   name: {{ app_name }}
   namespace: {{ namespace }}
 ---
-# Source: manifests/apps/jupyter/jupyter-web-app/upstream/base/cluster-role.yaml
+# Source: kubeflow/community-distribution 26.10.0 applications/notebooks-v1/upstream/jupyter-web-app/base/cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
