@@ -57,7 +57,7 @@ options:
     description: |
         The GPU vendors that are selectable by users in the New Notebook UI when creating a Notebook.
         Input is in JSON/YAML in the format defined by Kubeflow in:
-        https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+        https://github.com/kubeflow/community-distribution/blob/26.10.0/applications/notebooks-v1/upstream/jupyter-web-app/base/configs/spawner_ui_config.yaml
         Each item in the list should have keys:
         - limitsKey: the key that corresponds to the GPU vendor resource in Kubernetes
         - uiName: the name to be shown in the UI
@@ -74,7 +74,7 @@ options:
     description: |
         The Affinity configurations that are selectable by users in the New Notebook UI when creating a Notebook.
         Input is in JSON/YAML in the format defined by Kubeflow in:
-        https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+        https://github.com/kubeflow/community-distribution/blob/26.10.0/applications/notebooks-v1/upstream/jupyter-web-app/base/configs/spawner_ui_config.yaml
         Each item in the list should have keys:
         - configKey: an arbitrary key for the configuration
         - displayName: the name to be shown in the UI
@@ -92,7 +92,7 @@ options:
     description: |
       The Toleration configurations that are selectable by users in the New Notebook UI when creating a Notebook.
       Input is in JSON/YAML in the format defined by Kubeflow in:
-      https://github.com/kubeflow/kubeflow/blob/master/components/crud-web-apps/jupyter/manifests/base/configs/spawner_ui_config.yaml
+      https://github.com/kubeflow/community-distribution/blob/26.10.0/applications/notebooks-v1/upstream/jupyter-web-app/base/configs/spawner_ui_config.yaml
       Each item in the list should have keys:
       - groupKey: an arbitrary key for the configuration
       - displayName: the name to be shown in the UI

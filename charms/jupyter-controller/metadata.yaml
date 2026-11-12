@@ -8,16 +8,15 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-controller:
     resource: oci-image
-    uid: 584792
-    gid: 584792
+    uid: 1000
+    gid: 1000
 resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
     auto-fetch: true
-    # TODO: Replace image with upstream image or rock
-    # once https://github.com/kubeflow/notebooks/pull/628 is merged
-    upstream-source: docker.io/charmedkubeflow/notebook-controller:1.11.0-rc.1-ambient-8918b99-20260821094123
+    # TODO: Replace the temporary ambient-capable upstream fork image with the 1.11.1 rock.
+    upstream-source: nohaihab/notebook-controller:tmp-v1.11.1-ambient-2618bf8
 provides:
   metrics-endpoint:
     interface: prometheus_scrape
