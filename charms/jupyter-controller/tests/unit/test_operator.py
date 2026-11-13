@@ -37,13 +37,13 @@ def harness() -> Harness:
 class TestCharm:
     """Test class for JupyterController."""
 
-    @patch("charm.KubernetesServicePatch", MagicMock)
-    @patch("charm.JupyterController.k8s_resource_handler", MagicMock)
-    @patch("charm.JupyterController.crd_resource_handler", MagicMock)
-    def test_log_forwarding(self, harness: Harness):
-        with patch("charm.LogForwarder") as mock_logging:
-            harness.begin()
-            mock_logging.assert_called_once_with(charm=harness.charm)
+    @patch("charm.KubernetesServicePatch")
+    @patch("charm.LogForwarder")
+    def test_log_forwarding(
+        self, mock_logging: MagicMock, mock_service_patch: MagicMock, harness: Harness
+    ):
+        harness.begin()
+        mock_logging.assert_called_once_with(charm=harness.charm)
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
