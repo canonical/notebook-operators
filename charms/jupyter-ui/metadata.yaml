@@ -8,8 +8,8 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-ui:
     resource: oci-image
-    uid: 1000
-    gid: 1000
+    uid: 65532
+    gid: 65532
 resources:
   oci-image:
     type: oci-image
