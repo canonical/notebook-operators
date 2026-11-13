@@ -8,7 +8,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from ops.model import ActiveStatus, MaintenanceStatus, WaitingStatus
+from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.testing import Harness
 
 from charm import JupyterController
@@ -37,13 +37,13 @@ def harness() -> Harness:
 class TestCharm:
     """Test class for JupyterController."""
 
-    @patch("charm.KubernetesServicePatch", MagicMock)
-    @patch("charm.JupyterController.k8s_resource_handler", MagicMock)
-    @patch("charm.JupyterController.crd_resource_handler", MagicMock)
-    def test_log_forwarding(self, harness: Harness):
-        with patch("charm.LogForwarder") as mock_logging:
-            harness.begin()
-            mock_logging.assert_called_once_with(charm=harness.charm)
+    @patch("charm.KubernetesServicePatch")
+    @patch("charm.LogForwarder")
+    def test_log_forwarding(
+        self, mock_logging: MagicMock, mock_service_patch: MagicMock, harness: Harness
+    ):
+        harness.begin()
+        mock_logging.assert_called_once_with(charm=harness.charm)
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")
@@ -69,7 +69,7 @@ class TestCharm:
         crd_resource_handler: MagicMock,
         harness: Harness,
     ):
-        """Test charm goes to active if no additional relations exist."""
+        """Test charm blocks until the required service mesh relation is added."""
         harness.add_oci_resource(
             "oci-image",
             {
@@ -80,7 +80,49 @@ class TestCharm:
         )
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
-        assert harness.charm.model.unit.status == ActiveStatus("")
+        assert harness.charm.model.unit.status == BlockedStatus(
+            "Missing required relation: service-mesh"
+        )
+
+    @pytest.mark.parametrize("gateway_related", [False, True])
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
+    @patch("charm.JupyterController.k8s_resource_handler", MagicMock())
+    @patch("charm.JupyterController.crd_resource_handler", MagicMock())
+    def test_waiting_for_gateway(self, harness: Harness, gateway_related):
+        """Block without a gateway relation, but wait for data on an existing relation."""
+        harness.add_relation("service-mesh", "istio-beacon")
+        if gateway_related:
+            harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+        harness.begin_with_initial_hooks()
+        expected = (
+            WaitingStatus("Waiting for gateway metadata relation data")
+            if gateway_related
+            else BlockedStatus("Missing required relation: gateway-metadata")
+        )
+        assert harness.model.unit.status == expected
+        assert not harness.get_container_pebble_plan("jupyter-controller").services
+
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
+    @patch("charm.JupyterController.k8s_resource_handler", MagicMock())
+    @patch("charm.JupyterController.crd_resource_handler", MagicMock())
+    @patch("charm.ServiceMeshConsumer", MagicMock)
+    def test_service_mesh_removed(self, harness: Harness):
+        """Remain blocked after losing the mesh, including during update-status."""
+        mesh_id = harness.add_relation("service-mesh", "istio-beacon")
+        harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+        with patch("charm.GatewayMetadataRequirer.get_metadata") as get_metadata:
+            get_metadata.return_value.namespace = "kubeflow"
+            get_metadata.return_value.gateway_name = "ambient-gateway"
+            harness.begin_with_initial_hooks()
+            assert harness.model.unit.status == ActiveStatus()
+            harness.remove_relation(mesh_id)
+            assert harness.model.unit.status == BlockedStatus(
+                "Missing required relation: service-mesh"
+            )
+            harness.charm.on.update_status.emit()
+            assert harness.model.unit.status == BlockedStatus(
+                "Missing required relation: service-mesh"
+            )
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     def test_prometheus_data_set(self, harness: Harness, mocker):
@@ -155,8 +197,13 @@ class TestCharm:
                 "password": "",
             },
         )
-        harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-controller")
+        harness.add_relation("service-mesh", "istio-beacon")
+        harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+        with patch("charm.GatewayMetadataRequirer.get_metadata") as get_metadata:
+            get_metadata.return_value.namespace = "kubeflow"
+            get_metadata.return_value.gateway_name = "ambient-gateway"
+            harness.begin_with_initial_hooks()
+            harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.container.get_service("jupyter-controller").is_running()
         pebble_plan = harness.get_container_pebble_plan("jupyter-controller")
         assert pebble_plan
@@ -164,9 +211,12 @@ class TestCharm:
         pebble_plan_info = pebble_plan.to_dict()
         assert pebble_plan_info["services"]["jupyter-controller"]["command"] == "./manager"
         test_env = pebble_plan_info["services"]["jupyter-controller"]["environment"]
-        # there should be 10 environment variables
-        assert 10 == len(test_env)
-        assert "kubeflow/kubeflow-gateway" == test_env["ISTIO_GATEWAY"]
+        assert test_env["USE_ISTIO"] == "false"
+        assert test_env["EXPERIMENTAL_USE_GATEWAY_API"] == "true"
+        assert test_env["EXPERIMENTAL_K8S_GATEWAY_NAMESPACE"] == "kubeflow"
+        assert test_env["EXPERIMENTAL_K8S_GATEWAY_NAME"] == "ambient-gateway"
+        assert "ISTIO_GATEWAY" not in test_env
+        assert "ISTIO_HOST" not in test_env
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler")

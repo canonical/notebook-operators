@@ -9,42 +9,28 @@ This bundle contains Charmed Operators for Kubeflow Jupyter Notebook Controller 
 
 # Install
 
-This Jupyter bundle requires some other components of Kubeflow to be deployed,
-including istio and the kubeflow dashboard. It also currently requires some 
-manual configuration of the Kubernetes cluster. As these requirements are
-subject to change at this time, the most reliable set-up instructions are 
-contained in the `Deploy charm dependencies` section of the
-[integration workflow][integrate].
+The notebook operators require Istio ambient mesh. The bundle deploys `istio-k8s`,
+`istio-ingress-k8s`, and `istio-beacon-k8s` alongside the notebook operators and
+their Kubeflow dependencies. Deploy it into a prepared Kubernetes Juju model:
 
-Once those dependencies have been satisfied, you can deploy this Jupyter bundle
-with:
+    juju deploy ./bundle.yaml --trust
 
-    juju deploy jupyter
+The controller is blocked without `service-mesh` or `gateway-metadata`; once
+related, it waits for gateway metadata relation data. The UI is blocked without
+`service-mesh` or `istio-ingress-route`. The UI supports multiple
+ambient ingress relations.
 
 For more information, see https://juju.is/docs
 
-[integrate]: .github/workflows/integrate.yaml
+# Running Integration Tests
 
-
-# Running Bundle Tests
-
-The following instructions assume K8S cluster is configured and Juju controller
-is bootstraped.
-
-1. Install test prerequisites
-
-NOTE: Refer to `bundle-integration` section of [integration workflow][integrate]
-for up-to-date prerequisites installation steps.
+The integration suites exercise deployment and operation with Istio ambient mesh.
+With Kubernetes and a
+Juju controller prepared, run each suite in a clean model:
 
 ```bash
-sudo apt install -y firefox-geckodriver
-
+tox -e jupyter-controller-integration
+tox -e jupyter-ui-integration
 ```
 
-2. Execute tests in the `kubeflow` model:
-
-Add `kubeflow` model and execute tests:
-```bash
-juju add-model kubeflow
-tox -e integration -- --model kubeflow
-```
+See [.github/workflows/ci.yaml](.github/workflows/ci.yaml) for CI setup.
