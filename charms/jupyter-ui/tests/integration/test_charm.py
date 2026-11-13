@@ -21,10 +21,10 @@ from charmed_kubeflow_chisme.testing import (
     assert_path_reachable_through_ingress,
     assert_security_context,
     deploy_and_assert_grafana_agent,
-    deploy_and_integrate_service_mesh_charms,
     generate_container_securitycontext_map,
     get_http_response,
     get_pod_names,
+    integrate_with_service_mesh,
 )
 from lightkube.generic_resource import create_namespaced_resource
 from pytest_operator.plugin import OpsTest
@@ -126,11 +126,20 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
-    """Deploy and integrate Istio dependencies with the application under test."""
-    await deploy_and_integrate_service_mesh_charms(
+    """Deploy Istio via the Juju CLI for Ubuntu 26.04 base support, then integrate."""
+    for charm, options in (
+        ("istio-k8s", ("--config", "platform=")),
+        ("istio-ingress-k8s", ()),
+        ("istio-beacon-k8s", ("--config", "model-on-mesh=false")),
+    ):
+        await ops_test.juju(
+            "deploy", charm, "--channel", INGRESS_CHANNEL, "--trust", *options, check=True
+        )
+        await ops_test.model.wait_for_idle(apps=[charm], status="active", timeout=60 * 15)
+
+    await integrate_with_service_mesh(
         app=APP_NAME,
         model=ops_test.model,
-        channel=INGRESS_CHANNEL,
     )
     await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=60 * 10)
     await deploy_and_assert_grafana_agent(
@@ -163,11 +172,14 @@ async def test_deploy_and_relate_second_ingress(ops_test: OpsTest):
     jupyter-ui must accept more than one istio-ingress-route relation without erroring,
     so it should remain active after the second ingress is related.
     """
-    await ops_test.model.deploy(
+    await ops_test.juju(
+        "deploy",
         ISTIO_INGRESS_K8S_APP,
-        application_name=SECOND_INGRESS_APP,
-        channel=INGRESS_CHANNEL,
-        trust=True,
+        SECOND_INGRESS_APP,
+        "--channel",
+        INGRESS_CHANNEL,
+        "--trust",
+        check=True,
     )
     await ops_test.model.wait_for_idle(
         [SECOND_INGRESS_APP],

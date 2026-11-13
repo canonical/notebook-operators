@@ -17,7 +17,6 @@ from charmed_kubeflow_chisme.testing import (
     assert_path_reachable_through_ingress,
     assert_security_context,
     deploy_and_assert_grafana_agent,
-    deploy_and_integrate_service_mesh_charms,
     generate_container_securitycontext_map,
     get_alert_rules,
     get_pod_names,
@@ -83,7 +82,7 @@ def profile(lightkube_client):
 @pytest.mark.skip_if_deployed
 @pytest.mark.abort_on_fail
 async def test_build_and_deploy(ops_test: OpsTest, request):
-    """Test build and deploy."""
+    """Build and deploy, using the Juju CLI for Istio's Ubuntu 26.04 bases."""
 
     # Deploy jupyter-ui
     await ops_test.model.deploy(
@@ -106,11 +105,19 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "blocked"
 
-    # Deploy Istio service mesh charms and integrate with Jupyter Controller
-    await deploy_and_integrate_service_mesh_charms(
+    for charm, options in (
+        ("istio-k8s", ("--config", "platform=")),
+        ("istio-ingress-k8s", ()),
+        ("istio-beacon-k8s", ("--config", "model-on-mesh=false")),
+    ):
+        await ops_test.juju(
+            "deploy", charm, "--channel", "1.31/stable", "--trust", *options, check=True
+        )
+        await ops_test.model.wait_for_idle(apps=[charm], status="active", timeout=60 * 15)
+
+    await integrate_with_service_mesh(
         app=APP_NAME,
         model=ops_test.model,
-        channel="1.31/stable",
         relate_to_ingress_route_endpoint=False,
         relate_to_ingress_gateway_endpoint=True,
     )
