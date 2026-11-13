@@ -9,7 +9,7 @@ This charm is part of the Charmed Notebooks Operators bundle which is an integra
 
 # Service Mesh
 
-This release supports Istio ambient mesh only. Relate `service-mesh` to
+The charm uses Istio ambient mesh. Relate `service-mesh` to
 `istio-beacon-k8s` and `gateway-metadata` to `istio-ingress-k8s`. The charm is
 blocked if either relation is missing and waits for valid gateway metadata once
-related. It no longer falls back to sidecar Istio or a hardcoded gateway.
+related. Gateway metadata supplies the gateway name and namespace used for notebook routing.
