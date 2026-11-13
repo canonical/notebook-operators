@@ -31,46 +31,6 @@ requires:
     description: |
       Allow a cross-model application access to catalogue via the service mesh.
       This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
-  ingress:
-    interface: ingress
-    schema:
-      v2:
-        requires:
-          type: object
-          properties:
-            service:
-              type: string
-            port:
-              type: integer
-            namespace:
-              type: string
-            prefix:
-              type: string
-            rewrite:
-              type: string
-          required:
-          - service
-          - port
-          - namespace
-          - prefix
-      v1:
-        requires:
-          type: object
-          properties:
-            service:
-              type: string
-            port:
-              type: integer
-            prefix:
-              type: string
-            rewrite:
-              type: string
-          required:
-          - service
-          - port
-          - prefix
-    versions: [v1]
-    __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
   dashboard-links:
     interface: kubeflow_dashboard_links
   logging:

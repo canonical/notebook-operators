@@ -31,6 +31,11 @@ Upon applied, the module exports the following outputs:
 
 ## Usage
 
+This release requires ambient mesh integrations: connect the `service_mesh`
+endpoint to `istio-beacon-k8s` and `gateway_metadata` to `istio-ingress-k8s`.
+The application is blocked if either relation is missing and waits for gateway metadata
+once related.
+
 This module is intended to be used as part of a higher-level module. When defining one, users should ensure that Terraform is aware of the `juju_model` dependency of the charm module. There are two options to do so when creating a high-level module:
 
 ### Define a `juju_model` resource

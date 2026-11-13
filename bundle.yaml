@@ -12,26 +12,41 @@ applications:
     charm: ch:kubeflow-profiles
     channel: latest/edge
     scale: 1
+    trust: true
+    options:
+      service-mesh-mode: istio-ambient
+      istio-gateway-service-account: istio-ingress-k8s-istio
   kubeflow-dashboard:
     charm: ch:kubeflow-dashboard
     channel: latest/edge
     scale: 1
-  istio-pilot:
-    charm: ch:istio-pilot
-    channel: latest/edge
-    scale: 1
-    options:
-      default-gateway: kubeflow-gateway
-  istio-ingressgateway-operator:
-    charm: ch:istio-gateway
-    channel: latest/edge
+  istio-k8s:
+    charm: ch:istio-k8s
+    channel: 1.31/stable
     scale: 1
     trust: true
+    options:
+      platform: ""
+  istio-ingress-k8s:
+    charm: ch:istio-ingress-k8s
+    channel: 1.31/stable
+    scale: 1
+    trust: true
+  istio-beacon-k8s:
+    charm: ch:istio-beacon-k8s
+    channel: 1.31/stable
+    scale: 1
+    trust: true
+    options:
+      model-on-mesh: true
   admission-webhook:
     charm: ch:admission-webhook
     channel: latest/edge
     scale: 1
 relations:
-  - [istio-pilot:istio-pilot, istio-ingressgateway-operator:istio-pilot]
-  - [istio-pilot, jupyter-ui]
+  - [istio-beacon-k8s:service-mesh, jupyter-controller:service-mesh]
+  - [istio-ingress-k8s:gateway-metadata, jupyter-controller:gateway-metadata]
+  - [istio-beacon-k8s:service-mesh, jupyter-ui:service-mesh]
+  - [istio-ingress-k8s:istio-ingress-route, jupyter-ui:istio-ingress-route]
+  - [istio-beacon-k8s:service-mesh, kubeflow-profiles:service-mesh]
   - [kubeflow-profiles, kubeflow-dashboard]
