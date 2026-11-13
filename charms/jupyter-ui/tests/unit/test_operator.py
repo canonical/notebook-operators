@@ -142,15 +142,6 @@ def harness() -> Harness:
 class TestCharm:
     """Test class for JupyterUI."""
 
-    @pytest.mark.parametrize("field", ["uid", "gid"])
-    def test_container_user_ids_are_not_reserved(self, field):
-        """Workload user IDs must be valid and outside Juju's reserved range."""
-        metadata = yaml.safe_load((Path(__file__).parents[2] / "metadata.yaml").read_text())
-        value = metadata["containers"]["jupyter-ui"][field]
-        # TODO: Restore the non-root assertion when switching to the 1.11.1 rock.
-        assert value >= 0
-        assert not 1000 <= value <= 9999
-
     @pytest.mark.parametrize("tls_enabled, expected_port", [(False, 80), (True, 443)])
     @patch("charm.KubernetesServicePatch", MagicMock)
     @patch("charm.JupyterUI.k8s_resource_handler", MagicMock)

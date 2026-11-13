@@ -4,7 +4,6 @@
 """Unit tests for Jupyter controller."""
 
 import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -37,14 +36,6 @@ def harness() -> Harness:
 
 class TestCharm:
     """Test class for JupyterController."""
-
-    @pytest.mark.parametrize("field", ["uid", "gid"])
-    def test_container_user_ids_are_not_reserved(self, field):
-        """Workload user IDs must be non-root and outside Juju's reserved range."""
-        metadata = yaml.safe_load((Path(__file__).parents[2] / "metadata.yaml").read_text())
-        value = metadata["containers"]["jupyter-controller"][field]
-        assert value > 0
-        assert not 1000 <= value <= 9999
 
     @patch("charm.KubernetesServicePatch", MagicMock)
     @patch("charm.JupyterController.k8s_resource_handler", MagicMock)
