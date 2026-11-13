@@ -108,7 +108,7 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     for charm, options in (
         ("istio-k8s", ("--config", "platform=")),
         ("istio-ingress-k8s", ()),
-        ("istio-beacon-k8s", ("--config", "model-on-mesh=false")),
+        ("istio-beacon-k8s", ("--config", "model-on-mesh=true")),
     ):
         await ops_test.juju(
             "deploy", charm, "--channel", "1.31/stable", "--trust", *options, check=True
