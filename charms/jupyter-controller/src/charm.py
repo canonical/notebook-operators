@@ -207,7 +207,8 @@ class JupyterController(CharmBase):
         Returns:
             Tuple[str, str]: gateway namespace and name.
         Raises:
-            ErrorWithStatus: if a required ambient relation or gateway metadata is missing.
+            ErrorWithStatus: with BlockedStatus if a required ambient relation is missing, or
+                with WaitingStatus if gateway metadata has not yet been provided.
         """
         service_mesh_relation = self.model.get_relation(SERVICE_MESH_RELATION)
         ambient_gateway_relation = self.model.get_relation(AMBIENT_GATEWAY_RELATION)
