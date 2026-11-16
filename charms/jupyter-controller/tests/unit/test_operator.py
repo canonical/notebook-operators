@@ -13,6 +13,9 @@ from ops.testing import Harness
 
 from charm import JupyterController
 
+SERVICE_MESH_RELATION = "service-mesh"
+GATEWAY_METADATA_RELATION = "gateway-metadata"
+
 
 @pytest.fixture(scope="function")
 def harness() -> Harness:
@@ -81,7 +84,7 @@ class TestCharm:
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.model.unit.status == BlockedStatus(
-            "Missing required relation: service-mesh"
+            f"Missing required relation: {SERVICE_MESH_RELATION}"
         )
 
     @pytest.mark.parametrize("gateway_related", [False, True])
@@ -90,14 +93,14 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler", MagicMock())
     def test_waiting_for_gateway(self, harness: Harness, gateway_related):
         """Block without a gateway relation, but wait for data on an existing relation."""
-        harness.add_relation("service-mesh", "istio-beacon")
+        harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
         if gateway_related:
-            harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+            harness.add_relation(GATEWAY_METADATA_RELATION, "istio-ingress-k8s")
         harness.begin_with_initial_hooks()
         expected = (
             WaitingStatus("Waiting for gateway metadata relation data")
             if gateway_related
-            else BlockedStatus("Missing required relation: gateway-metadata")
+            else BlockedStatus(f"Missing required relation: {GATEWAY_METADATA_RELATION}")
         )
         assert harness.model.unit.status == expected
         assert not harness.get_container_pebble_plan("jupyter-controller").services
@@ -108,8 +111,8 @@ class TestCharm:
     @patch("charm.ServiceMeshConsumer", MagicMock)
     def test_service_mesh_removed(self, harness: Harness):
         """Remain blocked after losing the mesh, including during update-status."""
-        mesh_id = harness.add_relation("service-mesh", "istio-beacon")
-        harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+        mesh_id = harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
+        harness.add_relation(GATEWAY_METADATA_RELATION, "istio-ingress-k8s")
         with patch("charm.GatewayMetadataRequirer.get_metadata") as get_metadata:
             get_metadata.return_value.namespace = "kubeflow"
             get_metadata.return_value.gateway_name = "ambient-gateway"
@@ -117,11 +120,11 @@ class TestCharm:
             assert harness.model.unit.status == ActiveStatus()
             harness.remove_relation(mesh_id)
             assert harness.model.unit.status == BlockedStatus(
-                "Missing required relation: service-mesh"
+                f"Missing required relation: {SERVICE_MESH_RELATION}"
             )
             harness.charm.on.update_status.emit()
             assert harness.model.unit.status == BlockedStatus(
-                "Missing required relation: service-mesh"
+                f"Missing required relation: {SERVICE_MESH_RELATION}"
             )
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)

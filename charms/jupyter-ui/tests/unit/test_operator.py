@@ -34,6 +34,7 @@ from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
 
+SERVICE_MESH_RELATION = "service-mesh"
 
 # Sample inputs for render_jwa_file tests
 JUPYTER_IMAGES_CONFIG = ["jupyterimage1", "jupyterimage2"]
@@ -132,7 +133,7 @@ def harness() -> Harness:
     # set leader by default
     harness.set_leader(True)
 
-    harness.add_relation("service-mesh", "istio-beacon")
+    harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
     harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
     yield harness
@@ -278,7 +279,7 @@ class TestCharm:
     @patch("charm.JupyterUI.k8s_resource_handler")
     def test_no_relation(self, k8s_resource_handler: MagicMock, harness: Harness, container_ready):
         """Test the charm blocks without the required mesh relation."""
-        for relation in list(harness.model.relations["service-mesh"]):
+        for relation in list(harness.model.relations[SERVICE_MESH_RELATION]):
             harness.remove_relation(relation.id)
         harness.add_oci_resource(
             "oci-image",
@@ -639,7 +640,9 @@ class TestCharm:
             "Missing required relation: istio-ingress-route"
         )
 
-    @pytest.mark.parametrize("relation_name", ["service-mesh", ISTIO_INGRESS_ROUTE_ENDPOINT])
+    @pytest.mark.parametrize(
+        "relation_name", [SERVICE_MESH_RELATION, ISTIO_INGRESS_ROUTE_ENDPOINT]
+    )
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler", MagicMock())
     @patch("charm.ServiceMeshConsumer", MagicMock)
