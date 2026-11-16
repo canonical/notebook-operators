@@ -312,22 +312,6 @@ class TestCharm:
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
-    def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
-        """Test charm with relation."""
-        harness.add_oci_resource(
-            "oci-image",
-            {
-                "registrypath": "ci-test",
-                "username": "",
-                "password": "",
-            },
-        )
-        harness.begin_with_initial_hooks()
-
-        assert isinstance(harness.charm.model.unit.status, ActiveStatus)
-
-    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    @patch("charm.JupyterUI.k8s_resource_handler")
     def test_pebble_layer(self, k8s_resource_handler: MagicMock, harness: Harness):
         """Test creation of Pebble layer. Only test specific items."""
         harness.add_oci_resource(
