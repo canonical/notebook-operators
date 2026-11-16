@@ -12,7 +12,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
+from charmed_kubeflow_chisme.testing import (
+    ISTIO_BEACON_K8S_APP,
+    ISTIO_INGRESS_K8S_APP,
+    ISTIO_INGRESS_ROUTE_ENDPOINT,
+)
 from charms.istio_ingress_k8s.v0.istio_ingress_route import (
     HTTPPathMatchType,
     IstioIngressRouteConfig,
@@ -34,6 +38,7 @@ from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
 
+JUPYTER_UI_APP = "jupyter-ui"
 SERVICE_MESH_RELATION = "service-mesh"
 
 # Sample inputs for render_jwa_file tests
@@ -125,7 +130,7 @@ def harness() -> Harness:
     harness = Harness(JupyterUI)
 
     # setup container networking simulation
-    harness.set_can_connect("jupyter-ui", True)
+    harness.set_can_connect(JUPYTER_UI_APP, True)
 
     # set model name to avoid validation errors
     harness.set_model_name("kubeflow")
@@ -133,7 +138,7 @@ def harness() -> Harness:
     # set leader by default
     harness.set_leader(True)
 
-    harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
+    harness.add_relation(SERVICE_MESH_RELATION, ISTIO_BEACON_K8S_APP)
     harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
     yield harness
@@ -271,7 +276,7 @@ class TestCharm:
         """Test not a leader scenario."""
         harness.set_leader(False)
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-ui")
+        harness.container_pebble_ready(JUPYTER_UI_APP)
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
     @pytest.mark.parametrize("container_ready", [False, True])
@@ -290,7 +295,7 @@ class TestCharm:
             },
         )
         harness.begin()
-        harness.set_can_connect("jupyter-ui", container_ready)
+        harness.set_can_connect(JUPYTER_UI_APP, container_ready)
         harness.charm.on.config_changed.emit()
         assert harness.charm.model.unit.status == BlockedStatus(
             "Missing required relation: service-mesh"
@@ -301,15 +306,15 @@ class TestCharm:
     def test_container_not_ready(self, harness: Harness):
         """Do not report active before the related workload container is reachable."""
         harness.begin()
-        harness.set_can_connect("jupyter-ui", False)
+        harness.set_can_connect(JUPYTER_UI_APP, False)
         harness.charm.on.config_changed.emit()
         assert harness.model.unit.status == MaintenanceStatus(
             "Waiting for pod startup to complete"
         )
-        harness.set_can_connect("jupyter-ui", True)
+        harness.set_can_connect(JUPYTER_UI_APP, True)
         harness.charm.on.config_changed.emit()
         assert harness.model.unit.status == ActiveStatus()
-        assert harness.charm.container.get_service("jupyter-ui").is_running()
+        assert harness.charm.container.get_service(JUPYTER_UI_APP).is_running()
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
@@ -325,17 +330,17 @@ class TestCharm:
         )
         harness.set_model_name("kubeflow")
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-ui")
-        assert harness.charm.container.get_service("jupyter-ui").is_running()
-        pebble_plan = harness.get_container_pebble_plan("jupyter-ui")
+        harness.container_pebble_ready(JUPYTER_UI_APP)
+        assert harness.charm.container.get_service(JUPYTER_UI_APP).is_running()
+        pebble_plan = harness.get_container_pebble_plan(JUPYTER_UI_APP)
         assert pebble_plan
         assert pebble_plan.services
         pebble_plan_info = pebble_plan.to_dict()
         assert (
-            pebble_plan_info["services"]["jupyter-ui"]["command"]
+            pebble_plan_info["services"][JUPYTER_UI_APP]["command"]
             == "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app"
         )
-        test_env = pebble_plan_info["services"]["jupyter-ui"]["environment"]
+        test_env = pebble_plan_info["services"][JUPYTER_UI_APP]["environment"]
         # there should be 7 environment variables
         assert 7 == len(test_env)
         assert "cluster.local" == test_env["CLUSTER_DOMAIN"]

@@ -13,6 +13,9 @@ from ops.testing import Harness
 
 from charm import JupyterController
 
+JUPYTER_CONTROLLER_APP = "jupyter-controller"
+ISTIO_BEACON_K8S_APP = "istio-beacon"
+ISTIO_INGRESS_K8S_APP = "istio-ingress-k8s"
 SERVICE_MESH_RELATION = "service-mesh"
 GATEWAY_METADATA_RELATION = "gateway-metadata"
 
@@ -32,7 +35,7 @@ def harness() -> Harness:
     harness.set_leader(True)
 
     # setup container networking simulation
-    harness.set_can_connect("jupyter-controller", True)
+    harness.set_can_connect(JUPYTER_CONTROLLER_APP, True)
 
     return harness
 
@@ -60,7 +63,7 @@ class TestCharm:
         """Test that charm waits if not leader."""
         harness.set_leader(False)
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-controller")
+        harness.container_pebble_ready(JUPYTER_CONTROLLER_APP)
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
@@ -82,7 +85,7 @@ class TestCharm:
             },
         )
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-controller")
+        harness.container_pebble_ready(JUPYTER_CONTROLLER_APP)
         assert harness.charm.model.unit.status == BlockedStatus(
             f"Missing required relation: {SERVICE_MESH_RELATION}"
         )
@@ -93,9 +96,9 @@ class TestCharm:
     @patch("charm.JupyterController.crd_resource_handler", MagicMock())
     def test_waiting_for_gateway(self, harness: Harness, gateway_related):
         """Block without a gateway relation, but wait for data on an existing relation."""
-        harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
+        harness.add_relation(SERVICE_MESH_RELATION, ISTIO_BEACON_K8S_APP)
         if gateway_related:
-            harness.add_relation(GATEWAY_METADATA_RELATION, "istio-ingress-k8s")
+            harness.add_relation(GATEWAY_METADATA_RELATION, ISTIO_INGRESS_K8S_APP)
         harness.begin_with_initial_hooks()
         expected = (
             WaitingStatus("Waiting for gateway metadata relation data")
@@ -103,7 +106,7 @@ class TestCharm:
             else BlockedStatus(f"Missing required relation: {GATEWAY_METADATA_RELATION}")
         )
         assert harness.model.unit.status == expected
-        assert not harness.get_container_pebble_plan("jupyter-controller").services
+        assert not harness.get_container_pebble_plan(JUPYTER_CONTROLLER_APP).services
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     @patch("charm.JupyterController.k8s_resource_handler", MagicMock())
@@ -111,8 +114,8 @@ class TestCharm:
     @patch("charm.ServiceMeshConsumer", MagicMock)
     def test_service_mesh_removed(self, harness: Harness):
         """Remain blocked after losing the mesh, including during update-status."""
-        mesh_id = harness.add_relation(SERVICE_MESH_RELATION, "istio-beacon")
-        harness.add_relation(GATEWAY_METADATA_RELATION, "istio-ingress-k8s")
+        mesh_id = harness.add_relation(SERVICE_MESH_RELATION, ISTIO_BEACON_K8S_APP)
+        harness.add_relation(GATEWAY_METADATA_RELATION, ISTIO_INGRESS_K8S_APP)
         with patch("charm.GatewayMetadataRequirer.get_metadata") as get_metadata:
             get_metadata.return_value.namespace = "kubeflow"
             get_metadata.return_value.gateway_name = "ambient-gateway"
@@ -200,20 +203,20 @@ class TestCharm:
                 "password": "",
             },
         )
-        harness.add_relation("service-mesh", "istio-beacon")
-        harness.add_relation("gateway-metadata", "istio-ingress-k8s")
+        harness.add_relation(SERVICE_MESH_RELATION, ISTIO_BEACON_K8S_APP)
+        harness.add_relation(GATEWAY_METADATA_RELATION, ISTIO_INGRESS_K8S_APP)
         with patch("charm.GatewayMetadataRequirer.get_metadata") as get_metadata:
             get_metadata.return_value.namespace = "kubeflow"
             get_metadata.return_value.gateway_name = "ambient-gateway"
             harness.begin_with_initial_hooks()
-            harness.container_pebble_ready("jupyter-controller")
-        assert harness.charm.container.get_service("jupyter-controller").is_running()
-        pebble_plan = harness.get_container_pebble_plan("jupyter-controller")
+            harness.container_pebble_ready(JUPYTER_CONTROLLER_APP)
+        assert harness.charm.container.get_service(JUPYTER_CONTROLLER_APP).is_running()
+        pebble_plan = harness.get_container_pebble_plan(JUPYTER_CONTROLLER_APP)
         assert pebble_plan
         assert pebble_plan.services
         pebble_plan_info = pebble_plan.to_dict()
-        assert pebble_plan_info["services"]["jupyter-controller"]["command"] == "./manager"
-        test_env = pebble_plan_info["services"]["jupyter-controller"]["environment"]
+        assert pebble_plan_info["services"][JUPYTER_CONTROLLER_APP]["command"] == "./manager"
+        test_env = pebble_plan_info["services"][JUPYTER_CONTROLLER_APP]["environment"]
         assert test_env["USE_ISTIO"] == "false"
         assert test_env["EXPERIMENTAL_USE_GATEWAY_API"] == "true"
         assert test_env["EXPERIMENTAL_K8S_GATEWAY_NAMESPACE"] == "kubeflow"
@@ -247,7 +250,7 @@ class TestCharm:
     ):
         """Test update status handler."""
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready("jupyter-controller")
+        harness.container_pebble_ready(JUPYTER_CONTROLLER_APP)
 
         # test successful update status
         harness.charm.on.update_status.emit()
