@@ -127,6 +127,8 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
     """Deploy Istio via the Juju CLI for Ubuntu 26.04 base support, then integrate."""
+    # TODO: Replace this CLI workaround when migrating to Jubilant; python-libjuju used by
+    # pytest-operator does not support the Ubuntu 26.04 base used by these Istio charms.
     for charm, options in (
         ("istio-k8s", ("--config", "platform=")),
         ("istio-ingress-k8s", ()),
