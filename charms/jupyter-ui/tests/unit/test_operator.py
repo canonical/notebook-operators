@@ -306,7 +306,9 @@ class TestCharm:
             "Waiting for pod startup to complete"
         )
         harness.set_can_connect("jupyter-ui", True)
-        assert not harness.get_container_pebble_plan("jupyter-ui").services
+        harness.charm.on.config_changed.emit()
+        assert harness.model.unit.status == ActiveStatus()
+        assert harness.charm.container.get_service("jupyter-ui").is_running()
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
