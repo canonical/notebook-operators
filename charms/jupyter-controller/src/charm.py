@@ -163,9 +163,13 @@ class JupyterController(CharmBase):
             "CLUSTER_DOMAIN": config["cluster-domain"],
             "CULL_IDLE_TIME": config["cull-idle-time"],
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
+            # Disable the fork's legacy sidecar/VirtualService routing.
             "USE_ISTIO": "false",
+            # Enable the fork's ambient Gateway API HTTPRoute reconciliation.
             "EXPERIMENTAL_USE_GATEWAY_API": "true",
+            # Use the gateway name reported by the gateway-metadata relation.
             "EXPERIMENTAL_K8S_GATEWAY_NAME": k8s_gateway_name,
+            # Use the gateway namespace reported by the gateway-metadata relation.
             "EXPERIMENTAL_K8S_GATEWAY_NAMESPACE": k8s_gateway_namespace,
             "ENABLE_CULLING": config["enable-culling"],
         }
