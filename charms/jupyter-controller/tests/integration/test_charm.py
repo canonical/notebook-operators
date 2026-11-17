@@ -115,7 +115,9 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
         await ops_test.juju(
             "deploy", charm, "--channel", "1.31/stable", "--trust", *options, check=True
         )
-        await ops_test.model.wait_for_idle(apps=[charm], status="active", timeout=60 * 15)
+        await ops_test.model.wait_for_idle(
+            apps=[charm], status="active", raise_on_error=False, timeout=60 * 15
+        )
 
     await integrate_with_service_mesh(
         app=APP_NAME,

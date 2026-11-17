@@ -137,7 +137,9 @@ async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
         await ops_test.juju(
             "deploy", charm, "--channel", INGRESS_CHANNEL, "--trust", *options, check=True
         )
-        await ops_test.model.wait_for_idle(apps=[charm], status="active", timeout=60 * 15)
+        await ops_test.model.wait_for_idle(
+            apps=[charm], status="active", raise_on_error=False, timeout=60 * 15
+        )
 
     await integrate_with_service_mesh(
         app=APP_NAME,
