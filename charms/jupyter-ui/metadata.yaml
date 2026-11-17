@@ -8,16 +8,13 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-ui:
     resource: oci-image
-    # Temporary: upstream image config and asset paths require root for charm writes.
-    # TODO: Restore non-root UID/GID when switching to the 1.11.1 rock.
-    uid: 0
-    gid: 0
+    uid: 584792
+    gid: 584792
 resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    # TODO: Replace the upstream image with the 1.11.1 rock.
-    upstream-source: ghcr.io/kubeflow/notebooks/jupyter-web-app:v1.11.1
+    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.11.1-e7bfc9a-20261117084241
 requires:
   istio-ingress-route:
     interface: istio_ingress_route
