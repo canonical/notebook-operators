@@ -8,13 +8,16 @@ issues: https://github.com/canonical/notebook-operators/issues
 containers:
   jupyter-ui:
     resource: oci-image
-    uid: 584792
-    gid: 584792
+    # Temporary: upstream image config and asset paths require root for charm writes.
+    # TODO: Restore non-root UID/GID when switching to the 1.11.1 rock.
+    uid: 0
+    gid: 0
 resources:
   oci-image:
     type: oci-image
     description: 'Backing OCI image'
-    upstream-source: docker.io/charmedkubeflow/jupyter-web-app:1.11.0-rc.1-fb54354
+    # TODO: Replace the upstream image with the 1.11.1 rock.
+    upstream-source: ghcr.io/kubeflow/notebooks/jupyter-web-app:v1.11.1
 requires:
   istio-ingress-route:
     interface: istio_ingress_route
@@ -28,46 +31,6 @@ requires:
     description: |
       Allow a cross-model application access to catalogue via the service mesh.
       This relation provides additional data required by the service mesh to enforce cross-model authorization policies.
-  ingress:
-    interface: ingress
-    schema:
-      v2:
-        requires:
-          type: object
-          properties:
-            service:
-              type: string
-            port:
-              type: integer
-            namespace:
-              type: string
-            prefix:
-              type: string
-            rewrite:
-              type: string
-          required:
-          - service
-          - port
-          - namespace
-          - prefix
-      v1:
-        requires:
-          type: object
-          properties:
-            service:
-              type: string
-            port:
-              type: integer
-            prefix:
-              type: string
-            rewrite:
-              type: string
-          required:
-          - service
-          - port
-          - prefix
-    versions: [v1]
-    __schema_source: https://raw.githubusercontent.com/canonical/operator-schemas/master/ingress.yaml
   dashboard-links:
     interface: kubeflow_dashboard_links
   logging:

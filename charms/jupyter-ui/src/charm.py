@@ -42,7 +42,6 @@ from ops import main
 from ops.charm import CharmBase
 from ops.model import ActiveStatus, BlockedStatus, MaintenanceStatus, WaitingStatus
 from ops.pebble import ChangeError, Layer
-from serialized_data_interface import NoCompatibleVersions, NoVersionsListed, get_interfaces
 from yaml import YAMLError
 from yaml.parser import ParserError
 
@@ -56,7 +55,7 @@ from config_validators import (
 K8S_RESOURCE_FILES = [
     "src/templates/auth_manifests.yaml.j2",
 ]
-INGRESS_RELATION = "ingress"
+SERVICE_MESH_RELATION = "service-mesh"
 ISTIO_INGRESS_ROUTE_RELATION = "istio-ingress-route"
 JUPYTER_IMAGES_CONFIG = "jupyter-images"
 VSCODE_IMAGES_CONFIG = "vscode-images"
@@ -152,8 +151,10 @@ class JupyterUI(CharmBase):
             self.on.leader_elected,
             self.on.upgrade_charm,
             self.on.config_changed,
-            self.on[INGRESS_RELATION].relation_changed,
+            self.on[SERVICE_MESH_RELATION].relation_changed,
+            self.on[SERVICE_MESH_RELATION].relation_broken,
             self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_changed,
+            self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_broken,
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.jupyter_ui_pebble_ready, self._on_pebble_ready)
@@ -544,17 +545,6 @@ class JupyterUI(CharmBase):
             raise e
         self.unit.status = MaintenanceStatus("K8S resources removed")
 
-    def _configure_mesh(self, interfaces):
-        if interfaces[INGRESS_RELATION]:
-            interfaces[INGRESS_RELATION].send_data(
-                {
-                    "prefix": self.model.config["url-prefix"] + "/",
-                    "rewrite": "/",
-                    "service": self.model.app.name,
-                    "port": self.model.config["port"],
-                }
-            )
-
     def _is_container_ready(self):
         """Check if connection can be made with container.
 
@@ -573,51 +563,22 @@ class JupyterUI(CharmBase):
             self.logger.info("Not a leader")
             raise CheckFailed("Waiting for leadership", WaitingStatus)
 
-    def _get_interfaces(self):
-        try:
-            interfaces = get_interfaces(self)
-        except NoVersionsListed as err:
-            raise CheckFailed(str(err), WaitingStatus)
-        except NoCompatibleVersions as err:
-            raise CheckFailed(str(err), BlockedStatus)
-        return interfaces
-
-    def _check_istio_relations(self):
-        """Validate the charm's ingress relations are mutually exclusive.
-
-        The charm supports both ambient ingress (via the '{ISTIO_INGRESS_ROUTE_RELATION}'
-        endpoint) and sidecar ingress (via the '{INGRESS_RELATION}' endpoint), but the two
-        cannot be used at the same time. Each endpoint may hold any number of relations,
-        so this inspects the full list of relations on each endpoint.
-
-        Raises:
-            CheckFailed: with BlockedStatus if relations exist on both endpoints.
-        """
-        ambient_relations = self.model.relations[ISTIO_INGRESS_ROUTE_RELATION]
-        sidecar_relations = self.model.relations[INGRESS_RELATION]
-
-        if ambient_relations and sidecar_relations:
-            self.logger.error(
-                f"Both '{ISTIO_INGRESS_ROUTE_RELATION}' and '{INGRESS_RELATION}' "
-                "relations are present, remove one to unblock."
-            )
-            raise CheckFailed(
-                f"Cannot have both '{ISTIO_INGRESS_ROUTE_RELATION}' and '{INGRESS_RELATION}' "
-                "relations at the same time.",
-                BlockedStatus,
-            )
+    def _check_required_relations(self):
+        """Block until the required ambient mesh and ingress relations are added."""
+        for relation_name in (SERVICE_MESH_RELATION, ISTIO_INGRESS_ROUTE_RELATION):
+            if not self.model.relations[relation_name]:
+                raise CheckFailed(f"Missing required relation: {relation_name}", BlockedStatus)
 
     def main(self, _) -> None:
         """Perform all required actions of the Charm."""
         try:
             self._check_leader()
+            self._check_required_relations()
             self._deploy_k8s_resources()
-            if self._is_container_ready():
-                self._update_layer()
-                self._update_spawner_ui_config()
-                self._check_istio_relations()
-                interfaces = self._get_interfaces()
-                self._configure_mesh(interfaces)
+            if not self._is_container_ready():
+                return
+            self._update_layer()
+            self._update_spawner_ui_config()
         except CheckFailed as err:
             self.model.unit.status = err.status
             return

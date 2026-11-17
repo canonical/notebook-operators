@@ -11,7 +11,6 @@ output "provides" {
 output "requires" {
   value = {
     dashboard_links     = "dashboard-links",
-    ingress             = "ingress",
     istio_ingress_route = "istio-ingress-route",
     logging             = "logging",
     require_cmr_mesh    = "require-cmr-mesh",
