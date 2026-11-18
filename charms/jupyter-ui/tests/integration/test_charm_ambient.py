@@ -20,8 +20,8 @@ from charmed_kubeflow_chisme.testing import (
     assert_logging,
     assert_path_reachable_through_ingress,
     deploy_and_assert_grafana_agent,
-    deploy_and_integrate_service_mesh_charms,
     get_http_response,
+    integrate_with_service_mesh,
 )
 from lightkube.generic_resource import create_namespaced_resource
 from pytest_operator.plugin import OpsTest
@@ -128,10 +128,25 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 @pytest.mark.abort_on_fail
 async def test_deploy_and_relate_dependencies(ops_test: OpsTest):
     """Deploy and integrate Istio dependencies with the application under test."""
-    await deploy_and_integrate_service_mesh_charms(
+    # TODO: Replace this CLI workaround when migrating to Jubilant; python-libjuju used by
+    # pytest-operator does not support the Ubuntu 26.04 base used by these Istio charms.
+    for charm, options in (
+        ("istio-k8s", ("--config", "platform=")),
+        ("istio-ingress-k8s", ()),
+        ("istio-beacon-k8s", ("--config", "model-on-mesh=false")),
+    ):
+        await ops_test.juju(
+            "deploy", charm, "--channel", INGRESS_CHANNEL, "--trust", *options, check=True
+        )
+        await ops_test.model.wait_for_idle(
+            apps=[charm], status="active", raise_on_error=False, timeout=60 * 15
+        )
+
+    await integrate_with_service_mesh(
         app=APP_NAME,
         model=ops_test.model,
     )
+    await ops_test.model.wait_for_idle(apps=[APP_NAME], status="active", timeout=60 * 10)
 
 
 async def assert_ui_is_accessible(ops_test: OpsTest):
