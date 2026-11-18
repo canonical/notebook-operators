@@ -22,7 +22,7 @@ from charmed_kubeflow_chisme.testing import (
     get_pod_names,
     integrate_with_service_mesh,
 )
-from charms_dependencies import JUPYTER_UI, KUBEFLOW_PROFILES
+from charms_dependencies import JUPYTER_UI_APP_NAME, KUBEFLOW_PROFILES, deploy_jupyter_ui
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client, codecs
 from lightkube.generic_resource import create_global_resource, create_namespaced_resource
@@ -84,10 +84,7 @@ def profile(lightkube_client):
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
 
-    # Deploy jupyter-ui
-    await ops_test.model.deploy(
-        JUPYTER_UI.charm, channel=JUPYTER_UI.channel, trust=JUPYTER_UI.trust
-    )
+    await deploy_jupyter_ui(ops_test, request.config.getoption("--jupyter-ui-charm-path"))
 
     # Keep the option to run the integration tests locally
     # by building the charm and then deploying
@@ -131,7 +128,7 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 
     # Integrate Jupyter UI with service mesh
     await integrate_with_service_mesh(
-        app=JUPYTER_UI.charm,
+        app=JUPYTER_UI_APP_NAME,
         model=ops_test.model,
     )
 

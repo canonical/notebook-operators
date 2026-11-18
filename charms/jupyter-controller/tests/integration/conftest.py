@@ -19,5 +19,9 @@ def pytest_addoption(parser: Parser):
     """
     parser.addoption(
         "--charm-path",
-        help="Path to directory where charm files are stored.",
+        help="Path to the packed Jupyter Controller charm file.",
+    )
+    parser.addoption(
+        "--jupyter-ui-charm-path",
+        help="Path to the packed Jupyter UI charm file. If omitted, build it from the checkout.",
     )

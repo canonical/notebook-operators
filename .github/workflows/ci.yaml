@@ -160,9 +160,20 @@ jobs:
           merge-multiple: true
 
       - name: Integration tests
+        env:
+          CHARM: ${{ matrix.charm }}
+          TEST_TYPE: ${{ matrix.test-type }}
         run: |
+          charm_path="$GITHUB_WORKSPACE/charms/$CHARM/${CHARM}_ubuntu@24.04-amd64.charm"
+          charm_args=("--charm-path=$charm_path")
+          if [[ "$CHARM" == jupyter-controller ]]; then
+            charm_args+=("--jupyter-ui-charm-path=$GITHUB_WORKSPACE/charms/jupyter-ui/jupyter-ui_ubuntu@24.04-amd64.charm")
+          fi
+          for arg in "${charm_args[@]}"; do
+            if [[ ! -f "${arg#*=}" ]]; then
+              echo "Missing built charm: ${arg#*=}" >&2
+              exit 1
+            fi
+          done
           juju add-model kubeflow
-          # Pass the path where the charm artefact is downloaded to the tox command
-          # FIXME: Right now the complete path is half hardcoded to <charm name>_ubuntu@24.04-amd64.charm
-          # We need to find a better way to dynamically get this value
-          tox -e ${{ matrix.charm }}-${{ matrix.test-type }} -- --model kubeflow --charm-path=${{ github.workspace }}/charms/${{ matrix.charm }}/${{ matrix.charm }}_ubuntu@24.04-amd64.charm
+          tox -e "$CHARM-$TEST_TYPE" -- --model kubeflow "${charm_args[@]}"
