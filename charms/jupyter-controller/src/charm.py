@@ -105,7 +105,7 @@ class JupyterController(CharmBase):
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
         self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
-        for rel in self.model.relations.keys():
+        for rel in self.meta.relations.keys():
             self.framework.observe(self.on[rel].relation_changed, self._on_event)
 
         # setup events to be handled by specific event handlers
@@ -162,9 +162,19 @@ class JupyterController(CharmBase):
             "CLUSTER_DOMAIN": config["cluster-domain"],
             "CULL_IDLE_TIME": config["cull-idle-time"],
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
+<<<<<<< HEAD
             "USE_ISTIO": str(self._use_sidecar).lower(),
             "EXPERIMENTAL_USE_GATEWAY_API": str(self._use_gateway_api).lower(),
             "EXPERIMENTAL_K8S_GATEWAY_NAME": k8s_gateway_name,
+=======
+            # True for sidecar/VirtualService routing; false for ambient Gateway API routing.
+            "USE_ISTIO": str(self._use_sidecar).lower(),
+            # True for ambient Gateway API routing; false for sidecar/VirtualService routing.
+            "EXPERIMENTAL_USE_GATEWAY_API": str(self._use_gateway_api).lower(),
+            # Ambient gateway name from metadata.
+            "EXPERIMENTAL_K8S_GATEWAY_NAME": k8s_gateway_name,
+            # Ambient gateway namespace from metadata.
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
             "EXPERIMENTAL_K8S_GATEWAY_NAMESPACE": k8s_gateway_namespace,
             "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
             "ISTIO_HOST": "*",

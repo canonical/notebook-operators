@@ -17,13 +17,20 @@ from charmed_kubeflow_chisme.testing import (
     assert_path_reachable_through_ingress,
     assert_security_context,
     deploy_and_assert_grafana_agent,
+<<<<<<< HEAD
     deploy_and_integrate_service_mesh_charms,
+=======
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
     generate_container_securitycontext_map,
     get_alert_rules,
     get_pod_names,
     integrate_with_service_mesh,
 )
+<<<<<<< HEAD
 from charms_dependencies import JUPYTER_UI, KUBEFLOW_PROFILES
+=======
+from charms_dependencies import JUPYTER_UI_APP_NAME, KUBEFLOW_PROFILES, deploy_jupyter_ui
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client, codecs
 from lightkube.generic_resource import create_global_resource, create_namespaced_resource
@@ -85,10 +92,14 @@ def profile(lightkube_client):
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
 
+<<<<<<< HEAD
     # Deploy jupyter-ui
     await ops_test.model.deploy(
         JUPYTER_UI.charm, channel=JUPYTER_UI.channel, trust=JUPYTER_UI.trust
     )
+=======
+    await deploy_jupyter_ui(ops_test, request.config.getoption("--jupyter-ui-charm-path"))
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
 
     # Keep the option to run the integration tests locally
     # by building the charm and then deploying
@@ -107,7 +118,25 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
     assert ops_test.model.applications[APP_NAME].units[0].workload_status == "active"
 
     # Deploy Istio service mesh charms and integrate with Jupyter Controller
+<<<<<<< HEAD
     await deploy_and_integrate_service_mesh_charms(
+=======
+    # TODO: Replace this CLI workaround when migrating to Jubilant; python-libjuju used by
+    # pytest-operator does not support the Ubuntu 26.04 base used by these Istio charms.
+    for charm, options in (
+        ("istio-k8s", ("--config", "platform=")),
+        ("istio-ingress-k8s", ()),
+        ("istio-beacon-k8s", ("--config", "model-on-mesh=true")),
+    ):
+        await ops_test.juju(
+            "deploy", charm, "--channel", "1.31/stable", "--trust", *options, check=True
+        )
+        await ops_test.model.wait_for_idle(
+            apps=[charm], status="active", raise_on_error=False, timeout=60 * 15
+        )
+
+    await integrate_with_service_mesh(
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
         app=APP_NAME,
         model=ops_test.model,
         relate_to_ingress_route_endpoint=False,
@@ -118,7 +147,11 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
 
     # Integrate Jupyter UI with service mesh
     await integrate_with_service_mesh(
+<<<<<<< HEAD
         app=JUPYTER_UI.charm,
+=======
+        app=JUPYTER_UI_APP_NAME,
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
         model=ops_test.model,
     )
 

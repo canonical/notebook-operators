@@ -1,14 +1,18 @@
 # Charmed Jupyter Notebook Operators
 
-[![Charmed Jupyter](https://charmhub.io/jupyter/badge.svg)](https://charmhub.io/jupyter)
+[![Charmed Jupyter Controller](https://charmhub.io/jupyter-controller/badge.svg)](https://charmhub.io/jupyter-controller)
+[![Charmed Jupyter UI](https://charmhub.io/jupyter-ui/badge.svg)](https://charmhub.io/jupyter-ui)
 
 
 # Description
 
-This bundle contains Charmed Operators for Kubeflow Jupyter Notebook Controller and Kubeflow Jupyter UI web application (see [CharmHub](https://charmhub.io/?q=jupyter)).
+This repository contains the [Jupyter Controller](./charms/jupyter-controller) and
+[Jupyter UI](./charms/jupyter-ui) charms, which are part of
+[Charmed Kubeflow](https://charmhub.io/kubeflow).
 
 # Install
 
+<<<<<<< HEAD
 This Jupyter bundle requires some other components of Kubeflow to be deployed,
 including istio and the kubeflow dashboard. It also currently requires some 
 manual configuration of the Kubernetes cluster. As these requirements are
@@ -48,3 +52,14 @@ Add `kubeflow` model and execute tests:
 juju add-model kubeflow
 tox -e integration -- --model kubeflow
 ```
+=======
+Integration tests run per charm. See the `integration` job in the
+[CI workflow](./.github/workflows/ci.yaml) for runner setup and commands for both
+Istio sidecar and ambient modes.
+
+CI deploys packed charms from the same build, including the Jupyter UI dependency
+in the controller tests. For local runs, pass `--charm-path` after tox's `--` to
+use a prebuilt charm, and pass `--jupyter-ui-charm-path` to supply the UI artifact
+to the controller tests. If you omit either path, the tests build the corresponding
+charm from the local checkout.
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))

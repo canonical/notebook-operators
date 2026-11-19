@@ -25,7 +25,11 @@ To add/update/remove any dependencies and/or to upgrade Python, simply:
 
 ### Running `tox` Environments
 
+<<<<<<< HEAD
 To run `tox` environments, either locally for development or in CI workflows for testing, ensure to have `tox` installed first and then simply run your `tox` environments natively (e.g.: `tox -e lint`). `tox` will internally first install `poetry` and then rely on it to install and run its environments.
+=======
+From the repository root, prefix the environment name with the charm name (e.g. `tox -e jupyter-controller-lint`). To run an environment directly, use the charm directory (e.g. `tox -e lint` from `charms/jupyter-controller`). `tox` installs `poetry` and uses it to install the environment's dependencies.
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
 
 
 ### Running Python Environments

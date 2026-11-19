@@ -645,7 +645,43 @@ class TestCharm:
         assert isinstance(
             harness.charm.model.unit.status,
             BlockedStatus,
+<<<<<<< HEAD
+=======
         )
+
+    @pytest.mark.parametrize("relation_endpoint", [INGRESS_ENDPOINT, ISTIO_INGRESS_ROUTE_ENDPOINT])
+    @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_ingress_relation_broken(
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        relation_endpoint: str,
+    ):
+        """Test breaking either ingress relation reruns validation."""
+        sidecar_relation_id = harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
+        harness.add_relation_unit(sidecar_relation_id, f"{ISTIO_PILOT_APP}/0")
+        harness.update_relation_data(
+            sidecar_relation_id,
+            ISTIO_PILOT_APP,
+            {
+                "_supported_versions": "- v1",
+                "data": yaml.dump({"service-name": "service-name", "service-port": "6666"}),
+            },
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
+        )
+        relation_ids = {
+            INGRESS_ENDPOINT: sidecar_relation_id,
+            ISTIO_INGRESS_ROUTE_ENDPOINT: harness.add_relation(
+                ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP
+            ),
+        }
+        harness.begin_with_initial_hooks()
+        assert isinstance(harness.charm.model.unit.status, BlockedStatus)
+
+        harness.remove_relation(relation_ids[relation_endpoint])
+
+        assert harness.charm.model.unit.status == ActiveStatus("")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")

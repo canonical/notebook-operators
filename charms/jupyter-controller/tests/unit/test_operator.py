@@ -81,6 +81,30 @@ class TestCharm:
         harness.begin_with_initial_hooks()
         harness.container_pebble_ready("jupyter-controller")
         assert harness.charm.model.unit.status == ActiveStatus("")
+<<<<<<< HEAD
+=======
+
+    @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
+    @patch("charm.JupyterController.k8s_resource_handler")
+    @patch("charm.JupyterController.crd_resource_handler")
+    @patch("charm.ServiceMeshConsumer", lambda *_, **__: None)
+    def test_service_mesh_relation_broken(
+        self,
+        k8s_resource_handler: MagicMock,
+        crd_resource_handler: MagicMock,
+        harness: Harness,
+    ):
+        """Test the charm recovers when the service-mesh relation is broken."""
+        relation_id = harness.add_relation("service-mesh", "istio-pilot")
+        harness.begin_with_initial_hooks()
+        harness.container_pebble_ready("jupyter-controller")
+
+        assert isinstance(harness.charm.model.unit.status, BlockedStatus)
+
+        harness.remove_relation(relation_id)
+
+        assert harness.charm.model.unit.status == ActiveStatus("")
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
 
     @patch("charm.KubernetesServicePatch", lambda *_, **__: None)
     def test_prometheus_data_set(self, harness: Harness, mocker):

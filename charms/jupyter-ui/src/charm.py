@@ -153,6 +153,10 @@ class JupyterUI(CharmBase):
             self.on.upgrade_charm,
             self.on.config_changed,
             self.on[INGRESS_RELATION].relation_changed,
+<<<<<<< HEAD
+=======
+            self.on[INGRESS_RELATION].relation_broken,
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
             self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_changed,
         ]:
             self.framework.observe(event, self.main)
