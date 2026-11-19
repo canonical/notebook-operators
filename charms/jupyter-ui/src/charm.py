@@ -153,7 +153,9 @@ class JupyterUI(CharmBase):
             self.on.upgrade_charm,
             self.on.config_changed,
             self.on[INGRESS_RELATION].relation_changed,
+            self.on[INGRESS_RELATION].relation_broken,
             self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_changed,
+            self.on[ISTIO_INGRESS_ROUTE_RELATION].relation_broken,
         ]:
             self.framework.observe(event, self.main)
         self.framework.observe(self.on.jupyter_ui_pebble_ready, self._on_pebble_ready)

@@ -105,8 +105,9 @@ class JupyterController(CharmBase):
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
         self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
-        for rel in self.model.relations.keys():
+        for rel in self.meta.relations.keys():
             self.framework.observe(self.on[rel].relation_changed, self._on_event)
+            self.framework.observe(self.on[rel].relation_broken, self._on_event)
 
         # setup events to be handled by specific event handlers
         self.framework.observe(self.on.install, self._on_install)
