@@ -20,7 +20,11 @@ from charmed_kubeflow_chisme.testing import (
     get_alert_rules,
     get_pod_names,
 )
+<<<<<<< HEAD
 from charms_dependencies import ISTIO_GATEWAY, ISTIO_PILOT, JUPYTER_UI
+=======
+from charms_dependencies import ISTIO_GATEWAY, ISTIO_PILOT, JUPYTER_UI_APP_NAME, deploy_jupyter_ui
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
 from httpx import HTTPStatusError
 from lightkube import ApiError, Client
 from lightkube.generic_resource import create_namespaced_resource
@@ -47,6 +51,7 @@ def lightkube_client() -> Client:
 async def test_build_and_deploy(ops_test: OpsTest, request):
     """Test build and deploy."""
     # Deploy istio-operators first
+<<<<<<< HEAD
     await ops_test.model.deploy(
         entity_url=ISTIO_PILOT.charm,
         channel=ISTIO_PILOT.channel,
@@ -70,8 +75,35 @@ async def test_build_and_deploy(ops_test: OpsTest, request):
         timeout=300,
     )
     # Deploy jupyter-ui and relate to istio
+=======
+>>>>>>> 3ee4d2a (fix: keep istio sidecar support  (#652))
     await ops_test.model.deploy(
-        JUPYTER_UI.charm, channel=JUPYTER_UI.channel, trust=JUPYTER_UI.trust
+        entity_url=ISTIO_PILOT.charm,
+        channel=ISTIO_PILOT.channel,
+        config=ISTIO_PILOT.config,
+        trust=ISTIO_PILOT.trust,
+    )
+    await ops_test.model.deploy(
+        entity_url=ISTIO_GATEWAY.charm,
+        application_name=ISTIO_GATEWAY_APP_NAME,
+        channel=ISTIO_GATEWAY.channel,
+        config=ISTIO_GATEWAY.config,
+        trust=ISTIO_GATEWAY.trust,
+    )
+
+    await ops_test.model.integrate(ISTIO_PILOT.charm, ISTIO_GATEWAY_APP_NAME)
+
+    await ops_test.model.wait_for_idle(
+        status="active",
+        raise_on_blocked=False,
+        raise_on_error=True,
+        timeout=300,
+    )
+    # Deploy jupyter-ui and relate to istio
+    await deploy_jupyter_ui(ops_test, request.config.getoption("--jupyter-ui-charm-path"))
+    await ops_test.model.integrate(JUPYTER_UI_APP_NAME, ISTIO_PILOT.charm)
+    await ops_test.model.wait_for_idle(
+        apps=[JUPYTER_UI_APP_NAME], status="active", timeout=60 * 15
     )
     await ops_test.model.integrate(JUPYTER_UI.charm, ISTIO_PILOT.charm)
     await ops_test.model.wait_for_idle(apps=[JUPYTER_UI.charm], status="active", timeout=60 * 15)
