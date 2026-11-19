@@ -105,7 +105,7 @@ class JupyterController(CharmBase):
         # setup events to be handled by main event handler
         self.framework.observe(self.on.config_changed, self._on_event)
         self.framework.observe(self.on.jupyter_controller_pebble_ready, self._on_event)
-        for rel in self.model.relations.keys():
+        for rel in self.meta.relations.keys():
             self.framework.observe(self.on[rel].relation_changed, self._on_event)
             self.framework.observe(self.on[rel].relation_broken, self._on_event)
 
@@ -163,14 +163,16 @@ class JupyterController(CharmBase):
             "CLUSTER_DOMAIN": config["cluster-domain"],
             "CULL_IDLE_TIME": config["cull-idle-time"],
             "IDLENESS_CHECK_PERIOD": config["idleness-check-period"],
-            # Disable the fork's legacy sidecar/VirtualService routing.
-            "USE_ISTIO": "false",
-            # Enable the fork's ambient Gateway API HTTPRoute reconciliation.
-            "EXPERIMENTAL_USE_GATEWAY_API": "true",
-            # Use the gateway name reported by the gateway-metadata relation.
+            # True for sidecar/VirtualService routing; false for ambient Gateway API routing.
+            "USE_ISTIO": str(self._use_sidecar).lower(),
+            # True for ambient Gateway API routing; false for sidecar/VirtualService routing.
+            "EXPERIMENTAL_USE_GATEWAY_API": str(self._use_gateway_api).lower(),
+            # Ambient gateway name from metadata.
             "EXPERIMENTAL_K8S_GATEWAY_NAME": k8s_gateway_name,
-            # Use the gateway namespace reported by the gateway-metadata relation.
+            # Ambient gateway namespace from metadata.
             "EXPERIMENTAL_K8S_GATEWAY_NAMESPACE": k8s_gateway_namespace,
+            "ISTIO_GATEWAY": f"{self.model.name}/kubeflow-gateway",
+            "ISTIO_HOST": "*",
             "ENABLE_CULLING": config["enable-culling"],
         }
 
@@ -211,19 +213,20 @@ class JupyterController(CharmBase):
         Returns:
             Tuple[str, str]: gateway namespace and name.
         Raises:
-            ErrorWithStatus: with BlockedStatus if a required ambient relation is missing, or
-                with WaitingStatus if gateway metadata has not yet been provided.
+            ErrorWithStatus: if service mesh relation is present without gateway metadata relation,
+                             or if gateway metadata relation data is not yet available.
         """
         service_mesh_relation = self.model.get_relation(SERVICE_MESH_RELATION)
         ambient_gateway_relation = self.model.get_relation(AMBIENT_GATEWAY_RELATION)
 
-        if not service_mesh_relation:
+        if service_mesh_relation and not ambient_gateway_relation:
             raise ErrorWithStatus(
-                "Missing required relation: service-mesh",
+                "Service mesh relation present without gateway metadata relation",
                 BlockedStatus,
             )
+        # Return default values if no ambient gateway relation
         if not ambient_gateway_relation:
-            raise ErrorWithStatus("Missing required relation: gateway-metadata", BlockedStatus)
+            return "kubeflow", "kubeflow-gateway"
 
         ambient_data = self.ambient_gateway.get_metadata()
         if ambient_data is None:
@@ -287,7 +290,6 @@ class JupyterController(CharmBase):
     def _check_status(self):
         """Check status of workload and set status accordingly."""
         self._check_leader()
-        self._get_gateway_info()
         container = self.unit.get_container(self._container_name)
         if container:
             try:
@@ -303,6 +305,21 @@ class JupyterController(CharmBase):
                 raise ErrorWithStatus("Workload failed health check", MaintenanceStatus)
             else:
                 self.model.unit.status = ActiveStatus()
+
+    def _set_istio_configurations(self):
+        """Set Istio configuration based on service-mesh relation presence."""
+        ambient_relation = self.model.get_relation(SERVICE_MESH_RELATION)
+
+        # Determine Istio mode based on presence of service mesh relation
+        # Sidecar mode: USE_ISTIO=true, USE_GATEWAY_API=false
+        # Ambient mode: USE_ISTIO=false, USE_GATEWAY_API=true
+        self._use_sidecar = ambient_relation is None
+        self._use_gateway_api = ambient_relation is not None
+
+        logging.info(
+            f"Updating Istio configurations: USE_ISTIO={self._use_sidecar}, "
+            f"USE_GATEWAY_API={self._use_gateway_api}"
+        )
 
     def _on_install(self, _):
         """Installation only tasks."""
@@ -359,6 +376,7 @@ class JupyterController(CharmBase):
             self._check_container_connection()
             self._check_leader()
             self._apply_k8s_resources(force_conflicts=force_conflicts)
+            self._set_istio_configurations()
             update_layer(
                 self._container_name,
                 self._container,

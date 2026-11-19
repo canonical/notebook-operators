@@ -12,11 +12,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from charmed_kubeflow_chisme.testing import (
-    ISTIO_BEACON_K8S_APP,
-    ISTIO_INGRESS_K8S_APP,
-    ISTIO_INGRESS_ROUTE_ENDPOINT,
-)
+from charmed_kubeflow_chisme.testing import ISTIO_INGRESS_K8S_APP, ISTIO_INGRESS_ROUTE_ENDPOINT
 from charms.istio_ingress_k8s.v0.istio_ingress_route import (
     HTTPPathMatchType,
     IstioIngressRouteConfig,
@@ -38,8 +34,8 @@ from config_validators import ConfigValidationError, OptionsWithDefault
 
 logger = logging.getLogger(__name__)
 
-JUPYTER_UI_APP = "jupyter-ui"
-SERVICE_MESH_RELATION = "service-mesh"
+INGRESS_ENDPOINT = "ingress"
+ISTIO_PILOT_APP = "istio-pilot"
 
 # Sample inputs for render_jwa_file tests
 JUPYTER_IMAGES_CONFIG = ["jupyterimage1", "jupyterimage2"]
@@ -130,16 +126,13 @@ def harness() -> Harness:
     harness = Harness(JupyterUI)
 
     # setup container networking simulation
-    harness.set_can_connect(JUPYTER_UI_APP, True)
+    harness.set_can_connect("jupyter-ui", True)
 
     # set model name to avoid validation errors
     harness.set_model_name("kubeflow")
 
     # set leader by default
     harness.set_leader(True)
-
-    harness.add_relation(SERVICE_MESH_RELATION, ISTIO_BEACON_K8S_APP)
-    harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
     yield harness
 
@@ -276,16 +269,13 @@ class TestCharm:
         """Test not a leader scenario."""
         harness.set_leader(False)
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready(JUPYTER_UI_APP)
+        harness.container_pebble_ready("jupyter-ui")
         assert harness.charm.model.unit.status == WaitingStatus("Waiting for leadership")
 
-    @pytest.mark.parametrize("container_ready", [False, True])
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
-    def test_no_relation(self, k8s_resource_handler: MagicMock, harness: Harness, container_ready):
-        """Test the charm blocks without the required mesh relation."""
-        for relation in list(harness.model.relations[SERVICE_MESH_RELATION]):
-            harness.remove_relation(relation.id)
+    def test_no_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
+        """Test no relation scenario."""
         harness.add_oci_resource(
             "oci-image",
             {
@@ -294,27 +284,34 @@ class TestCharm:
                 "password": "",
             },
         )
-        harness.begin()
-        harness.set_can_connect(JUPYTER_UI_APP, container_ready)
-        harness.charm.on.config_changed.emit()
-        assert harness.charm.model.unit.status == BlockedStatus(
-            "Missing required relation: service-mesh"
-        )
+        harness.begin_with_initial_hooks()
+        harness.container_pebble_ready("jupyter-ui")
+        assert harness.charm.model.unit.status == ActiveStatus("")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    @patch("charm.JupyterUI.k8s_resource_handler", MagicMock())
-    def test_container_not_ready(self, harness: Harness):
-        """Do not report active before the related workload container is reachable."""
-        harness.begin()
-        harness.set_can_connect(JUPYTER_UI_APP, False)
-        harness.charm.on.config_changed.emit()
-        assert harness.model.unit.status == MaintenanceStatus(
-            "Waiting for pod startup to complete"
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_with_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
+        """Test charm with relation."""
+        harness.add_oci_resource(
+            "oci-image",
+            {
+                "registrypath": "ci-test",
+                "username": "",
+                "password": "",
+            },
         )
-        harness.set_can_connect(JUPYTER_UI_APP, True)
-        harness.charm.on.config_changed.emit()
-        assert harness.model.unit.status == ActiveStatus()
-        assert harness.charm.container.get_service(JUPYTER_UI_APP).is_running()
+        rel_id = harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
+
+        harness.add_relation_unit(rel_id, f"{ISTIO_PILOT_APP}/0")
+        data = {"service-name": "service-name", "service-port": "6666"}
+        harness.update_relation_data(
+            rel_id,
+            ISTIO_PILOT_APP,
+            {"_supported_versions": "- v1", "data": yaml.dump(data)},
+        )
+        harness.begin_with_initial_hooks()
+
+        assert isinstance(harness.charm.model.unit.status, ActiveStatus)
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
@@ -330,17 +327,17 @@ class TestCharm:
         )
         harness.set_model_name("kubeflow")
         harness.begin_with_initial_hooks()
-        harness.container_pebble_ready(JUPYTER_UI_APP)
-        assert harness.charm.container.get_service(JUPYTER_UI_APP).is_running()
-        pebble_plan = harness.get_container_pebble_plan(JUPYTER_UI_APP)
+        harness.container_pebble_ready("jupyter-ui")
+        assert harness.charm.container.get_service("jupyter-ui").is_running()
+        pebble_plan = harness.get_container_pebble_plan("jupyter-ui")
         assert pebble_plan
         assert pebble_plan.services
         pebble_plan_info = pebble_plan.to_dict()
         assert (
-            pebble_plan_info["services"][JUPYTER_UI_APP]["command"]
+            pebble_plan_info["services"]["jupyter-ui"]["command"]
             == "gunicorn -w 3 --bind 0.0.0.0:5000 --access-logfile - entrypoint:app"
         )
-        test_env = pebble_plan_info["services"][JUPYTER_UI_APP]["environment"]
+        test_env = pebble_plan_info["services"]["jupyter-ui"]["environment"]
         # there should be 7 environment variables
         assert 7 == len(test_env)
         assert "cluster.local" == test_env["CLUSTER_DOMAIN"]
@@ -632,34 +629,56 @@ class TestCharm:
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
-    def test_waiting_for_ingress_relation(self, k8s_resource_handler: MagicMock, harness: Harness):
-        """Test the charm blocks when ambient ingress is missing."""
-        for relation in list(harness.model.relations[ISTIO_INGRESS_ROUTE_ENDPOINT]):
-            harness.remove_relation(relation.id)
+    def test_sidecar_and_ambient_relations_added(
+        self, k8s_resource_handler: MagicMock, harness: Harness
+    ):
+        """Test the charm is in BlockedStatus when both sidecar and ambient relations are added."""
+        # Arrange
+        harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
+
+        harness.add_relation(ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP)
 
         # Act
         harness.begin_with_initial_hooks()
 
         # Assert
-        assert harness.charm.model.unit.status == BlockedStatus(
-            "Missing required relation: istio-ingress-route"
+        assert isinstance(
+            harness.charm.model.unit.status,
+            BlockedStatus,
         )
 
-    @pytest.mark.parametrize(
-        "relation_name", [SERVICE_MESH_RELATION, ISTIO_INGRESS_ROUTE_ENDPOINT]
-    )
+    @pytest.mark.parametrize("relation_endpoint", [INGRESS_ENDPOINT, ISTIO_INGRESS_ROUTE_ENDPOINT])
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
-    @patch("charm.JupyterUI.k8s_resource_handler", MagicMock())
-    @patch("charm.ServiceMeshConsumer", MagicMock)
-    def test_required_relation_removed(self, harness: Harness, relation_name):
-        """Return to blocked when the mesh or final ingress relation is removed."""
-        harness.begin_with_initial_hooks()
-        assert harness.model.unit.status == ActiveStatus()
-        for relation in list(harness.model.relations[relation_name]):
-            harness.remove_relation(relation.id)
-        assert harness.model.unit.status == BlockedStatus(
-            f"Missing required relation: {relation_name}"
+    @patch("charm.JupyterUI.k8s_resource_handler")
+    def test_ingress_relation_broken(
+        self,
+        k8s_resource_handler: MagicMock,
+        harness: Harness,
+        relation_endpoint: str,
+    ):
+        """Test breaking either ingress relation reruns validation."""
+        sidecar_relation_id = harness.add_relation(INGRESS_ENDPOINT, ISTIO_PILOT_APP)
+        harness.add_relation_unit(sidecar_relation_id, f"{ISTIO_PILOT_APP}/0")
+        harness.update_relation_data(
+            sidecar_relation_id,
+            ISTIO_PILOT_APP,
+            {
+                "_supported_versions": "- v1",
+                "data": yaml.dump({"service-name": "service-name", "service-port": "6666"}),
+            },
         )
+        relation_ids = {
+            INGRESS_ENDPOINT: sidecar_relation_id,
+            ISTIO_INGRESS_ROUTE_ENDPOINT: harness.add_relation(
+                ISTIO_INGRESS_ROUTE_ENDPOINT, ISTIO_INGRESS_K8S_APP
+            ),
+        }
+        harness.begin_with_initial_hooks()
+        assert isinstance(harness.charm.model.unit.status, BlockedStatus)
+
+        harness.remove_relation(relation_ids[relation_endpoint])
+
+        assert harness.charm.model.unit.status == ActiveStatus("")
 
     @patch("charm.KubernetesServicePatch", lambda x, y, service_name: None)
     @patch("charm.JupyterUI.k8s_resource_handler")
